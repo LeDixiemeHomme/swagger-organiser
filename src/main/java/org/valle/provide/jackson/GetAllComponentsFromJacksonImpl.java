@@ -2,23 +2,22 @@ package org.valle.provide.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
-import org.valle.provide.GetAllSchemas;
+import org.valle.provide.GetAllComponents;
 
 import java.io.File;
 
 @Slf4j
-public class GetAllSchemasFromJacksonImpl implements GetAllSchemas {
+public class GetAllComponentsFromJacksonImpl implements GetAllComponents {
 
     private final JacksonUtils jacksonUtils;
 
-    public GetAllSchemasFromJacksonImpl(String swaggerFilePath) {
+    public GetAllComponentsFromJacksonImpl(String swaggerFilePath) {
         this.jacksonUtils = new JacksonUtils(new File(swaggerFilePath));
     }
 
     @Override
     public JsonNode provide() {
         JsonNode openApi = this.jacksonUtils.readValue();
-        JsonNode components = openApi.get("components");
-        return components.get("schemas");
+        return openApi.get("components");
     }
 }

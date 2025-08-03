@@ -1,15 +1,15 @@
 package org.valle;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.valle.persist.jackson.PersistResultFileWithJacksonImpl;
 import org.valle.present.logger.ShowEndpointsLoggerImpl;
+import org.valle.process.ClearEndpointOnDemandImpl;
 import org.valle.process.ShowEndpointsImpl;
 import org.valle.process.models.EndPoint;
-import org.valle.process.models.OpenApiObjects;
+import org.valle.provide.jackson.GetAllComponentsFromJacksonImpl;
 import org.valle.provide.jackson.GetAllEndpointsFromJackson;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.provide.jackson.GetAllPathsFromJacksonImpl;
+import org.valle.provide.jackson.GetAllSchemasFromJacksonImpl;
 
-import java.io.File;
-import java.util.Map;
 import java.util.Set;
 
 public class Main {
@@ -22,27 +22,22 @@ public class Main {
 
         process1.execute();
 
-        // demander quelques endpoints à supprimer via la console
-        Set<EndPoint> endpointsToClean = Set.of(EndPoint.builder()
-                .method("post")
-                .path("/cadh/v1/operations")
-                .build());
-
-        JacksonUtils jacksonUtils = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
-
-        JsonNode jsonNode = jacksonUtils.readValue();
-        Map<String, Object> rawValue = jacksonUtils.readRawValue();
-
-        OpenApiObjects openApiObjects = new OpenApiObjects(jsonNode, rawValue);
-
-        Set<String> schemasToRemove = openApiObjects.getSchemaNamesToBeRemoved(
-                getAllEndpoints.provide(),
-                endpointsToClean
+        ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
+                getAllEndpoints,
+                new GetAllPathsFromJacksonImpl("src/main/resources/swagger-cobaye.yml"),
+                new GetAllComponentsFromJacksonImpl("src/main/resources/swagger-cobaye.yml"),
+                new PersistResultFileWithJacksonImpl("src/main/resources/swagger-cleaned.yml")
         );
 
-        Map<String, Object> toWrite = openApiObjects.removeElementsByName(endpointsToClean, schemasToRemove);
+        // demander quels endpoints à supprimer via la console
+        Set<EndPoint> endpointsToClean = Set.of(
+                EndPoint.builder()
+                        .method("post")
+                        .path("/cadh/v1/operations")
+                        .build()
+        );
 
-        jacksonUtils.writeRawValue(toWrite, new File("src/main/resources/swagger-cleaned.yml"));
+        clearEndpointOnDemand.execute(endpointsToClean);
 
         ShowEndpointsImpl process2 = new ShowEndpointsImpl(
                 new GetAllEndpointsFromJackson("src/main/resources/swagger-cleaned.yml"),

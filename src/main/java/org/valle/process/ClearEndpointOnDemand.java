@@ -2,8 +2,8 @@ package org.valle.process;
 
 import org.valle.process.models.EndPoint;
 
-import java.util.List;
+import java.util.Set;
 
 public interface ClearEndpointOnDemand {
-    void execute(List<EndPoint> toBeCleared);
+    void execute(Set<EndPoint> toBeCleared);
 }

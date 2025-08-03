@@ -53,6 +53,14 @@ public class JacksonUtils {
         }
     }
 
+    public void writeRawValueToSwaggerFile(Map<String, Object> objectMap) {
+        try {
+            this.mapper.writeValue(this.swaggerFile, objectMap);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
+        }
+    }
+
     /**
      * YAMLFactory hérite de JsonFactory.
      *
