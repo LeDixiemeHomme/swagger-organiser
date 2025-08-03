@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Test 8
+  version: 1.0.0
+paths:
+  /employee:
+    get:
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Person'
+                  - type: object
+                    properties:
+                      role:
+                        type: string
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        name:
+          type: string

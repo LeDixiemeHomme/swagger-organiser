@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Test 1
+  version: 1.0.0
+paths:
+  /user:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string

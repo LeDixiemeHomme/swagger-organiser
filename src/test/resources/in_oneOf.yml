@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info:
+  title: Test 3
+  version: 1.0.0
+paths:
+  /animal:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Cat'
+                  - $ref: '#/components/schemas/Dog'
+components:
+  schemas:
+    Cat:
+      type: object
+      properties:
+        meow:
+          type: string
+    Dog:
+      type: object
+      properties:
+        bark:
+          type: string

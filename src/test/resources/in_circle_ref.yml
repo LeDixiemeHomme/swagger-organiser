@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Test 5
+  version: 1.0.0
+paths:
+  /node:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/Node'

@@ -1,0 +1,682 @@
+---
+openapi: "3.0.1"
+info:
+  title: "Subscription API"
+  description: "Swagger for subscription API Internet/Intranet : API de l'acte d'adhé\
+    sion épargne retraite individuelle"
+  termsOfService: "termsOfServiceUrl"
+  contact:
+    name: "contact"
+  license:
+    name: "license"
+  version: "version 1"
+servers:
+- url: "/"
+tags:
+- name: "Acte d'adhésion"
+paths:
+  /cadh/v1/operations/{operation_id}/documents:
+    get:
+      tags:
+      - "Acte d'adhésion"
+      summary: "Retourne la liste des documents à signer"
+      description: "Retourner la liste des documents (contractuels &agrave; signer\
+        \ et pr&eacute;contractuels à pr&eacute;senter) <br> associ&eacute;e &agrave;\
+        \ une adh&eacute;sion. <br> Temps de r&eacute;ponse maximal 0,400s."
+      operationId: "getDocuments"
+      parameters:
+      - name: "operation_id"
+        in: "path"
+        description: "UUID de l'opération"
+        required: true
+        schema:
+          type: "string"
+        example: "6b6dce06-b3a5-4fc5-a58d-c21a207cd75e"
+      - name: "signature_date"
+        in: "query"
+        description: "Date de signature"
+        required: false
+        schema:
+          type: "string"
+        example: "2023-04-14T07:58:30.996+0200"
+      - name: "generate"
+        in: "query"
+        description: "Flag de génération des documents"
+        required: false
+        schema:
+          type: "boolean"
+          default: false
+        example: false
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          example: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+        example: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+          \ des actions initiées par l’application consommatrice."
+        required: true
+        schema:
+          type: "string"
+          example: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      responses:
+        "200":
+          description: "Les documents à signer et présenter"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/DocumentDTOV1"
+        "400":
+          description: "Un ou plusieurs param&egrave;tres d'entr&eacute;e sont incorrects\
+            \ ou une erreur fonctionnelle est survenue"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-400-000:
+                  description: "E-400-000"
+                  value:
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                      \ ou une erreur fonctionnelle est survenue"
+                E-400-007:
+                  description: "E-400-002"
+                  value:
+                  - code: "E-400-002"
+                    message: "Autre message 400"
+        "401":
+          description: "Acc&egrave;s refus&eacute;"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-401-000:
+                  description: "E-401-000"
+                  value:
+                    code: "E-401-000"
+                    message: "Accès refusé"
+        "403":
+          description: "Accès interdit"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-403-000:
+                  description: "E-403-000"
+                  value:
+                    code: "E-403-000"
+                    message: "Accès interdit, la fonctionnalité adhésion est désactivé\
+                      e"
+        "500":
+          description: "Erreur serveur interne"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-500:
+                  description: "E-500"
+                  value:
+                    code: "E-500"
+                    message: "Erreur serveur interne"
+      security:
+      - bearerAuth: []
+  /cadh/v1/operations/{operation_id}/default_account:
+    get:
+      tags:
+      - "Récupération du numéro de compte bancaire"
+      summary: "Service de récupération du numéro de compte bancaire"
+      description: "Compte bancaire rattach&eacute; au versement initial lors de l'adh&eacute;sion\
+        \ <br> Temps de r&eacute;ponse maximal 0,400s."
+      operationId: "getDefaultAccount"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          default: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+          default: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+          \ des actions initiées par l’application consommatrice."
+        required: true
+        schema:
+          type: "string"
+          default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      - name: "operation_id"
+        in: "path"
+        description: "L’uuid de l'opération d'adhésion épargne"
+        required: true
+        schema:
+          type: "string"
+          default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultAccountOutputDTOV1"
+              examples:
+                "200":
+                  description: "Compte bancaire de réference (lié au VI)"
+                  value:
+                    iban: "FR0330002000110000123456T00"
+                    number: "0000123456T"
+                    bic_code: "CRLYFRPPXXX"
+                    owner: "M Jean Dupont"
+        "400":
+          description: "Un ou plusieurs param&egrave;tres d'entr&eacute;e sont incorrects\
+            \ ou une erreur fonctionnelle est survenue"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-400-000:
+                  description: "E-400-000"
+                  value:
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                      \ ou une erreur fonctionnelle est survenue"
+                E-400-001:
+                  description: "E-400-001"
+                  value:
+                  - code: "E-400-001"
+                    message: "Autre message 400"
+        "404":
+          description: "Aucun numéro de compte ne correspond au numéro d'opération\
+            \ saisi"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-404-000:
+                  description: "E-404-000"
+                  value:
+                    code: "E-404-000,"
+                    message: "Aucun numéro de compte ne correspond au numéro d'opé\
+                      ration saisi"
+        "401":
+          description: "Acc&egrave;s refus&eacute;"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-401-000:
+                  description: "E-401-000"
+                  value:
+                    code: "E-401-000"
+                    message: "Accès refusé"
+        "403":
+          description: "Accès interdit"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-403-000:
+                  description: "E-403-000"
+                  value:
+                    code: "E-403-000"
+                    message: "Accès interdit, la fonctionnalité adhésion est désactivé\
+                      e"
+        "500":
+          description: "Erreur serveur interne"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-500:
+                  description: "E-500"
+                  value:
+                    code: "E-500"
+                    message: "Erreur serveur interne"
+      security:
+      - bearerAuth: []
+  /cadh/v1/operations/{operation_id}/validity:
+    get:
+      tags:
+      - "Acte d'adhésion"
+      summary: "Renvoi la validité de l'opération"
+      description: "Contr&ocirc;ler la validit&eacute; de l'op&eacute;ration d'adh&eacute;sion.\
+        \ <br> Temps de r&eacute;ponse maximal 0,400s."
+      operationId: "checkValidity"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          default: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+          default: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+          \ des actions initiées par l’application consommatrice."
+        required: true
+        schema:
+          type: "string"
+          default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      - name: "operation_id"
+        in: "path"
+        description: "L’uuid de l'opération d'adhésion épargne"
+        required: true
+        schema:
+          type: "string"
+          default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckValidityOutputDTOV1"
+        "400":
+          description: "Un ou plusieurs param&egrave;tres d'entr&eacute;e sont incorrects\
+            \ ou une erreur fonctionnelle est survenue"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-400-000:
+                  description: "E-400-000"
+                  value:
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                      \ ou une erreur fonctionnelle est survenue"
+                E-400-001:
+                  description: "E-400-001"
+                  value:
+                  - code: "E-400-001"
+                    message: "Autre message 400"
+        "404":
+          description: "Aucun numéro de compte ne correspond au numéro d'opération\
+            \ saisi"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-404-000:
+                  description: "E-404-000"
+                  value:
+                    code: "E-404-000,"
+                    message: "Ressource introuvable"
+        "401":
+          description: "Acc&egrave;s refus&eacute;"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-401-000:
+                  description: "E-401-000"
+                  value:
+                    code: "E-401-000"
+                    message: "Accès refusé"
+        "403":
+          description: "Accès interdit"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-403-000:
+                  description: "E-403-000"
+                  value:
+                    code: "E-403-000"
+                    message: "Accès interdit, la fonctionnalité adhésion est désactivé\
+                      e"
+        "500":
+          description: "Erreur serveur interne"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-500:
+                  description: "E-500"
+                  value:
+                    code: "E-500"
+                    message: "Erreur serveur interne"
+      security:
+      - bearerAuth: []
+  /cadh/v1/operations/{operation_id}/enforcement:
+    put:
+      tags:
+      - "Acte d'adhésion"
+      summary: "Effectue la mise en vigueur de la proposition."
+      description: "Effectue la mise en vigueur de la proposition rattach&eacute;e\
+        \ &agrave; l'id op&eacute;ration <br> Temps de r&eacute;ponse maximal 1,500s."
+      operationId: "putEnforcement"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          default: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+          default: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+          \ des actions initiées par l’application consommatrice."
+        required: true
+        schema:
+          type: "string"
+          default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      - name: "operation_id"
+        in: "path"
+        description: "L’uuid de l'opération d'adhésion épargne"
+        required: true
+        schema:
+          type: "string"
+          default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+      - name: "technical_communication_code"
+        in: "query"
+        description: "Norme groupe CAM0258: Moyen et format d'échange utilisé pour\
+          \ communiquer avec le client. <br> Cette donnée étant fortement liée au\
+          \ \"signature_type\" il est nécessaire de remplir les deux si vous voulez\
+          \ la remplir. <br> Si ces données ne sont pas remplis, les valeurs par dé\
+          faut sont technical_communication_code: 170 et signature_type: 4 <br> Valeurs\
+          \ supportées: <br> &nbsp; 010: Face à face agence (transmission d'informations\
+          \ directement entre personnes physiquement présentes sur le même lieu (agence))\
+          \ <br> &nbsp; 170: Internet ordinateur individuel (par opposition à l’Internet\
+          \ mobile, l’utilisateur accède au réseau depuis un navigateur web installé\
+          \ sur un ordinateur individuel non apparenté à un téléphone mobile) <br>\
+          \ &nbsp; 180: Internet mobile (accès au réseau depuis un navigateur web\
+          \ (protocole Internet) installé sur le téléphone mobile de l’utilisateur)"
+        required: false
+        schema:
+          type: "string"
+        example: 170
+      - name: "signature_type"
+        in: "query"
+        description: "Norme groupe CAM0309: Types de signature disponibles. <br> Cette\
+          \ donnée étant fortement liée au \"technical_communication_code\" il est\
+          \ nécessaire de remplir les deux si vous voulez la remplir. <br> Valeurs\
+          \ supportées: <br> &nbsp; 1: Signature manuscrite <br> &nbsp; 4: Signature\
+          \ électronique"
+        required: false
+        schema:
+          type: "string"
+        example: 4
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnforcementOutputDTOV1"
+              example:
+                archive_id: "202200690781566"
+                function_policy_number: 0
+        "400":
+          description: "Un ou plusieurs param&egrave;tres d'entr&eacute;e sont incorrects\
+            \ ou une erreur fonctionnelle est survenue"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-400-000:
+                  description: "E-400-000"
+                  value:
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                      \ ou une erreur fonctionnelle est survenue"
+                E-400-001:
+                  description: "E-400-001"
+                  value:
+                  - code: "E-400-001"
+                    message: "Autre message 400"
+        "401":
+          description: "Acc&egrave;s refus&eacute;"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-401-000:
+                  description: "E-401-000"
+                  value:
+                    code: "E-401-000"
+                    message: "Accès refusé"
+        "403":
+          description: "Accès interdit"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-403-000:
+                  description: "E-403-000"
+                  value:
+                    code: "E-403-000"
+                    message: "Accès interdit, la fonctionnalité adhésion est désactivé\
+                      e"
+        "404":
+          description: "Aucun numéro de compte ne correspond au numéro d'opération\
+            \ saisi"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-404-000:
+                  description: "E-404-000"
+                  value:
+                    code: "E-404-000,"
+                    message: "Aucun numéro de compte ne correspond au numéro d'opé\
+                      ration saisi"
+        "500":
+          description: "Erreur serveur interne"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              examples:
+                E-500:
+                  description: "E-500"
+                  value:
+                    code: "E-500"
+                    message: "Erreur serveur interne"
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    CaaErrorMessage:
+      type: "object"
+      properties:
+        code:
+          type: "string"
+          description: "Code de l'erreur"
+          example: "E-40X-XXX | E-500"
+        message:
+          type: "string"
+          description: "Message d'erreur fonctionnel ou technique"
+          example: "<Erreur fonctionnelle> | Erreur serveur interne"
+    CheckValidityOutputDTOV1:
+      title: "CheckValidityOutputDTOV1"
+      type: "object"
+      description: "Retour de check validity. Contient un message d'erreur si isValid\
+        \ = false"
+      required:
+      - "is_valid"
+      - "error_messages"
+      properties:
+        is_valid:
+          type: "boolean"
+          description: "Booléen indiquant si le check validity est passant ou pas"
+          pattern: "^(?!\\s*$).+"
+          example: true
+        error_messages:
+          type: "array"
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CaaErrorMessage"
+    DefaultAccountOutputDTOV1:
+      title: "DefaultAccountOutputDTOV1"
+      type: "object"
+      description: "Données relatives au compte pour les versements"
+      required:
+      - "iban"
+      - "number"
+      - "bic_code"
+      - "owner"
+      properties:
+        iban:
+          type: "string"
+          description: "Iban"
+          pattern: "^(?!\\s*$).+"
+          example: "FR0330002000110000123456T00"
+        number:
+          type: "string"
+          description: "Numéro de compte bancaire"
+          pattern: "^(?!\\s*$).+"
+          example: "0000123456T"
+        bic_code:
+          type: "string"
+          description: "code BIC"
+          pattern: "^(?!\\s*$).+"
+          example: "CRLYFRPPXXX"
+        owner:
+          type: "string"
+          description: "RIB Nom du titulaire"
+          pattern: "^(?!\\s*$).+"
+          example: "M Jean Dupont"
+    DocumentDTOV1:
+      type: "object"
+      properties:
+        code:
+          type: "string"
+          description: "Code Produit"
+          example: "TP002"
+        label:
+          type: "string"
+          description: "Nom du document utilisé pour affichage sur le parcours gé\
+            nérique"
+          example: "Document Label"
+        label_to_present:
+          type: "string"
+          description: "Libellé complet du document, à afficher dans le parcours de\
+            \ signature. Libellé générique complété pour certains documents du nom\
+            \ de produit et/ou du numéro de contrat"
+          example: "Demande d'adhésion au contrat [nom_produit] n° [id_contrat]"
+        url:
+          type: "string"
+          description: "URL du document sur FM"
+          example: "https://dev-fm.predica.group.gca/caagis-fm-ihmpucc/getfile/20220216153129842_1PC2D2FG_ad9fa32842e4f59d89f410a090ee3784.PDF"
+        documents_to_present:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/DocumentToPresentDTOV1"
+        archive_id:
+          type: "string"
+          description: "Id Archive"
+          example: "202200690781566"
+        page_count:
+          type: "integer"
+          description: "Nombre de page du document"
+          format: "int32"
+          example: 2
+        signature_presentation_type:
+          type: "string"
+          description: "Type de présentation pour la signature du document, permet\
+            \ d'afficher le bon protocole de consentement en fonction des cas de figure.\
+            \ Cette valeur est composée de la concaténation des codes suivants en\
+            \ fonction des particularités de l'acte d'adhésion :\n - RBC (Recueil\
+            \ de bon consentement, si investissement sur au moins un support de type\
+            \ FAF ou UCO)\n - SDF (Spécifités de fonctionnement, si investissement\
+            \ sur au moin un support atypique)\n - MDA (Mandat, si présence d'un mandat)."
+          example: "RBC SDF MDA"
+    DocumentToPresentDTOV1:
+      type: "object"
+      properties:
+        code:
+          type: "string"
+          description: "Code Document"
+          example: "TP082"
+        url:
+          type: "string"
+          description: "Url du document sur FM"
+          example: "https://dev-fm.predica.group.gca/caagis-fm-ihmpucc/getfile/20211214135832697_JL248XGG_TP044_111937_12eec52f311401968fee2f05dfb00255.pdf"
+        title:
+          type: "string"
+          description: "Titre du document à présenter"
+          example: "DICI AF DYNAMIC MULTI FACTOR EUROP EQ AE"
+    EnforcementOutputDTOV1:
+      title: "EnforcementOutputDTOV1"
+      type: "object"
+      properties:
+        archiveId:
+          type: "string"
+          description: "Id Archive"
+          example: 202200690781566
+        functionPolicyNumber:
+          type: "integer"
+          format: "int32"
+          description: "Numéro de fonction de police"
+          example: 0
+  securitySchemes:
+    bearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"

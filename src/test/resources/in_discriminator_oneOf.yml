@@ -1,0 +1,39 @@
+openapi: 3.0.0
+info:
+  title: Test 10
+  version: 1.0.0
+paths:
+  /vehicle:
+    get:
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+components:
+  schemas:
+    Vehicle:
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          car: '#/components/schemas/Car'
+          truck: '#/components/schemas/Truck'
+      oneOf:
+        - $ref: '#/components/schemas/Car'
+        - $ref: '#/components/schemas/Truck'
+    Car:
+      type: object
+      properties:
+        type:
+          type: string
+        doors:
+          type: integer
+    Truck:
+      type: object
+      properties:
+        type:
+          type: string
+        capacity:
+          type: integer

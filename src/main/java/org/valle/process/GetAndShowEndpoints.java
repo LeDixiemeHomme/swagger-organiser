@@ -1,5 +1,5 @@
 package org.valle.process;
 
-public interface GetAndShowPaths {
+public interface GetAndShowEndpoints {
     void execute();
 }

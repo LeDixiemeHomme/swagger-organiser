@@ -1,0 +1,71 @@
+package org.valle.provide.jackson;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import lombok.Getter;
+
+import java.io.File;
+import java.util.Map;
+
+public class JacksonUtils {
+
+    private final File swaggerFile;
+
+    @Getter
+    private final ObjectMapper mapper;
+
+    public JacksonUtils(File swaggerFile) {
+        this.swaggerFile = swaggerFile;
+        this.mapper = new ObjectMapper(this.getParseFactory());
+    }
+
+    public JsonNode readValue() {
+        try {
+            return this.mapper.readTree(this.swaggerFile);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read value from swagger file: " + swaggerFile.getPath(), e);
+        }
+    }
+
+    public Map<String, Object> readRawValue() {
+        try {
+            return this.mapper.readValue(this.swaggerFile, Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read value from swagger file: " + swaggerFile.getPath(), e);
+        }
+    }
+
+    public void writeValue(JsonNode node, File targetSwaggerFile) {
+        try {
+            this.mapper.writeValue(targetSwaggerFile, node);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
+        }
+    }
+
+    public void writeRawValue(Map<String, Object> objectMap, File targetSwaggerFile) {
+        try {
+            this.mapper.writeValue(targetSwaggerFile, objectMap);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
+        }
+    }
+
+    /**
+     * YAMLFactory hérite de JsonFactory.
+     *
+     * @return Une factory JSON ou YAML en fonction de l'extension du fichier swagger
+     */
+    public JsonFactory getParseFactory() {
+        String path = this.swaggerFile.getPath();
+        if (path.endsWith(".yml") || path.endsWith(".yaml")) {
+            return new YAMLFactory();
+        } else if (path.endsWith(".json")) {
+            return new JsonFactory();
+        } else {
+            throw new IllegalArgumentException("Unsupported file type: " + path);
+        }
+    }
+}
