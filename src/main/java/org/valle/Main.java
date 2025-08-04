@@ -15,12 +15,18 @@ import java.util.Set;
 public class Main {
     public static void main(String[] args) {
         GetAllEndpointsFromJackson getAllEndpoints = new GetAllEndpointsFromJackson("src/main/resources/swagger-cobaye.yml");
-        ShowEndpointsImpl process1 = new ShowEndpointsImpl(
+
+        ShowEndpointsImpl showEndpointsCobaye = new ShowEndpointsImpl(
                 getAllEndpoints,
                 new ShowEndpointsLoggerImpl()
         );
 
-        process1.execute();
+        ShowEndpointsImpl showEndpointsCleaned = new ShowEndpointsImpl(
+                new GetAllEndpointsFromJackson("src/main/resources/swagger-cleaned.yml"),
+                new ShowEndpointsLoggerImpl()
+        );
+        System.out.println(new GetAllSchemasFromJacksonImpl("src/main/resources/swagger-cobaye.yml").provide().size());
+        showEndpointsCobaye.execute();
 
         ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
                 getAllEndpoints,
@@ -37,12 +43,10 @@ public class Main {
                         .build()
         );
 
+        System.out.println(new GetAllSchemasFromJacksonImpl("src/main/resources/swagger-cleaned.yml").provide().size());
+        showEndpointsCleaned.execute();
         clearEndpointOnDemand.execute(endpointsToClean);
-
-        ShowEndpointsImpl process2 = new ShowEndpointsImpl(
-                new GetAllEndpointsFromJackson("src/main/resources/swagger-cleaned.yml"),
-                new ShowEndpointsLoggerImpl()
-        );
-        process2.execute();
+        System.out.println(new GetAllSchemasFromJacksonImpl("src/main/resources/swagger-cleaned.yml").provide().size());
+        showEndpointsCleaned.execute();
     }
 }

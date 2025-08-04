@@ -9,7 +9,6 @@ import org.valle.process.models.EndPoint;
 import org.valle.provide.GetAllComponents;
 import org.valle.provide.GetAllEndpoints;
 import org.valle.provide.GetAllPaths;
-import org.valle.provide.GetAllSchemas;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
@@ -40,7 +39,6 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
         Set<String> schemasToRemove = getSchemaNamesToBeRemoved(
                 this.getAllEndpoints.provide(),
                 toBeCleared,
-                this.getAllPaths.provide(),
                 this.getAllComponents.provide()
         );
 
@@ -92,7 +90,6 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
     public static Set<String> getSchemaNamesToBeRemoved(
             Set<EndPoint> allEndPoints,
             Set<EndPoint> endPointsToBeRemoved,
-            JsonNode allPaths,
             JsonNode allComponents
     ) {
 
@@ -100,11 +97,11 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
         endPointsToKeep.removeAll(endPointsToBeRemoved);
 
         Set<String> schemasToKeep = endPointsToKeep.stream()
-                .flatMap(endPoint -> getAllNamedReferencesOfAPath(endPoint, allPaths, allComponents).stream())
+                .flatMap(endPoint -> getAllNamedReferencesOfAPath(endPoint, allComponents).stream())
                 .collect(Collectors.toSet());
 
         Set<String> schemasToRemove = endPointsToBeRemoved.stream()
-                .flatMap(endPoint -> getAllNamedReferencesOfAPath(endPoint, allPaths, allComponents).stream())
+                .flatMap(endPoint -> getAllNamedReferencesOfAPath(endPoint, allComponents).stream())
                 .collect(Collectors.toSet());
 
         schemasToRemove.removeAll(schemasToKeep);
@@ -126,12 +123,12 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
         return schemasToRemove;
     }
 
-    public static Set<String> getAllNamedReferencesOfAPath(EndPoint endPoint, JsonNode allPaths, JsonNode allComponents) {
-        JsonNode selectedPath = allPaths.get(endPoint.path()).get(endPoint.method());
-        return findRefs(selectedPath, allComponents);
+    public static Set<String> getAllNamedReferencesOfAPath(EndPoint endPoint, JsonNode allComponents) {
+        JsonNode selectedPath = allComponents.get("paths").get(endPoint.path()).get(endPoint.method());
+        return findRefs(selectedPath, allComponents, new HashSet<>());
     }
 
-    public static Set<String> findRefs(JsonNode node, JsonNode allComponents) {
+    public static Set<String> findRefs(JsonNode node, JsonNode allComponents, Set<String> visited) {
         Set<String> refs = new HashSet<>();
 
         // si le noeud est null, pas de traitement
@@ -143,17 +140,22 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
                 if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
-                    String refName = new DollarRef(field.getValue().asText()).getName();
-                    refs.addAll(findRefs(allComponents.get(refName), allComponents));
-                    // pointe de la méthode récursive
-                    refs.add(refName);
+                    DollarRef dollarRef = new DollarRef(field.getValue().asText());
+                    String referencedName = dollarRef.getReferencedName();
+                    if (!visited.contains(referencedName)) {
+                        // pointe de la méthode récursive
+                        refs.add(referencedName);
+                        visited.add(referencedName);
+                        // appel récursif pour trouver les références dans le noeud référencé
+                        refs.addAll(findRefs(dollarRef.getReferencedNode(allComponents), allComponents, visited));
+                    }
                 } else {
-                    refs.addAll(findRefs(field.getValue(), allComponents));
+                    refs.addAll(findRefs(field.getValue(), allComponents, visited));
                 }
             }
         } else if (node.isArray()) {
             for (JsonNode item : node) {
-                refs.addAll(findRefs(item, allComponents));
+                refs.addAll(findRefs(item, allComponents, visited));
             }
         }
 

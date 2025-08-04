@@ -8,6 +8,7 @@ import org.valle.process.models.EndPoint;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -20,22 +21,17 @@ class ClearEndpointOnDemandImplTest {
     public static final String INPUT_SWAGGER_BASE_PATH = "src/test/resources";
 
     @ParameterizedTest
-    @MethodSource("provide_test_getAllNamedReferencesOfASchema_values")
-    void test_getAllNamedReferencesOfASchema(
+    @MethodSource("provide_test_findRefs_values")
+    void test_findRefs(
             String inputFileName,
             String schemaName,
             Set<String> expectedReferences
     ) {
         // Arrange
         JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/" + inputFileName));
-
         JsonNode objectMap = jacksonUtils.readValue();
-
-        JsonNode allComponents = objectMap.get("components").get("schemas");
-
         // Act
-        Set<String> actual = findRefs(allComponents.get(schemaName), allComponents);
-
+        Set<String> actual = findRefs(objectMap.get("components").get("schemas").get(schemaName), objectMap, new HashSet<>());
         // Assert
         assertThat(actual)
                 .usingRecursiveComparison()
@@ -43,7 +39,7 @@ class ClearEndpointOnDemandImplTest {
                 .isEqualTo(expectedReferences);
     }
 
-    private static Stream<Arguments> provide_test_getAllNamedReferencesOfASchema_values() {
+    private static Stream<Arguments> provide_test_findRefs_values() {
         return Stream.of(
                 Arguments.of("swagger-cobaye.yml", "ContractDTOV1", Set.of(
                         "AccountDTOV1",
@@ -76,14 +72,8 @@ class ClearEndpointOnDemandImplTest {
     ) {
         // Arrange
         JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/" + inputFileName));
-
-        JsonNode objectMap = jacksonUtils.readValue();
-
-        JsonNode allPaths = objectMap.get("paths");
-
-        JsonNode allComponents = objectMap.get("components").get("schemas");
         // Act
-        Set<String> actual = getAllNamedReferencesOfAPath(endPoint, allPaths, allComponents);
+        Set<String> actual = getAllNamedReferencesOfAPath(endPoint, jacksonUtils.readValue());
         // Assert
         assertThat(actual)
                 .usingRecursiveComparison()
@@ -131,6 +121,30 @@ class ClearEndpointOnDemandImplTest {
                 Arguments.of("in_parameter.yml",
                         EndPoint.builder().method("get").path("/user").build(),
                         Set.of("UserId")
+                ),
+                Arguments.of("in_oneOf.yml",
+                        EndPoint.builder().method("get").path("/animal").build(),
+                        Set.of("Cat", "Dog")
+                ),
+                Arguments.of("in_example.yml",
+                        EndPoint.builder().method("get").path("/product").build(),
+                        Set.of("ProductExample")
+                ),
+                Arguments.of("in_discriminator_oneOf.yml",
+                        EndPoint.builder().method("get").path("/vehicle").build(),
+                        Set.of("Vehicle", "Car", "Truck")
+                ),
+                Arguments.of("in_circle_ref.yml",
+                        EndPoint.builder().method("get").path("/node").build(),
+                        Set.of("Node")
+                ),
+                Arguments.of("in_allOf.yml",
+                        EndPoint.builder().method("get").path("/employee").build(),
+                        Set.of("Person")
+                ),
+                Arguments.of("crossed_ref.yml",
+                        EndPoint.builder().method("get").path("/order").build(),
+                        Set.of("Order", "Address", "Customer")
                 )
         );
     }
