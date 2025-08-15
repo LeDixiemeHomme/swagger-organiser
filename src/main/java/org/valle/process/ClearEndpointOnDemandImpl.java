@@ -39,7 +39,7 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
         Set<String> schemasToRemove = getSchemaNamesToBeRemoved(
                 this.getAllEndpoints.provide(),
                 toBeCleared,
-                this.getAllComponents.provide()
+                jacksonUtils.readValue()
         );
 
         Map<String, Object> toWrite = removeElementsByName(toBeCleared, schemasToRemove, rawValue);
@@ -82,8 +82,6 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
             schemasToRemove.forEach(componentValue::remove);
         }
 
-//        Map<String, Object> schemas = (Map<String, Object>) components.get("schemas");
-//        schemasToRemove.forEach(schemas::remove);
         return objectsRaw;
     }
 
@@ -124,7 +122,10 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
     }
 
     public static Set<String> getAllNamedReferencesOfAPath(EndPoint endPoint, JsonNode allComponents) {
-        JsonNode selectedPath = allComponents.get("paths").get(endPoint.path()).get(endPoint.method());
+        JsonNode selectedPath = allComponents
+                .get("paths")
+                .get(endPoint.path())
+                .get(endPoint.method());
         return findRefs(selectedPath, allComponents, new HashSet<>());
     }
 

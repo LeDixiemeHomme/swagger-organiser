@@ -11,64 +11,64 @@ info:
     name: "license"
   version: "version 1"
 servers:
-  - url: "/"
+- url: "/"
 tags:
-  - name: "Acte d'adhésion"
+- name: "Acte d'adhésion"
 paths:
   /cadh/v1/operations/{operation_id}/documents:
     get:
       tags:
-        - "Acte d'adhésion"
+      - "Acte d'adhésion"
       summary: "Retourne la liste des documents à signer"
       description: "Retourner la liste des documents (contractuels &agrave; signer\
         \ et pr&eacute;contractuels à pr&eacute;senter) <br> associ&eacute;e &agrave;\
         \ une adh&eacute;sion. <br> Temps de r&eacute;ponse maximal 0,400s."
       operationId: "getDocuments"
       parameters:
-        - name: "operation_id"
-          in: "path"
-          description: "UUID de l'opération"
-          required: true
-          schema:
-            type: "string"
-          example: "6b6dce06-b3a5-4fc5-a58d-c21a207cd75e"
-        - name: "signature_date"
-          in: "query"
-          description: "Date de signature"
-          required: false
-          schema:
-            type: "string"
-          example: "2023-04-14T07:58:30.996+0200"
-        - name: "generate"
-          in: "query"
-          description: "Flag de génération des documents"
-          required: false
-          schema:
-            type: "boolean"
-            default: false
-          example: false
-        - name: "Authorization"
-          in: "header"
-          description: "Le token pour authentifier le service appelant"
-          required: true
-          schema:
-            type: "string"
-            example: "Bearer JWT Token"
-        - name: "X-Passport"
-          in: "header"
-          description: "Le token utilisé pour propager l'identité de l'utilisateur"
-          required: true
-          schema:
-            type: "string"
-          example: "<JWT Token>"
-        - name: "Correlationid"
-          in: "header"
-          description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+      - name: "operation_id"
+        in: "path"
+        description: "UUID de l'opération"
+        required: true
+        schema:
+          type: "string"
+        example: "6b6dce06-b3a5-4fc5-a58d-c21a207cd75e"
+      - name: "signature_date"
+        in: "query"
+        description: "Date de signature"
+        required: false
+        schema:
+          type: "string"
+        example: "2023-04-14T07:58:30.996+0200"
+      - name: "generate"
+        in: "query"
+        description: "Flag de génération des documents"
+        required: false
+        schema:
+          type: "boolean"
+          default: false
+        example: false
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          example: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+        example: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
           \ des actions initiées par l’application consommatrice."
-          required: true
-          schema:
-            type: "string"
-            example: "f77270a9-b280-43e2-96e1-66c290d702b1"
+        required: true
+        schema:
+          type: "string"
+          example: "f77270a9-b280-43e2-96e1-66c290d702b1"
       responses:
         "200":
           description: "Les documents à signer et présenter"
@@ -91,14 +91,14 @@ paths:
                 E-400-000:
                   description: "E-400-000"
                   value:
-                    - code: "E-400-000"
-                      message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
                       \ ou une erreur fonctionnelle est survenue"
                 E-400-007:
                   description: "E-400-002"
                   value:
-                    - code: "E-400-002"
-                      message: "Autre message 400"
+                  - code: "E-400-002"
+                    message: "Autre message 400"
         "401":
           description: "Acc&egrave;s refus&eacute;"
           content:
@@ -137,45 +137,45 @@ paths:
                     code: "E-500"
                     message: "Erreur serveur interne"
       security:
-        - bearerAuth: [ ]
+      - bearerAuth: []
   /cadh/v1/operations/{operation_id}/default_account:
     get:
       tags:
-        - "Récupération du numéro de compte bancaire"
+      - "Récupération du numéro de compte bancaire"
       summary: "Service de récupération du numéro de compte bancaire"
       description: "Compte bancaire rattach&eacute; au versement initial lors de l'adh&eacute;sion\
         \ <br> Temps de r&eacute;ponse maximal 0,400s."
       operationId: "getDefaultAccount"
       parameters:
-        - name: "Authorization"
-          in: "header"
-          description: "Le token pour authentifier le service appelant"
-          required: true
-          schema:
-            type: "string"
-            default: "Bearer JWT Token"
-        - name: "X-Passport"
-          in: "header"
-          description: "Le token utilisé pour propager l'identité de l'utilisateur"
-          required: true
-          schema:
-            type: "string"
-            default: "<JWT Token>"
-        - name: "Correlationid"
-          in: "header"
-          description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          default: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+          default: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
           \ des actions initiées par l’application consommatrice."
-          required: true
-          schema:
-            type: "string"
-            default: "f77270a9-b280-43e2-96e1-66c290d702b1"
-        - name: "operation_id"
-          in: "path"
-          description: "L’uuid de l'opération d'adhésion épargne"
-          required: true
-          schema:
-            type: "string"
-            default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+        required: true
+        schema:
+          type: "string"
+          default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      - name: "operation_id"
+        in: "path"
+        description: "L’uuid de l'opération d'adhésion épargne"
+        required: true
+        schema:
+          type: "string"
+          default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
       responses:
         "200":
           description: "OK"
@@ -204,14 +204,14 @@ paths:
                 E-400-000:
                   description: "E-400-000"
                   value:
-                    - code: "E-400-000"
-                      message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
                       \ ou une erreur fonctionnelle est survenue"
                 E-400-001:
                   description: "E-400-001"
                   value:
-                    - code: "E-400-001"
-                      message: "Autre message 400"
+                  - code: "E-400-001"
+                    message: "Autre message 400"
         "404":
           description: "Aucun numéro de compte ne correspond au numéro d'opération\
             \ saisi"
@@ -266,45 +266,45 @@ paths:
                     code: "E-500"
                     message: "Erreur serveur interne"
       security:
-        - bearerAuth: [ ]
+      - bearerAuth: []
   /cadh/v1/operations/{operation_id}/validity:
     get:
       tags:
-        - "Acte d'adhésion"
+      - "Acte d'adhésion"
       summary: "Renvoi la validité de l'opération"
       description: "Contr&ocirc;ler la validit&eacute; de l'op&eacute;ration d'adh&eacute;sion.\
         \ <br> Temps de r&eacute;ponse maximal 0,400s."
       operationId: "checkValidity"
       parameters:
-        - name: "Authorization"
-          in: "header"
-          description: "Le token pour authentifier le service appelant"
-          required: true
-          schema:
-            type: "string"
-            default: "Bearer JWT Token"
-        - name: "X-Passport"
-          in: "header"
-          description: "Le token utilisé pour propager l'identité de l'utilisateur"
-          required: true
-          schema:
-            type: "string"
-            default: "<JWT Token>"
-        - name: "Correlationid"
-          in: "header"
-          description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          default: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+          default: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
           \ des actions initiées par l’application consommatrice."
-          required: true
-          schema:
-            type: "string"
-            default: "f77270a9-b280-43e2-96e1-66c290d702b1"
-        - name: "operation_id"
-          in: "path"
-          description: "L’uuid de l'opération d'adhésion épargne"
-          required: true
-          schema:
-            type: "string"
-            default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+        required: true
+        schema:
+          type: "string"
+          default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      - name: "operation_id"
+        in: "path"
+        description: "L’uuid de l'opération d'adhésion épargne"
+        required: true
+        schema:
+          type: "string"
+          default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
       responses:
         "200":
           description: "OK"
@@ -325,14 +325,14 @@ paths:
                 E-400-000:
                   description: "E-400-000"
                   value:
-                    - code: "E-400-000"
-                      message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
                       \ ou une erreur fonctionnelle est survenue"
                 E-400-001:
                   description: "E-400-001"
                   value:
-                    - code: "E-400-001"
-                      message: "Autre message 400"
+                  - code: "E-400-001"
+                    message: "Autre message 400"
         "404":
           description: "Aucun numéro de compte ne correspond au numéro d'opération\
             \ saisi"
@@ -386,48 +386,48 @@ paths:
                     code: "E-500"
                     message: "Erreur serveur interne"
       security:
-        - bearerAuth: [ ]
+      - bearerAuth: []
   /cadh/v1/operations/{operation_id}/enforcement:
     put:
       tags:
-        - "Acte d'adhésion"
+      - "Acte d'adhésion"
       summary: "Effectue la mise en vigueur de la proposition."
       description: "Effectue la mise en vigueur de la proposition rattach&eacute;e\
         \ &agrave; l'id op&eacute;ration <br> Temps de r&eacute;ponse maximal 1,500s."
       operationId: "putEnforcement"
       parameters:
-        - name: "Authorization"
-          in: "header"
-          description: "Le token pour authentifier le service appelant"
-          required: true
-          schema:
-            type: "string"
-            default: "Bearer JWT Token"
-        - name: "X-Passport"
-          in: "header"
-          description: "Le token utilisé pour propager l'identité de l'utilisateur"
-          required: true
-          schema:
-            type: "string"
-            default: "<JWT Token>"
-        - name: "Correlationid"
-          in: "header"
-          description: "L’identifiant de corrélation permet d’assurer la traçabilité\
+      - name: "Authorization"
+        in: "header"
+        description: "Le token pour authentifier le service appelant"
+        required: true
+        schema:
+          type: "string"
+          default: "Bearer JWT Token"
+      - name: "X-Passport"
+        in: "header"
+        description: "Le token utilisé pour propager l'identité de l'utilisateur"
+        required: true
+        schema:
+          type: "string"
+          default: "<JWT Token>"
+      - name: "Correlationid"
+        in: "header"
+        description: "L’identifiant de corrélation permet d’assurer la traçabilité\
           \ des actions initiées par l’application consommatrice."
-          required: true
-          schema:
-            type: "string"
-            default: "f77270a9-b280-43e2-96e1-66c290d702b1"
-        - name: "operation_id"
-          in: "path"
-          description: "L’uuid de l'opération d'adhésion épargne"
-          required: true
-          schema:
-            type: "string"
-            default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
-        - name: "technical_communication_code"
-          in: "query"
-          description: "Norme groupe CAM0258: Moyen et format d'échange utilisé pour\
+        required: true
+        schema:
+          type: "string"
+          default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+      - name: "operation_id"
+        in: "path"
+        description: "L’uuid de l'opération d'adhésion épargne"
+        required: true
+        schema:
+          type: "string"
+          default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+      - name: "technical_communication_code"
+        in: "query"
+        description: "Norme groupe CAM0258: Moyen et format d'échange utilisé pour\
           \ communiquer avec le client. <br> Cette donnée étant fortement liée au\
           \ \"signature_type\" il est nécessaire de remplir les deux si vous voulez\
           \ la remplir. <br> Si ces données ne sont pas remplis, les valeurs par dé\
@@ -439,21 +439,21 @@ paths:
           \ sur un ordinateur individuel non apparenté à un téléphone mobile) <br>\
           \ &nbsp; 180: Internet mobile (accès au réseau depuis un navigateur web\
           \ (protocole Internet) installé sur le téléphone mobile de l’utilisateur)"
-          required: false
-          schema:
-            type: "string"
-          example: 170
-        - name: "signature_type"
-          in: "query"
-          description: "Norme groupe CAM0309: Types de signature disponibles. <br> Cette\
+        required: false
+        schema:
+          type: "string"
+        example: 170
+      - name: "signature_type"
+        in: "query"
+        description: "Norme groupe CAM0309: Types de signature disponibles. <br> Cette\
           \ donnée étant fortement liée au \"technical_communication_code\" il est\
           \ nécessaire de remplir les deux si vous voulez la remplir. <br> Valeurs\
           \ supportées: <br> &nbsp; 1: Signature manuscrite <br> &nbsp; 4: Signature\
           \ électronique"
-          required: false
-          schema:
-            type: "string"
-          example: 4
+        required: false
+        schema:
+          type: "string"
+        example: 4
       responses:
         "200":
           description: "OK"
@@ -477,14 +477,14 @@ paths:
                 E-400-000:
                   description: "E-400-000"
                   value:
-                    - code: "E-400-000"
-                      message: "Un ou plusieurs paramètres d'entrée sont incorrects\
+                  - code: "E-400-000"
+                    message: "Un ou plusieurs paramètres d'entrée sont incorrects\
                       \ ou une erreur fonctionnelle est survenue"
                 E-400-001:
                   description: "E-400-001"
                   value:
-                    - code: "E-400-001"
-                      message: "Autre message 400"
+                  - code: "E-400-001"
+                    message: "Autre message 400"
         "401":
           description: "Acc&egrave;s refus&eacute;"
           content:
@@ -539,7 +539,7 @@ paths:
                     code: "E-500"
                     message: "Erreur serveur interne"
       security:
-        - bearerAuth: [ ]
+      - bearerAuth: []
 components:
   schemas:
     CaaErrorMessage:
@@ -553,1236 +553,14 @@ components:
           type: "string"
           description: "Message d'erreur fonctionnel ou technique"
           example: "<Erreur fonctionnelle> | Erreur serveur interne"
-    CustomerDTOV1:
-      title: "CustomerDTOV1"
-      type: "object"
-      description: "Données relatives au client"
-      required:
-        - "id"
-        - "uom_code"
-        - "agency_code"
-      properties:
-        id:
-          type: "string"
-          description: "Identifiant du client"
-          example: 9000035679
-          pattern: "^(?!\\s*$).+"
-        uom_code:
-          type: "string"
-          description: "Code caisse regionale sur 5 chiffres"
-          example: 20000
-          pattern: "^(?!\\s*$).+"
-    ActorDTOV1:
-      title: "ActorDTOV1"
-      type: "object"
-      description: "Données de l'utilisateur à l'initiative de l'appel"
-      required:
-        - "id"
-        - "uom_code"
-        - "agency_code"
-        - "type"
-      properties:
-        id:
-          type: "string"
-          description: "Matricule"
-          example: "01"
-          pattern: "^(?!\\s*$).+"
-        uom_code:
-          type: "string"
-          description: "Code caisse regionale sur 5 chiffres"
-          example: 20000
-          pattern: "^(?!\\s*$).+"
-        agency_code:
-          type: "string"
-          description: "Code agence de connexion sur 5 chiffres"
-          example: "07612"
-          pattern: "^(?!\\s*$).+"
-        type:
-          type: "string"
-          enum:
-            - "01"
-            - "02"
-            - "03"
-            - "04"
-            - "05"
-          description: "Type. Valeurs possibles:\n  -  01 : conseiller/agent \n -\
-            \ 02 : client/personne physique connue du système d'information \n - 03\
-            \ : personne physique non connue du système d'information (intervenant\
-            \ au travers d'un contrat d'entreprise) \n - 04 : prospect \n  -  05 :\
-            \ traitement informatique non déclenché par un humain (automate)"
-          example: "01"
-    RecommendationAssessmentDTOV1:
-      title: "RecommendationAssessmentDTOV1"
-      type: "object"
-      description: "Données relatives au Bilan Conseil (BC)"
-      required:
-        - "id"
-        - "operation_number"
-        - "distribution_situation_code"
-        - "is_signed"
-      properties:
-        id:
-          type: "string"
-          description: "Identifiant du bilan conseil"
-          example: 123456789
-          pattern: "^(?!\\s*$).+"
-        operation_number:
-          type: "string"
-          description: "Numéro de l'opération du bilan conseil"
-          example: 10306
-          pattern: "^(?!\\s*$).+"
-        distribution_situation_code:
-          type: "string"
-          enum:
-            - "01"
-            - "02"
-          description: "Contexte de la signature associé au choix du client. Valeurs\
-            \ possibles:\n  - 01: Client présent\n - 02: Vente à distance"
-          example: "01"
-        is_signed:
-          type: "boolean"
-          description: "Le bilan conseil / ticket simm a été signé ou non"
-    ContractDTOV1:
-      title: "ContractDTOV1"
-      type: "object"
-      description: "Données relatives au contrat"
-      required:
-        - "id"
-        - "uc_management_expense_rate"
-        - "euro_management_expense_rate"
-        - "free_deposit_ncr_fees_rate"
-        - "has_marketable_management_expense"
-        - "has_consulting_service"
-        - "offer"
-        - "initial_payment"
-        - "investment_repartitions"
-        - "beneficiary_clause"
-      properties:
-        id:
-          type: "string"
-          description: "Identifiant du contrat"
-          example: 98751867433
-          pattern: "^(?!\\s*$).+"
-        accounting_decree_date:
-          type: "string"
-          format: "date-time"
-          description: "Date arrêté comptable pour les clients ayant choisis d'être\
-            \ en exercice décalé. (si PER)"
-          example: "2023-03-08T10:39:24"
-        retirement_regime_enrollment_date:
-          type: "string"
-          format: "date-time"
-          description: "Date prévue de départ à la retraite (si PER)"
-          example: "2023-03-08T10:39:24"
-        insured_member_quality_code:
-          type: "string"
-          description: "Code qualité de l'adhérent (si PER) : \n - 1 : Chef d'exploitation\
-            \ \n - 2 : Conjoint d'agriculteur \n - 3 : Aide familial \n - 4 : Agriculteur\
-            \ retraité  \n - 5 : Commerçant \n - 6 : Artisan \n - 7 : Profession libé\
-            rale ou indépendante   \n - 8 : Chef d'entreprise \n - 9 : Sans objet\
-            \   \n - A : Auto-entrepreneur \n - B : Jeune installé \n - C : Retraité\
-            \ professionnel   \n - D : Conjoint du professionnel \n - E : Enfant du\
-            \ professionnel   \n - F : Autre professionnel \n - G : conjoint salarié\
-            \ de l'exploitation  \n - H : Salarié de l’exploitation   \n - I : Travailleur\
-            \ Non Salarié non agricole \n - J : Conjoint collaborateur  \n - K : Chef\
-            \ d’exploitation ou d’entreprise agricole  \n - L : Enfant de l’agriculteur\
-            \ \n - M : Autre agriculteur \n - N : Particulier \n - O : PRO-BIC/BNC\
-            \ \n - P : PRO-AUTRES \n - Q : AGRI-CHEF D'EXPLOITATION OU D'ENTREPRISE\
-            \ AGRICOLE \n - R : AGRI-AIDE FAMILIALE \n - S : AGRI-CONJOINT COLLABORATEUR\
-            \ \n - T : MICRO ENTREPRENEUR \n - U : DIRIGEANTS ASSIMILES SALARIES \n\
-            \ - V : DIRIGEANTS NON-SALARIES NON MADELIN"
-          example: "C"
-          pattern: "^(?!\\s*$).+"
-        management_profil_code:
-          type: "string"
-          description: "Code du profil de risque du client"
-          example: 2
-          pattern: "^(?!\\s*$).+"
-        management_profil_label:
-          type: "string"
-          description: "Libellé du profil de risque du client"
-          example: "Prudent"
-          pattern: "^(?!\\s*$).+"
-        tax_framework_code:
-          type: "string"
-          description: "code du cadre fiscal :\n - 01 : Epargne handicap  \n - 02\
-            \ : Rente survie  \n - 03 : Contrat de capitalisation nominatif \n - 04\
-            \ : Contrat de capitalisation anonyme \n - 05 : Alsace / Moselle\n - 06\
-            \ : Versements volontaires déductibles \n - 07 : Versements volontaires\
-            \ non déductibles / Epargne salariale"
-          example: "01"
-          pattern: "^(?!\\s*$).+"
-        fees_discount_reason_code:
-          type: "integer"
-          description: "Code du motif de la décôte du taux de frais standard sur VI\
-            \ ou VR. A renseigner uniquement si le conseiller a saisi une décôte par\
-            \ rapport au taux standard proposé."
-          example: 3
-        uc_management_expense_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais de gestion sur l'encours UC (Obligatoire pour\
-            \ la gamme UC)"
-          example: 0.95
-        euro_management_expense_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais de gestion sur l'encours Euro (Obligatoire pour\
-            \ la gamme UC)"
-          example: 0.8
-        free_deposit_ncr_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de Frais standard NCR sur VL."
-          example: 3.2
-        has_marketable_management_expense:
-          type: "boolean"
-          description: "Booléen indiquant la présence de frais de gestion négociable"
-        has_consulting_service:
-          type: "boolean"
-          description: "Booléen indiquant la présence du service conseil"
-        offer:
-          $ref: "#/components/schemas/OfferDTOV1"
-        initial_payment:
-          $ref: "#/components/schemas/InitialPaymentDTOV1"
-        programmed_deposit:
-          $ref: "#/components/schemas/ProgrammedDepositDTOV1"
-        rpp:
-          $ref: "#/components/schemas/RppDTOV1"
-        investment_repartitions:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/InvestmentRepartitionDTOV1"
-        beneficiary_clause:
-          $ref: "#/components/schemas/BeneficiaryClauseDTOV1"
-        death_guarantee:
-          $ref: "#/components/schemas/DeathGuaranteeDTOV1"
-        financial_options:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/FinancialOptionDTOV1"
-        mandate:
-          $ref: "#/components/schemas/MandateDTOV1"
-    OfferDTOV1:
-      title: "OfferDTOV1"
-      type: "object"
-      description: "Donnée relatives à l'offre"
-      required:
-        - "code"
-        - "label"
-        - "product"
-      properties:
-        code:
-          type: "string"
-          description: "identifiant de l'offre"
-          example: "00527"
-          pattern: "^(?!\\s*$).+"
-        label:
-          type: "string"
-          description: "Libellé de l'offre"
-          example: "LCL ACUITY EVOLUTION TRANSFERT"
-          pattern: "^(?!\\s*$).+"
-        custom_solution_code:
-          type: "string"
-          description: "Code solution personnalisée : \n - 01 : Faire un placement\
-            \ \n - 02 : Préparer votre retraite \n - 03 : Préparer l'avenir des proches\
-            \ \n - 04 : Percevoir un revenu régulier \n - 99 : A définir"
-          example: "01"
-        contract_id:
-          type: "string"
-          description: "Identifiant contrat de niveau offre. A renseigner dans le\
-            \ cas d'une adhésion dans une offre existante (offre multi-produit, multi\
-            \ détention)"
-          example: "O9999999540"
-        product:
-          $ref: "#/components/schemas/ProductDTOV1"
-    ProductDTOV1:
-      title: "ProductDTOV1"
-      type: "object"
-      description: "Donnée relatives au produit"
-      required:
-        - "code"
-        - "label"
-      properties:
-        code:
-          type: "string"
-          description: "Code produit"
-          example: "HG6831"
-          pattern: "^(?!\\s*$).+"
-        label:
-          type: "string"
-          description: "libellé du produit"
-          example: "LCL ACUITY EVOLUTION"
-          pattern: "^(?!\\s*$).+"
-        offer_function_code:
-          type: "string"
-          description: "Code option 'offre-produit' sélectionnée: Code spécifiant\
-            \ le fonctionnement d'un produit au sein d'une offre L'option est rattaché\
-            e à un mode de gestion."
-          example: "OPT025"
-        offer_function_label:
-          type: "string"
-          description: "Libellé de l'option offre-produit (formule)"
-          example: "Access"
-          pattern: "^(?!\\s*$).+"
-        range_code:
-          type: "string"
-          description: "code type/gamme de produit : \n - F : Epargne en Unités de\
-            \ Compte \n - N : Epargne en numéraire \n  - I : Rente \n  - A : Prévoyance\
-            \ Santé de type rente invalidité (Dépendance) \n - 1 : Prévoyance Santé\
-            \ de type indemnités journalières \n - 8 : Prévoyance Temporaire Décè\
-            s \n - O : Financement et Assistance Obsèques \n - 0 : Prévoyance de type\
-            \ rente générique \n - J : Prévoyance de type Indemnité journalière gé\
-            nérique \n - V : Prévoyance de type service générique \n - Q : Préovyance\
-            \ de type Capital générique"
-          example: "F"
-          pattern: "^(?!\\s*$).+"
-    InitialPaymentDTOV1:
-      title: "InitialPaymentDTOV1"
-      type: "object"
-      description: "Données relatives au versement initial (VI)"
-      required:
-        - "amount"
-        - "ncr_fees_rate"
-        - "cr_fees_rate"
-        - "specific_fees_rate"
-        - "polco_outstanding_amount"
-        - "is_polco_eligible"
-        - "origin_type_code"
-        - "account"
-      properties:
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant brut vers. Initial (en €)"
-          example: 5000
-        ncr_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais standard NCR sur VI"
-          example: 2.5
-        cr_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais standard CR sur VI"
-          example: 0
-        specific_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais à appliquer sur VI (peut-être différent du taux\
-            \ de frais standard si le conseiller saisi une décôte)"
-          example: 2.4
-        polco_outstanding_amount:
-          type: "number"
-          format: "double"
-          description: "Encours client POLCO (Politique commerciale) pour VI"
-          example: 1000
-        is_polco_eligible:
-          type: "boolean"
-          description: "Booléen indiquant l'éligibilité au taux POLCO (Politique commerciale)\
-            \ sur VI"
-        origin_type_code:
-          type: "string"
-          description: "Code type de provenance des fonds du versement initial :\n\
-            \ - 01 : Versement standard \n - 02 : Réemploi assurance vie \n - 03 :\
-            \ Réemploi de titres de capitalisation \n - 04 : Offre PBAO \n - 05 :\
-            \ Transfert entrant produit réglementé \n - 06 : Reprise Concurrence \n\
-            \ - 07 : Echéance fiscale de PEP PREDICA \n - 08 : PEP CA \n - 09 : PEA\
-            \ CA \n - 10 : orchestral CA \n - 11 : Origine hors CA \n - 12 : Rente\
-            \ issue de sinistre \n - 13 : Transformation DSK police en FF \n - 14\
-            \ : Transformation DSK police en UC \n - 15 : Reprise contrat EUROPAVIE\
-            \ \n - 16 : Rachat de droits \n - 17 : Avenant de remplacement \n - 18\
-            \ : Opportunité \n - 19 : Reprise IRV \n - 20 : Bon sur mesure ou réé\
-            dition \n - 21: Rente de réversion \n - 22 : Rente annuités garanties\
-            \ / réversion \n - 23 : Rente annuités garanties \n - 24 : Pension de\
-            \ veuvage \n - 25 : Abondement Gulliver \n - 26 : Versement Prestation\
-            \ - UL \n - 27 : Transmission de patrimoine \n - 28 : PEL échus \n - 29\
-            \ : Transfert FOURGOUS \n - 30 : GARANTIE PREVOYANCE \n - 31 : GARANTIE\
-            \ DECES POUR DEUX \n - 32 : ABONDEMENT PREDICA \n - 33 : DECO AUTRE SUPPORT\
-            \  \n - 34 : GESTION CONSEILLEE  \n - 35 : SERVICE CONSEIL  \n - 36 :\
-            \ VERSEMENT COMPLEMENTAIRE   \n - 39 : TRANSFERT INTERNE REGLEMENTE VI\
-            \ VVD  \n - 38 : TRANSFERT INTERNE REGLEMENTE VL VVD  \n - 72 : STANDARD\
-            \ VVND  \n - 73 : TRANSF REGL. INTERNE ASS VVD \n - 74 : TRANSF REGL.\
-            \ INTERNE ASS VVND  \n - 75 : TRANSF REGL. INTERNE ASS ESE  \n - 76 :\
-            \ TRANSF REGL. INTERNE ASS ESNE \n - 77 : TRANSF REGL. INTERNE ASS VO\
-            \ \n - 83 : TRANSF REGL. EXTERNE VVD \n - 84 : TRANSF REGL. EXTERNE VVND\
-            \ \n - 85 : TRANSF REGL. EXTERNE ESE \n - 86 : TRANSF REGL. EXTERNE ESNE\
-            \ \n - 87 : TRANSF REGL. EXTERNE VO"
-          example: "01"
-        account:
-          allOf:
-            - $ref: "#/components/schemas/AccountDTOV1"
-            - type: "object"
-            - required:
-                - "lender_id"
-    ProgrammedDepositDTOV1:
-      title: "ProgrammedDepositDTOV1"
-      type: "object"
-      description: "Données relatives au versement régulier (VR). A renseigner dans\
-        \ le cas d'un versement régulier"
-      required:
-        - "periodicity_code"
-        - "amount"
-        - "ncr_fees_rate"
-        - "cr_fees_rate"
-        - "specific_fees_rate"
-        - "polco_outstanding_amount"
-        - "is_polco_eligible"
-        - "has_annual_revaluation"
-        - "account"
-      properties:
-        periodicity_code:
-          type: "string"
-          description: "Code de periodicite:\n - J : Journalière \n - M : Mensuelle\
-            \ \n - T : Trimestrielle \n - S : Semestrielle \n - A : Annuelle \n -\
-            \ U : Unique \n - PO : Fréquence variable"
-          example: "M"
-          pattern: "^(?!\\s*$).+"
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant brut versements periodiques (en €)"
-          example: 3000
-        ncr_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais standard NCR sur VR"
-          example: 2.5
-        cr_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais standard CR sur VR"
-          example: 0
-        specific_fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais à appliquer sur VR (peut-être différent du taux\
-            \ de frais standard si le conseiller saisi une décôte)"
-          example: 2.4
-        polco_outstanding_amount:
-          type: "number"
-          format: "double"
-          description: "Encours client POLCO (Politique commerciale) pour VR"
-          example: 1000
-        is_polco_eligible:
-          type: "boolean"
-          description: "Booléen indiquant l'éligibilité au taux POLCO (Politique commerciale)\
-            \ sur VR"
-        has_annual_revaluation:
-          type: "boolean"
-          description: "Booléen indiquant la présence de revalorisation annuelle pour\
-            \ le versement régulier"
-        revaluation_amount:
-          type: "number"
-          format: "double"
-          description: "montant de revalorisation (en €) (à renseigner si has_annual_revaluation\
-            \ = true, soit le montant soit le taux doit être renseigné)"
-          example: 500
-        revaluation_rate:
-          type: "number"
-          format: "double"
-          description: "taux de revalorisation (à renseigner si has_annual_revaluation\
-            \ = true, soit le montant soit le taux doit être renseigné)"
-          example: 1.5
-        account:
-          allOf:
-            - $ref: "#/components/schemas/AccountDTOV1"
-            - type: "object"
-            - required:
-                - "lender_id"
-    RppDTOV1:
-      title: "RppDTOV1"
-      type: "object"
-      description: "Données relatives aux rachats partiels programmés. A renseigner\
-        \ si présence de rachats partiels programmés"
-      required:
-        - "type"
-        - "periodicity_code"
-        - "operation_taxation_code"
-        - "first_day"
-        - "amount"
-        - "amount_indicator_code"
-        - "account"
-      properties:
-        type:
-          type: "string"
-          description: "Type de RPP :\n - 01 : Libre revenus - Fixe \n - 02 : Capital\
-            \ protégé - VA \n - 03 : Capital protégé - Versements\n - 04 : Prélèvemt\
-            \ décès - Lion Avenir \n - 05 : Prélèvemt décès - Familio \n - 06 : Capital\
-            \ protégé - VA+Versement \n - 99 : Capital Fractionné - Pacte"
-          example: "01"
-          pattern: "^(?!\\s*$).+"
-        periodicity_code:
-          type: "string"
-          description: "Code périodicité RPP :\n - J : Journalière \n - M : Mensuelle\
-            \ \n - T : Trimestrielle \n - S : Semestrielle \n - A : Annuelle \n -\
-            \ U : Unique \n - PO : Fréquence variable"
-          example: "M"
-        operation_taxation_code:
-          type: "string"
-          example: "01"
-          description: "Code type option fiscale: \n - IR :    Impôt sur le revenu\
-            \ \n - PFL :    Prélèvement forfaitaire libératoire \n - EXOD :    Exoné\
-            ration liée à la durée du contrat \n - EXOMIC :    Exonération pour incitation\
-            \ à la consommation \n - EXOFM :    Exonération cas de force majeure \n\
-            \ - TRANSF :    Pas de fiscalité appliquée \n - NR :    Fiscalité non\
-            \ résident \n - EXORV :    Exonération fiscale \n - EXODSK :    Transformation\
-            \ DSK \n - ANONYM :    Sortie anonyme      \n - EXOTF :    Exonération,\
-            \ Décès Terme Fixe \n - PFO :    Prélèvement forfaitaire obligatoire"
-        first_day:
-          type: "integer"
-          description: "Jour du pp"
-          example: 10
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant des RPP (en €)"
-          example: 500
-        amount_indicator_code:
-          type: "string"
-          example: "B"
-          description: "Code Indicateur brut/net :\n - B : Brut \n - N : Net"
-        account:
-          allOf:
-            - $ref: "#/components/schemas/AccountDTOV1"
-            - type: "object"
-    InvestmentRepartitionDTOV1:
-      title: "InvestmentRepartitionDTOV1"
-      type: "object"
-      description: "Données relatives à la répartition d'un investissement"
-      required:
-        - "code"
-        - "amount"
-        - "pockets"
-      properties:
-        code:
-          type: "string"
-          description: "Code de l'investissement: \n - 01 Versement Initial F \n -\
-            \ 03 Versement Régulier F \n - 04 Ecrêtage F \n - 12 Rachat partiel programmé\
-            \ sans gestion du prorata F \n - 13 Rachat partiel programmé au prorata\
-            \ F \n"
-          example: "01"
-          pattern: "^(?!\\s*$).+"
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant brut de l'investissement (en €)"
-          example: 5000
-          pattern: "^(?!\\s*$).+"
-        pockets:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/PocketDTOV1"
-    PocketDTOV1:
-      title: "PocketDTOV1"
-      type: "object"
-      description: "Données relatives à la(aux) poche(s) sur la(les)quelle(s) est(sont)\
-        \ réparti(s) l'investissement"
-      required:
-        - "type_code"
-        - "code"
-        - "label"
-        - "supports"
-      properties:
-        type_code:
-          type: "string"
-          description: "Code type poche : \n - MA Mandat \n - EC Euro Croissance \n\
-            \ - PI Pilotée \n - AU Autre"
-          example: "MA"
-          pattern: "^(?!\\s*$).+"
-        code:
-          type: "string"
-          description: "Code de la poche"
-          example: "TODO"
-          pattern: "^(?!\\s*$).+"
-        label:
-          type: "string"
-          description: "Libellé de la poche"
-          example: "TODO"
-          pattern: "^(?!\\s*$).+"
-        rate:
-          type: "number"
-          format: "double"
-          description: "Taux investi sur la poche (en %). \n Soit le montant soit\
-            \ le taux doit être renseigné"
-          example: 100
-          pattern: "^(?!\\s*$).+"
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant investi sur la poche (en €). \n Soit le montant soit\
-            \ le taux doit être renseigné."
-          example: 5000
-          pattern: "^(?!\\s*$).+"
-        supports:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/SupportDTOV1"
-    SupportDTOV1:
-      title: "SupportDTOV1"
-      type: "object"
-      description: "Données relatives à(aux) objet(s) sur le(s)quel(s) est(sont) ré\
-        parti(s) le montant de l'investissement"
-      required:
-        - "code"
-        - "isin_code"
-        - "label"
-        - "amf_typology_label"
-      properties:
-        code:
-          type: "string"
-          description: "Code du support"
-          example: "001116"
-        isin_code:
-          type: "string"
-          description: "Code Isin du support"
-          example: "FR001400BL08"
-        label:
-          type: "string"
-          description: "Libellé du support"
-          example: "IMPACT TRANSITION BY CA SEPT 2022"
-          pattern: "^(?!\\s*$).+"
-        rate:
-          type: "number"
-          format: "double"
-          description: "Taux investi sur le support (en %). \n Soit le montant soit\
-            \ le taux doit être renseigné"
-          example: 100
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant investi sur le support (en €) \n Soit le montant soit\
-            \ le taux doit être renseigné"
-          example: 1000
-        amf_typology_label:
-          type: "string"
-          description: "Libellé classe AMF"
-          example: "Immobilier"
-        type_code:
-          type: "string"
-          description: "Code type de support spécifique : \n - U : UC NON FAF \n -\
-            \ F : UC FAF \n - M : MONETAIRE \n - C : EUROCROISSANCE \n - Z : PART\
-            \ PM EUROCROISSANCE \n - E : PART PTD EUROCROISSANCE \n - P : Support\
-            \ point \n - 8 : Euro 98"
-          example: "U"
-        nature_code:
-          type: "string"
-          description: "Code nature du support : \n - EE : European equity (Actions\
-            \ européennes) \n - FE : French equity (Actions françaises) \n - IE :\
-            \ International equity (Actions internationales) \n - DI : Diversifié\
-            \ \n - FF : Fonds à formule \n - ME : Monetary euro (Monétaire euro) \n\
-            \ - EU : Euro (Numéraire) \n - IB : International bonds (Obligations internationales)\
-            \ \n - EB : Europeen bonds (Obligations européennes) \n - UO : UC Obligataire\
-            \ \n - EC : Eurocroissance \n - IS : SCPI \n - IO : OPCI \n - IC : SCI\
-            \ \n - TC : Titre de créance \n- SF : SAF Monétarisé \n - OE : Action\
-            \ Euro \n - PR : Point Retraite \n - ET : Exchange-Traded Funds"
-          example: "IS"
-    BeneficiaryClauseDTOV1:
-      title: "BeneficiaryClauseDTOV1"
-      type: "object"
-      description: "Données relatives à la clause bénéficiaire"
-      required:
-        - "type_code"
-        - "label"
-      properties:
-        type_code:
-          type: "string"
-          description: "Code type de clause beneficiaire :\n - 01 : Adhérent \n -\
-            \ 02 : Mon conjoint, à défaut mes enfants nés, à naître, vivants ou repré\
-            sentés, à défaut mes héritiers \n - 03 : Texte libre\n - 04 : Text not\
-            \ defined \n - 05 : Text not defined \n - 06 : Text not defined \n - 07\
-            \ : Text not defined \n - 08 : Mon enfant handicapé (rente survie) \n\
-            \ - 09 : Les bénéficiaire désignés par vous lors de votre dernière demande\
-            \ \n - 10 : Mes héritiers \n - 11 : Mon conjoint, non séparé de corps,\
-            \ ou le partenaire avec qui je suis lié par un pacte civil de solidarité\
-            ; à défaut, mes enfants nés, à naitre, vivants ou représentés ; à défaut\
-            \ mes héritiers.\n - 21 : Le conjoint de l'adhérent assuré non séparé\
-            \ de corps ou le partenaire lié à l'assuré par un pacte civil de solidarité\
-            \ ; à défaut les enfants de l'adhérent assuré, nés ou à naître, vivants\
-            \ ou représentés ; à défaut les héritiers de l'adhérent assuré\n - 22\
-            \ : Les enfants de l'adhérent assuré, nés ou à naître, vivants ou repré\
-            sentés ; à défaut les héritiers de l'adhérent assuré\n - 23 : L'adhérent\
-            \ survivant ; à défaut les enfants des adhérents-assurés, nés ou à naî\
-            tre, vivants ou représentés ; à défaut les héritiers de l'assuré décé\
-            dé.\n - 24 : Les enfants des adhérents-assurés, nés ou à naître, vivants\
-            \ ou représentés ; à défaut les héritiers de l'assuré décédé\n - 50 :\
-            \ L'assuré(e).\n - 51 : Le conjoint de l'assuré, non séparé de corps,\
-            \ à défaut les descendants  de l'assuré,nés ou à naître, à défaut les\
-            \ héritiers de l'assuré \n - 52 : Les descendants de l'assuré, nés ou\
-            \ à naître, à défaut les héritiers de l'assuré \n - 53 : Le Crédit Lyonnais\
-            \ pour toutes les sommes qui lui sont dues. Le solde  éventuel est versé\
-            \ au conjoint de l'assuré(e) non séparé de corps ; à défaut aux enfants\
-            \ de l'assuré(e) nés ou à naître, vivants ou représentés ; à défaut aux\
-            \ héritiers de l'assuré(e). \n - 54 : Le Crédit Lyonnais pour toutes les\
-            \ sommes qui lui sont dues. Le solde éventuel est versé à l'assuré. \n\
-            \ - 55 : Le Crédit Lyonnais pour toutes les sommes qui lui sont dues.\
-            \ Le solde éventuel est versé à l'adhérent. \n - 56 : Le Crédit Lyonnais\
-            \ pour toutes les sommes qui lui sont dues. Le solde  éventuel est versé\
-            , en cas de vie à l'assuré(e), et, en cas de décés, au   conjoint de l'assuré\
-            (e) non séparé de corps, à défaut aux descendants de l'assuré(e), nés\
-            \ ou à naître, vivants ou représentés, à défaut aux héritiers de l'assuré\
-            (e). \n - 57 : Le conjoint de l'assuré(e), non séparé(e) de corps, à dé\
-            faut les enfants de l'assuré(e), nés ou à naître, vivants ou représenté\
-            s, à défaut les héritiers de l'assuré(e). \n - 58 : Les enfants de l'assuré\
-            (e), nés ou à naître, vivants ou représentés,  à défaut les héritiers\
-            \ de l'assuré(e). \n - 59 : Les bénéficiaire désignés par vous lors de\
-            \ votre dernière demande \n - 60 : Le conjoint de l'assuré(e), à défaut\
-            \ les enfants de l'assuré(e) mineurs ou handicapés à la date du décés,\
-            \ sans limite d'âge, et par part égales, à défaut les enfants de l'assuré\
-            (e), vivants ou représentés, à défaut les héritiers de l'assuré(e). \n\
-            \ - 61 : Le porteur du bon. \n - 62 : L'assuré bénéficiaire \n - 63 :\
-            \ Le conjoint de l'assuré bénéficiaire, non séparé de corps, à défaut\
-            \ les enfants de l'assuré bénéficiaire, nés ou à naître, vivants ou repré\
-            sentés, à défaut les héritiers de l'assuré bénéficiaire. \n - 64 : Les\
-            \ enfants de l'assuré bénéficiaire, nés ou à naître, vivants ou  repré\
-            sentés, à défaut les héritiers de l'assuré bénéficiaire. \n - 65 : L'adhé\
-            rent assuré. \n - 66 : Le conjoint de l'adhérent assuré, non séparé de\
-            \ corps, à défaut les enfants de l'adhérent assuré, nés ou à naître, vivants\
-            \ ou représentés, à  défaut les héritiers légaux de l'adhérent assuré\
-            . \n - 67 : Les enfants de l'adhérent assuré, nés ou à naître, vivants\
-            \ ou  représentés, à défaut les héritiers légaux de l'adhérent assuré\
-            . \n - 68 : La Société de Crédit pour les sommes susceptibles de lui ê\
-            tre dues. Le solde éventuel est versé, en cas de vie, à l'assuré(e), et,\
-            \ en cas de décès, au conjoint de l'assuré(e), non séparé de corps, à\
-            \ défaut aux descendants de l'assuré(e), nés ou à naître, vivants ou repré\
-            sentés, à défaut, aux héritiers de l'assuré(e).  \n - 69 : Les salarié\
-            s de l'entreprise adhérente, conformément aux engagements définis au contrat.\
-            \ \n - 70 : Le(s) bénéficiaire(s) désigné(s) sur le certificat d'adhé\
-            sion \n - 71 : La Banque Laydernier pour toutes les sommes qui lui sont\
-            \ dues. Le solde éventuel est versé, en cas de vie à l'assuré(e), et ,\
-            \ en cas de décès, au conjoint de l'assuré(e) non séparé de corps, à dé\
-            faut aux descendants de  l'assuré(e), nés ou à naître, vivants ou repré\
-            sentés, à défaut aux héritiers de l'assuré(e). \n - 72 : Pas de réversion.\
-            \ \n - 73 : Le salarié affilié \n - 74 : Le conjoint du salarié affilié\
-            , non séparé de corps, à défaut les  enfants du salarié affilié, nés ou\
-            \ à naître, vivants ou représentés, à défaut les héritiers du salarié\
-            \ affilié. \n - 75 : Les enfants du salarié affilié, nés ou à naître,\
-            \ vivants ou représentés, à défaut les héritiers du salarié affilié. \n\
-            \ - 76 : La Banque de la Réunion pour toutes les sommes qui lui sont dues.\
-            \ Le  solde éventuel est versé, en cas de vie à l'assuré(e), et, en cas\
-            \ de décès,  au conjoint de l'assuré(e) non séparé de corps; à défaut\
-            \ aux descendants de   l'assuré(e), nés ou à naitre, vivants ou repré\
-            sentés; à défaut aux héritiers  de l'assuré(e). \n - 77 : Le Crédit Lyonnais\
-            \ pour toutes les sommes qui lui sont dues. Le solde  éventuel est versé\
-            \ aux enfants de l'assuré(e), nés ou à naître, vivants ou représentés\
-            \ ; à défaut aux héritiers de l'assuré(e). \n - 78 : La Banque de la Ré\
-            union pour toutes les sommes qui lui sont dues. Le  solde éventuel est\
-            \ versé au conjoint de l'assuré(e) non séparé de corps ; à   défaut aux\
-            \ enfants de l'assuré(e) nés ou à naître, vivants ou représentés ;  à\
-            \ défaut aux héritiers de l'assuré(e). \n - 79 : La Banque de la Réunion\
-            \ pour toutes les sommes qui lui sont dues. Le solde éventuel est versé\
-            \ aux enfants de l'assuré(e), nés ou à naître, vivants ou représentés\
-            \ ; à défaut aux héritiers de l'assuré(e). \n - 80 : Le conjoint de l'assuré\
-            , non séparé de corps, à défaut les descendants de l'assuré, nés ou à\
-            \ naître, à défaut ses héritiers. \n - 81 : En l'absence de bénéficiaire\
-            \ à la date de versement du capital, celui-ci sera alors versé à l'assuré\
-            , à défaut aux héritiers de l'assuré. \n - 82 : En l'absence de bénéficiaire\
-            \ à l'échéance de votre contrat, le capital  sera versé aux héritiers\
-            \ du bénéficiaire. \n - 83 : Le conjoint de l'assuré(e), non séparé(e)\
-            \ de corps, à défaut les enfants de l'assuré(e), nés ou à naître, vivants\
-            \ ou représentés, à défaut  les héritiers de l'assuré(e). Lors de la ré\
-            alisation du risque, si le bénéficiaire est un enfant de moins de 25 ans,\
-            \ la prestation sera versée sous forme d'une rente éducation. \n - 84\
-            \ : Les enfants de l'assuré(e), nés ou à naître, vivants ou représenté\
-            s,  à défaut les héritiers de l'assuré(e). Lors de la réalisation du risque,\
-            \ si le bénéficiaire est un enfant de moins de 25 ans, la prestation sera\
-            \ versée sous forme d'une rente éducation. \n - 85 : Les enfants de l'assuré\
-            (e), nés ou à naître, vivants ou représentés ; à défaut le conjoint de\
-            \ l'assuré non séparé de corps, à défaut les héritiers de l'assuré(e).\
-            \ \n - 86 : Les héritiers légaux. \n - 87 : Le conjoint de l'assuré(e),\
-            \ à défaut le(s) enfant(s) à charge de  l'assuré(e) par parts égales jusqu'à\
-            \ leur 25 éme anniversaire. \n - 88 : Le conjoint de l'adhérent-assuré\
-            , non séparé de corps, ou le partenaire  lié à l'adhérent assuré par un\
-            \ pacte civil de solidarité ; à défaut les enfants de l'adhérent-assuré\
-            , nés ou à naitre, vivants ou représentés ; à défaut les héritiers de\
-            \ l'adhérent-assuré. \n - 92 : L'entreprise de pompes funèbres ou la personne\
-            \ qui a réglé mes obsèques à hauteur de la facture, pour le surplus mon\
-            \ conjoint, ou le partenaire avec  qui je suis lié par un pacte civil\
-            \ de solidarité, à défaut mes héritiers. \n - 93 : Le conjoint de l'assuré\
-            , non séparé de corps, ou le partenaire lié à l'assuré par un pacte civil\
-            \ de solidarité ; à défaut les enfants de l'assuré, nés ou à naître, vivants\
-            \ ou représentés ; à défaut les héritiers de l'assuré. \n - 97 : Les enfants\
-            \ de l'assuré, nés ou à naître, vivants ou représentés, à défaut les hé\
-            ritiers de l'assuré. \n - 98 : Les enfants de l'assuré, nés ou à naître,\
-            \ vivants ou représentés, à défaut Le conjoint de l'assuré, non séparé\
-            \ de corps, ou le partenaire lié à l'assuré par un pacte civil de solidarité\
-            , à défaut les héritiers de l'assuré.  \n - 94 : Les enfants de l'adhé\
-            rent-assuré, nés ou à naitre, vivants ou représentés; à défaut le conjoint\
-            \ de l'adhérent-assuré, non séparé de corps, ou le partenaire lié à l'adhé\
-            rent-assuré par un pacte civil de solidarité, à défaut les héritiers de\
-            \ l'adhérent-assuré. \n - 95 : Les enfants de l'adhérent-assuré, nés ou\
-            \ à naitre, vivants ou représentés; à défaut les héritiers de l'adhérent-assuré\
-            . \n - 96 : L'entreprise des pompes funèbres ou la personne qui a réglé\
-            \ les obsèques à hauteur de la facture, pour le surplus.  \n - 89 : Le\
-            \ conjoint de l'adhérent-assuré, non séparé de corps, ou le partenaire\
-            \ lié à l'adhérent-assuré par un pacte civil de solidarité, à défaut les\
-            \ enfants de l'adhérents-assuré, nés ou à naitre, vivants ou représenté\
-            s, à défaut les héritiers de l'adhérent-assuré. Lors de la réalisation\
-            \ du risque, si le bénéficiaire est un enfants de moins de 25 ans, la\
-            \ prestation sera versée sous forme d'une rente éducation. \n - 91 : L'entreprise\
-            \ des pompes funèbres ou la personne qui a réglé mes obsèques à hauteur\
-            \ de la facture, pour le surplus mon conjoint, à défaut mes héritiers.\n\
-            \ - 12 : Les enfants du souscripteur, nés ou à naître, vivants ou repré\
-            sentés à défaut les héritiers du souscripteur (clause créée uniquement\
-            \ pour la transcodification de la clause S00097 pour arpège- n'existe\
-            \ pas dans ingénium) \n - 39 : LES ENFANTS DE L'ADHERENT ASSURE, NES OU\
-            \ A NAITRE, VIVANTS OU REPRESENTES ; A DEFAUT LES HERITIERS DE L'ADHERENT\
-            \ ASSURE. A LA DATE DU DÉCÈS DE L'ADHÉRENT-ASSURÉ, SI LE BÉNÉFICIAIRE\
-            \ EST UN ENFANT DE L'ADHÉRENT-ASSURÉ DE MOINS DE 25 ANS, LE CAPITAL ASSURÉ\
-            \ SERA VERSÉ SOUS FORME D'ÉCHÉANCES MENSUELLES JUSQU'AUX 25 ANS DU BÉ\
-            NÉFICIAIRE DANS LES CONDITIONS ET LIMITES DÉFINIES AU SEIN DE LA NOTICE\
-            \ D'INFORMATION."
-          example: "88"
-          pattern: "^(?!\\s*$).+"
-        label:
-          type: "string"
-          description: "Texte clause beneficiaire"
-          example: "LE CONJOINT DE L'ADHERENT-ASSURE, NON SEPARE DE CORPS, OU LE PARTENAIRE\
-            \ LIE A L'ADHERENT-ASSURE PAR UN PACTE CIVIL DE SOLIDARITE ; A DEFAUT\
-            \ LES ENFANTS DE L'ADHERENT-ASSURE, NES OU A NAITRE, VIVANTS OU REPRESENTES\
-            \ ; A DEFAUT LES HERITIERS DE L'ADHERENT-ASSURE."
-          pattern: "^(?!\\s*$).+"
-    DeathGuaranteeDTOV1:
-      title: "DeathGuaranteeDTOV1"
-      type: "object"
-      description: "Garantie décès. A renseigner si une garantie décès optionnelle\
-        \ est souscrite"
-      required:
-        - "id"
-        - "code"
-        - "label"
-      properties:
-        id:
-          type: "string"
-          description: "Id de la garantie décès optionnelle"
-          example: "TODO"
-          pattern: "^(?!\\s*$).+"
-        code:
-          type: "string"
-          description: "Code de la garantie décès optionnelle"
-          example: "TODO"
-          pattern: "^(?!\\s*$).+"
-        label:
-          type: "string"
-          description: "Texte de la garantie décès optionnelle"
-          example: "TODO"
-          pattern: "^(?!\\s*$).+"
-    FinancialOptionDTOV1:
-      title: "FinancialOptionDTOV1"
-      type: "object"
-      description: "Données relatives aux options financières. A renseigner si pré\
-        sence d'option(s) financière(s)"
-      required:
-        - "id"
-        - "code"
-        - "label"
-        - "fees_rate"
-        - "status_code"
-        - "destination_ucs"
-      properties:
-        id:
-          type: "string"
-          description: "identifiant de l'option financière"
-          example: "OPTSP1"
-          pattern: "^(?!\\s*$).+"
-        code:
-          type: "string"
-          description: "Code de l'option financière:\n - IP : Investissement progressif\
-            \ \n - RE : Réallocation d'actifs \n - SP : Sécurisation de la plus value\
-            \ \n - DY : Ecretage \n - SL : Stop loss \n - SR : Stop loss relatif \n\
-            \ - SW : Stop win \n - CL : Cliquetage des Performances \n - IM : IP Mandat"
-          example: "SP"
-          pattern: "^(?!\\s*$).+"
-        label:
-          type: "string"
-          description: "Libellé de l'option financière"
-          example: "Sécurisation de la plus value"
-          pattern: "^(?!\\s*$).+"
-        fees_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais associé à l'option financière"
-          example: 0.2
-          pattern: "^(?!\\s*$).+"
-        periodicity_code:
-          type: "string"
-          description: "Code périodicité de l'option financière (à renseigner si code\
-            \ = 'IP' ou 'RE') :\n - J : Journalière \n - M : Mensuelle \n - T : Trimestrielle\
-            \ \n - S : Semestrielle \n - A : Annuelle \n - U : Unique \n - PO : Fré\
-            quence variable"
-          example: "M"
-        duration_unit_code:
-          type: "string"
-          description: "Unité de durée de l'option financière (à renseigner si code\
-            \ = 'IP' ou 'CL' ou 'SP') :\n - A : Année \n - M : Mois \n "
-          example: "A"
-        duration:
-          type: "integer"
-          description: "durée de l'option financière (à renseigner si code = 'IP'\
-            \ ou 'CL' ou 'SP')"
-          example: 2
-        status_code:
-          type: "string"
-          description: "Code statut : \n - A : Actif \n - T : Terminée \n - R : Ré\
-            siliée \n - N : Annulée \n - E : En attente"
-          example: "A"
-          pattern: "^(?!\\s*$).+"
-        origin_ucs:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/OriginUcsDTOV1"
-        destination_ucs:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/DestinationUcsDTOV1"
-    MandateDTOV1:
-      title: "MandateDTOV1"
-      type: "object"
-      description: "Données relatives au mandat. A renseigner si présence d'un mandat"
-      required:
-        - "management_objective_id"
-        - "management_objective_label"
-        - "mandatory_id"
-        - "mandatory_label"
-        - "mandate_management_expense_rate"
-        - "insurer_mandate_rate"
-        - "distributor_mandate_rate"
-        - "agent_mandate_rate"
-        - "lender_id"
-      properties:
-        management_objective_id:
-          type: "string"
-          description: "Id objectif de gestion"
-          pattern: "^(?!\\s*$).+"
-          example: "A05"
-        management_objective_label:
-          type: "string"
-          description: "Libellé de l'objectif de gestion"
-          pattern: "^(?!\\s*$).+"
-          example: "ALLOCATION RESPONSABLE"
-        mandatory_id:
-          type: "string"
-          description: "id du mandataire"
-          pattern: "^(?!\\s*$).+"
-          example: "LCL"
-        mandatory_label:
-          type: "string"
-          description: "Libellé entité mandataire"
-          pattern: "^(?!\\s*$).+"
-          example: "TODO"
-        mandate_management_expense_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais de gestion mandat"
-          pattern: "^(?!\\s*$).+"
-          example: 0.3
-        insurer_mandate_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais mandat assureur"
-          pattern: "^(?!\\s*$).+"
-          example: 0.1
-        distributor_mandate_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais mandat distributeur"
-          pattern: "^(?!\\s*$).+"
-          example: 0.1
-        agent_mandate_rate:
-          type: "number"
-          format: "double"
-          description: "Taux de frais de gestion mandat mandataire"
-          pattern: "^(?!\\s*$).+"
-          example: 0.1
-        lender_id:
-          type: "string"
-          description: "Identifiant du créancier SEPA (ICS) du mandataire"
-          pattern: "^(?!\\s*$).+"
-          example: "FR88ZZZ237434"
-    FrcDTOV1:
-      title: "FrcDTOV1"
-      type: "object"
-      description: "Données relatives à la fiche de renseignement complémentaire.\
-        \ A renseigner si présence de FRC"
-      required:
-        - "type_code"
-        - "owner_occupation_label"
-        - "is_owner_payer"
-        - "is_customer_situation_coherent"
-        - "customer_relationship_duration_code"
-        - "funds_origins"
-      properties:
-        type_code:
-          type: "string"
-          description: "Code type FRC :\n - 00 : MONTANT SUPERIEUR SEUIL \n - 01 :\
-            \ PERSONNE MORALE \n - 02 : PAYS RESIDENCE SOUS SURVEILLANCE \n - 03 :\
-            \ PAYS FISCAL SOUS SURVEILLANCE \n - 04 : PAYS BAO SOUS SURVEILLANCE \n\
-            \ - 05 : OPERATION SUR CLIENT ANONYME \n - 06 : OPERATION PRECOSE \n -\
-            \ 07 : OPERATIONS FRACTIONNEES RESEAU \n - 08 : PROPORTION VI/VP \n -\
-            \ 09 : CUMUL D'OPERATION \n - 10 : BANQUE SOUS SURVEILLANCE \n - 11 :\
-            \ FICHE MANUELLE \n - 12 : FICHE MANUELLE \n - 13 : FICHE MULTI-CRITERES\
-            \ \n - 14 : PORTEUR NON CLIENT DE LA CAISSE D'OPERATION \n - 15 : OPERATION\
-            \ NOMINATIVE BACK OFFICE \n - 16 : SEUIL ET FAMILLE DE PRODUIT \n - 50\
-            \ : SEUIL ET PAYS DE DOMICILE \n - 51 : SEUIL ET RESIDENCE FISCALE \n\
-            \ - 52 : SEUIL ET RACHAT PRECOCE \n - 53 : SEUIL ET PROPORTION VI/VP \n\
-            \ - 54 : SEUIL ET CUMUL D'OPERATION \n - 55 : PAYS DOMICILE + RESID FISCALE\
-            \ \n - 56 : PAYS DOMICILE + RACHAT - 2 ANS \n - 57 : PAYS DOMICILE + PROPORTIPON\
-            \ VI/VP \n - 58 : PAYS DOMICILE + CUMUL OPERATION \n - 59 : RES FISCAL\
-            \ + RACHAT - 2 ANS \n - 60 : RES FISCAL + PROPORTIPON VI/VP \n - 61 :\
-            \ RES FISCAL + CUMUL OPERATION \n - 62 : NON CLIENT ET PAYS DE DOMICILE\
-            \ \n - 63 : NON CLIENT ET RESIDENCE FISCALE \n - 64 : NON CLIENT ET RACHAT\
-            \ PRECOCE \n - 97 : FRC CREE PAR L'ASSUREUR \n - 98 : CLIENT SOUS SURVEILLANCE\
-            \ SF"
-          example: "00"
-          pattern: "^(?!\\s*$).+"
-        owner_occupation_label:
-          type: "string"
-          description: "Libellé de la profession du souscripteur"
-          example: "texte libre"
-          pattern: "^(?!\\s*$).+"
-        is_owner_payer:
-          type: "boolean"
-          description: "Booléen indiquant si le souscripteur est également le payeur\
-            \ des cotisations"
-          pattern: "^(?!\\s*$).+"
-        owner_payer_link_code:
-          type: "string"
-          description: "Code lien souscripteur/payeur (à renseigner si is_owner_payer\
-            \ = false) :\n - CO :  Conjoint \n - AS : Ascendant 1er ou 2ème degré\
-            \ (parents ou grand parents) \n - AU : Autre"
-          example: "CO"
-          pattern: "^(?!\\s*$).+"
-        owner_payer_link_label:
-          type: "string"
-          description: "Libellé du lien souscripteur/payeur (à renseigner si is_owner_payer\
-            \ = false et owner_payer_link_code = 'AU')"
-          example: "texte libre"
-        is_customer_situation_coherent:
-          type: "boolean"
-          description: "Booléen indiquant si l'opération est cohérente avec la connaissance\
-            \ du client"
-        customer_relationship_duration_code:
-          type: "string"
-          description: "Code durée de la relation client :\n - A : Moins d'un an \n\
-            \ - B : 1 à 5 ans  \n - C : Plus de 5 ans \n - Z : Pas de compte bancaire\
-            \ au CA/LCL"
-          example: "A"
-        customer_relationship_observation:
-          type: "string"
-          description: "Observations sur la relation client"
-          example: "texte libre"
-        funds_origins:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/FundsOriginDTOV1"
-    FundsOriginDTOV1:
-      title: "FundsOriginDTOV1"
-      type: "object"
-      description: "Informations sur l'origine des fonds. A renseigner si présence\
-        \ de FRC (has_frc = true)"
-      required:
-        - "code"
-        - "label"
-        - "amount"
-      properties:
-        code:
-          type: "string"
-          description: "Code de l'origine des fonds :\n - BM : VENTE DE BIEN MOBILIERS\
-            \ \n - CA : CESSION D'ACTIFS PROFESSIONNELS \n - CB : CESSION BIEN IMMOB>5\
-            \ ANS \n - DO : DON \n - EP : EPARGNE GROUPE CA (> 5 ANS) \n - GJ : GAINS\
-            \ AU JEU \n - HD : NE PLUS UTILISER(DON/HERITAGE) \n - HE : HERITAGE /\
-            \ SUCCESSION \n - MF : MONTAGE FINANCIER \n - PR : PRESTATION A.D.I OU\
-            \ INDEMNITE \n - RP : REVENUS PROFESSIONNELS \n - TR : EPARGNE < 5ANS\
-            \ OU HORS CA \n - VI : VENTE IMMOBILIERE BIEN < 5 ANS  \n - EP : EPARGNE\
-            \ GROUPE CA (> 5 ANS) \n - TR : EPARGNE < 5ANS OU HORS CA \n - CB : VENTE\
-            \ IMMOBILIERE \n - HD : HERITAGE / DON / SUCCESSION \n - PR : PRESTATION\
-            \ A.D.I OU INDEMNITE \n - RP : REVENUS PROFESSIONNELS \n - CA : CESSION\
-            \ ACTIFS PROFESSIONNELS \n - BM : VENTE DE BIENS MOBILIERS \n - GJ : GAINS\
-            \ AU JEU \n - MF : MONTAGE FINANCIER \n - CM : CRYPTO MONNAIES \n - VO\
-            \ : VENTE D'OEUVRES D'ART \n - VM : VENTE METAUX PRECIEUX/BIJOUX \n -\
-            \ AO : AUTRE "
-          pattern: "^(?!\\s*$).+"
-          example: "BM"
-        label:
-          type: "string"
-          description: "Libellé origine des fonds"
-          pattern: "^(?!\\s*$).+"
-          example: "VENTE DE BIENS MOBILIERS"
-        details:
-          type: "string"
-          description: "Détails sur l'origine des fonds"
-          pattern: "^(?!\\s*$).+"
-          example: "texte libre"
-        payment_date:
-          type: "string"
-          format: "date-time"
-          description: "Date de versement des fonds"
-          example: "2023-03-08T10:39:24"
-        establishment:
-          type: "string"
-          description: "Etablissement d'origine des fonds"
-          example: "texte libre"
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant des fonds (en €)"
-          example: 200000
-    OriginUcsDTOV1:
-      title: "OriginUcsDTOV1"
-      type: "object"
-      description: "Données relatives aux ucs à l'origine de l'option financière"
-      required:
-        - "code"
-        - "label"
-        - "isin_code"
-      properties:
-        code:
-          type: "string"
-          description: "Code unité de compte"
-          pattern: "^(?!\\s*$).+"
-          example: "001111"
-        label:
-          type: "string"
-          description: "Libellé unité de compte"
-          pattern: "^(?!\\s*$).+"
-          example: "RIVOLI AVENIR PATRIMOINE"
-        triggering_threshold:
-          type: "number"
-          format: "double"
-          description: "Seuil de déclenchement \n à renseigner si code = 'SP', 'SL',\
-            \ 'SR', 'SW' ou 'CL'"
-          pattern: "^(?!\\s*$).+"
-          example: 50
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant  à arbitrer (en €) \n à renseigner si code = 'IP'"
-          example: 100
-        rate:
-          type: "number"
-          format: "double"
-          description: "Pourcentage à arbitrer \n à renseigner si code = 'SL', 'SR'\
-            \ ou 'SP'"
-          example: 0.2
-        order_number:
-          type: "integer"
-          description: "numéro d'ordre. Permet d'indiquer à quel support de prélè\
-            vement correspond chaque support de destination \n à renseigner si code\
-            \ = 'SR', 'SW' ou 'SL'"
-          format: "int32"
-          example: 1
-        isin_code:
-          type: "string"
-          description: "Code Isin du support"
-          example: "FR001400BL08"
-        nature_code:
-          type: "string"
-          description: "Code nature du support : \n - EE : European equity (Actions\
-            \ européennes) \n - FE : French equity (Actions françaises) \n - IE :\
-            \ International equity (Actions internationales) \n - DI : Diversifié\
-            \ \n - FF : Fonds à formule \n - ME : Monetary euro (Monétaire euro) \n\
-            \ - EU : Euro (Numéraire) \n - IB : International bonds (Obligations internationales)\
-            \ \n - EB : Europeen bonds (Obligations européennes) \n - UO : UC Obligataire\
-            \ \n - EC : Eurocroissance \n - IS : SCPI \n - IO : OPCI \n - IC : SCI\
-            \ \n - TC : Titre de créance \n- SF : SAF Monétarisé \n - OE : Action\
-            \ Euro \n - PR : Point Retraite \n - ET : Exchange-Traded Funds"
-          example: "IS"
-    DestinationUcsDTOV1:
-      title: "DestinationUcsDTOV1"
-      type: "object"
-      description: "Données relatives aux ucs de destination de l'option financiè\
-        re"
-      required:
-        - "code"
-        - "label"
-        - "isin_code"
-      properties:
-        code:
-          type: "string"
-          description: "Code unité de compte"
-          pattern: "^(?!\\s*$).+"
-          example: "A05"
-        label:
-          type: "string"
-          description: "Libellé unité de compte"
-          pattern: "^(?!\\s*$).+"
-          example: "ALLOCATION RESPONSABLE"
-        amount:
-          type: "number"
-          format: "double"
-          description: "Montant  à arbitrer (en €) \n à renseigner si code ='IP'"
-          example: 50
-        rate:
-          type: "number"
-          format: "double"
-          description: "Pourcentage à arbitrer \n à renseigner si code = 'SL', 'SR',\
-            \ 'SW', 'RE' ou 'SP'"
-          example: 0.2
-        order_number:
-          type: "integer"
-          description: "numéro d'ordre. Permet d'indiquer à quel support de prélè\
-            vement correspond chaque support de destination \n à renseigner si code\
-            \ = 'SR', 'SW' ou 'SL'"
-          format: "int32"
-          example: 1
-        isin_code:
-          type: "string"
-          description: "Code Isin du support"
-          example: "FR001400BL08"
-        nature_code:
-          type: "string"
-          description: "Code nature du support : \n - EE : European equity (Actions\
-            \ européennes) \n - FE : French equity (Actions françaises) \n - IE :\
-            \ International equity (Actions internationales) \n - DI : Diversifié\
-            \ \n - FF : Fonds à formule \n - ME : Monetary euro (Monétaire euro) \n\
-            \ - EU : Euro (Numéraire) \n - IB : International bonds (Obligations internationales)\
-            \ \n - EB : Europeen bonds (Obligations européennes) \n - UO : UC Obligataire\
-            \ \n - EC : Eurocroissance \n - IS : SCPI \n - IO : OPCI \n - IC : SCI\
-            \ \n - TC : Titre de créance \n- SF : SAF Monétarisé \n - OE : Action\
-            \ Euro \n - PR : Point Retraite \n - ET : Exchange-Traded Funds"
-          example: "IS"
-    AccountDTOV1:
-      title: "AccountDTOV1"
-      type: "object"
-      description: "Données relatives au compte pour les versements"
-      required:
-        - "iban"
-        - "bic_code"
-        - "owner"
-      properties:
-        iban:
-          type: "string"
-          description: "Iban"
-          pattern: "^(?!\\s*$).+"
-          example: "FR0330002000110000123456T00"
-        number:
-          type: "string"
-          description: "Numéro de compte"
-          pattern: "^(?!\\s*$).+"
-          example: "0000123456T"
-        bic_code:
-          type: "string"
-          description: "code BIC"
-          pattern: "^(?!\\s*$).+"
-          example: "CRLYFRPPXXX"
-        owner:
-          type: "string"
-          description: "RIB Nom du titulaire"
-          pattern: "^(?!\\s*$).+"
-          example: "M Jean Dupont"
-        lender_id:
-          type: "string"
-          description: "Identifiant du créancier SEPA (ICS)"
-          pattern: "^(?!\\s*$).+"
-          example: "FR88ZZZ237434"
     CheckValidityOutputDTOV1:
       title: "CheckValidityOutputDTOV1"
       type: "object"
       description: "Retour de check validity. Contient un message d'erreur si isValid\
         \ = false"
       required:
-        - "is_valid"
-        - "error_messages"
+      - "is_valid"
+      - "error_messages"
       properties:
         is_valid:
           type: "boolean"
@@ -1799,10 +577,10 @@ components:
       type: "object"
       description: "Données relatives au compte pour les versements"
       required:
-        - "iban"
-        - "number"
-        - "bic_code"
-        - "owner"
+      - "iban"
+      - "number"
+      - "bic_code"
+      - "owner"
       properties:
         iban:
           type: "string"
