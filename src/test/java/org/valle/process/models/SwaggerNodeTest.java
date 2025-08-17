@@ -1,10 +1,9 @@
-package org.valle.process;
+package org.valle.process.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.valle.process.models.EndPoint;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
@@ -13,10 +12,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.valle.process.ClearEndpointOnDemandImpl.findRefs;
-import static org.valle.process.ClearEndpointOnDemandImpl.getAllNamedReferencesOfAPath;
+import static org.valle.process.models.SwaggerNode.findRefs;
+import static org.valle.process.models.SwaggerNode.getAllNamedReferencesOfAPath;
 
-class ClearEndpointOnDemandImplTest {
+class SwaggerNodeTest {
 
     public static final String INPUT_SWAGGER_BASE_PATH = "src/test/resources";
 

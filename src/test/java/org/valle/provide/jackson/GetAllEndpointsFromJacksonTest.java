@@ -2,6 +2,8 @@ package org.valle.provide.jackson;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GetAllEndpointsFromJacksonTest {
@@ -11,7 +13,8 @@ class GetAllEndpointsFromJacksonTest {
     @Test
     void provide() {
         // Arrange
-        GetAllEndpointsFromJackson getAllPathsFromJackson = new GetAllEndpointsFromJackson(SWAGGER_FILE_PATH);
+        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File(SWAGGER_FILE_PATH));
+        GetAllEndpointsFromJackson getAllPathsFromJackson = new GetAllEndpointsFromJackson(jacksonUtilsCobaye);
         // Act
         var endpoints = getAllPathsFromJackson.provide();
         // Assert

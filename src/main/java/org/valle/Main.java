@@ -1,20 +1,25 @@
 package org.valle;
 
-import org.valle.persist.jackson.PersistResultFileWithJacksonImpl;
 import org.valle.present.logger.ShowEndpointsLoggerImpl;
 import org.valle.process.ClearEndpointOnDemandImpl;
 import org.valle.process.ShowEndpointsImpl;
 import org.valle.process.models.EndPoint;
-import org.valle.provide.jackson.GetAllComponentsFromJacksonImpl;
 import org.valle.provide.jackson.GetAllEndpointsFromJackson;
-import org.valle.provide.jackson.GetAllPathsFromJacksonImpl;
 import org.valle.provide.jackson.GetAllSchemasFromJacksonImpl;
+import org.valle.provide.jackson.GetSwaggerRawValueJacksonImpl;
+import org.valle.provide.jackson.GetSwaggerValueJacksonImpl;
+import org.valle.provide.jackson.JacksonUtils;
 
+import java.io.File;
 import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
-        GetAllEndpointsFromJackson getAllEndpoints = new GetAllEndpointsFromJackson("src/main/resources/swagger-cobaye.yml");
+
+        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
+        JacksonUtils jacksonUtilsCleaned = new JacksonUtils(new File("src/main/resources/swagger-cleaned.yml"));
+
+        GetAllEndpointsFromJackson getAllEndpoints = new GetAllEndpointsFromJackson(jacksonUtilsCobaye);
 
         ShowEndpointsImpl showEndpointsCobaye = new ShowEndpointsImpl(
                 getAllEndpoints,
@@ -22,17 +27,16 @@ public class Main {
         );
 
         ShowEndpointsImpl showEndpointsCleaned = new ShowEndpointsImpl(
-                new GetAllEndpointsFromJackson("src/main/resources/swagger-cleaned.yml"),
+                new GetAllEndpointsFromJackson(jacksonUtilsCleaned),
                 new ShowEndpointsLoggerImpl()
         );
-        System.out.println(new GetAllSchemasFromJacksonImpl("src/main/resources/swagger-cobaye.yml").provide().size());
+        System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCobaye).provide().size());
         showEndpointsCobaye.execute();
 
         ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
                 getAllEndpoints,
-                new GetAllPathsFromJacksonImpl("src/main/resources/swagger-cobaye.yml"),
-                new GetAllComponentsFromJacksonImpl("src/main/resources/swagger-cobaye.yml"),
-                new PersistResultFileWithJacksonImpl("src/main/resources/swagger-cleaned.yml")
+                new GetSwaggerRawValueJacksonImpl(jacksonUtilsCobaye),
+                new GetSwaggerValueJacksonImpl(jacksonUtilsCobaye)
         );
 
         // demander quels endpoints à supprimer via la console
@@ -43,10 +47,10 @@ public class Main {
                         .build()
         );
 
-        System.out.println(new GetAllSchemasFromJacksonImpl("src/main/resources/swagger-cleaned.yml").provide().size());
+        System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCleaned).provide().size());
         showEndpointsCleaned.execute();
         clearEndpointOnDemand.execute(endpointsToClean);
-        System.out.println(new GetAllSchemasFromJacksonImpl("src/main/resources/swagger-cleaned.yml").provide().size());
+        System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCleaned).provide().size());
         showEndpointsCleaned.execute();
     }
 }

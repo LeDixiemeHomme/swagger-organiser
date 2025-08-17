@@ -1,24 +1,21 @@
 package org.valle.provide.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.EndPoint;
 import org.valle.provide.GetAllEndpoints;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 @Slf4j
+@AllArgsConstructor
 public class GetAllEndpointsFromJackson implements GetAllEndpoints {
 
     private final JacksonUtils jacksonUtils;
-
-    public GetAllEndpointsFromJackson(String swaggerFilePath) {
-        this.jacksonUtils = new JacksonUtils(new File(swaggerFilePath));
-    }
 
     @Override
     public Set<EndPoint> provide() {

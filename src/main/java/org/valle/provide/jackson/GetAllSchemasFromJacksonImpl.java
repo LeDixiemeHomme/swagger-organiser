@@ -1,19 +1,15 @@
 package org.valle.provide.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.provide.GetAllSchemas;
 
-import java.io.File;
-
 @Slf4j
+@AllArgsConstructor
 public class GetAllSchemasFromJacksonImpl implements GetAllSchemas {
 
     private final JacksonUtils jacksonUtils;
-
-    public GetAllSchemasFromJacksonImpl(String swaggerFilePath) {
-        this.jacksonUtils = new JacksonUtils(new File(swaggerFilePath));
-    }
 
     @Override
     public JsonNode provide() {

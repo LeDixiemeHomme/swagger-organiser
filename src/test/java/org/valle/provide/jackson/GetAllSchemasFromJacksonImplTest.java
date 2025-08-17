@@ -2,6 +2,8 @@ package org.valle.provide.jackson;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GetAllSchemasFromJacksonImplTest {
@@ -11,7 +13,8 @@ class GetAllSchemasFromJacksonImplTest {
     @Test
     void provide() {
         // Arrange
-        GetAllSchemasFromJacksonImpl getAllSchemasFromJackson = new GetAllSchemasFromJacksonImpl(SWAGGER_FILE_PATH);
+        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File(SWAGGER_FILE_PATH));
+        GetAllSchemasFromJacksonImpl getAllSchemasFromJackson = new GetAllSchemasFromJacksonImpl(jacksonUtilsCobaye);
         // Act
         var schemas = getAllSchemasFromJackson.provide();
         // Assert
