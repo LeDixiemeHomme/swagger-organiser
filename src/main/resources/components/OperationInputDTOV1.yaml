@@ -1,0 +1,47 @@
+---
+title: "OperationInputDTOV1"
+type: "object"
+description: "Données génériques relatives à l'opération d'adhésion"
+required:
+- "external_id"
+- "processing_date"
+- "distribution_situation_code"
+- "validity_end_date"
+- "customer"
+- "actor"
+- "recommendation_assessment"
+- "contract"
+properties:
+  external_id:
+    type: "string"
+    description: "id operation du distributeur"
+    example: "CL20230213_150252_000889"
+    pattern: "^(?!\\s*$).+"
+  processing_date:
+    type: "string"
+    format: "date-time"
+    description: "Date de référence de saisie de l'opération"
+    example: "2023-03-08T10:39:24"
+  distribution_situation_code:
+    type: "string"
+    enum:
+    - "01"
+    - "02"
+    description: "Contexte de la signature associé au choix du client. Valeurs possibles:\n\
+      \  - 01: Client présent\n - 02: Vente à distance"
+    example: "02"
+  validity_end_date:
+    type: "string"
+    format: "date-time"
+    description: "date de fin de validifité de proposition"
+    example: "2023-03-08T10:39:24"
+  customer:
+    $ref: "../components/CustomerDTOV1.yaml"
+  actor:
+    $ref: "../components/ActorDTOV1.yaml"
+  recommendation_assessment:
+    $ref: "../components/RecommendationAssessmentDTOV1.yaml"
+  contract:
+    $ref: "../components/ContractDTOV1.yaml"
+  frc:
+    $ref: "../components/FrcDTOV1.yaml"

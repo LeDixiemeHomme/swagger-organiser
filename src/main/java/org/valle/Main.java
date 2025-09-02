@@ -97,11 +97,11 @@ public class Main {
                 pathsDir.delete();
             }
             pathsDir.mkdirs();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> field = fields.next();
-                JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/main/resources/components/%s.yaml".formatted(field.getKey())));
-                new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) field.getValue());
-            }
+//            while (fields.hasNext()) {
+//                Map.Entry<String, JsonNode> field = fields.next();
+//            }
+            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/main/resources/components/%s.yaml".formatted(entry.getKey())));
+            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) node);
         });
 
         Map<String, Object> main = (Map<String, Object>) decomposed.get("main");

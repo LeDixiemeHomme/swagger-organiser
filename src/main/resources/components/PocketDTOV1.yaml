@@ -1,0 +1,45 @@
+---
+title: "PocketDTOV1"
+type: "object"
+description: "Données relatives à la(aux) poche(s) sur la(les)quelle(s) est(sont)\
+  \ réparti(s) l'investissement"
+required:
+- "type_code"
+- "code"
+- "label"
+- "supports"
+properties:
+  type_code:
+    type: "string"
+    description: "Code type poche : \n - MA Mandat \n - EC Euro Croissance \n - PI\
+      \ Pilotée \n - AU Autre"
+    example: "MA"
+    pattern: "^(?!\\s*$).+"
+  code:
+    type: "string"
+    description: "Code de la poche"
+    example: "TODO"
+    pattern: "^(?!\\s*$).+"
+  label:
+    type: "string"
+    description: "Libellé de la poche"
+    example: "TODO"
+    pattern: "^(?!\\s*$).+"
+  rate:
+    type: "number"
+    format: "double"
+    description: "Taux investi sur la poche (en %). \n Soit le montant soit le taux\
+      \ doit être renseigné"
+    example: 100
+    pattern: "^(?!\\s*$).+"
+  amount:
+    type: "number"
+    format: "double"
+    description: "Montant investi sur la poche (en €). \n Soit le montant soit le\
+      \ taux doit être renseigné."
+    example: 5000
+    pattern: "^(?!\\s*$).+"
+  supports:
+    type: "array"
+    items:
+      $ref: "../components/SupportDTOV1.yaml"

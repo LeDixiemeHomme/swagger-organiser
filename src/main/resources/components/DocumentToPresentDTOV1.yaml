@@ -1,0 +1,15 @@
+---
+type: "object"
+properties:
+  code:
+    type: "string"
+    description: "Code Document"
+    example: "TP082"
+  url:
+    type: "string"
+    description: "Url du document sur FM"
+    example: "https://dev-fm.predica.group.gca/caagis-fm-ihmpucc/getfile/20211214135832697_JL248XGG_TP044_111937_12eec52f311401968fee2f05dfb00255.pdf"
+  title:
+    type: "string"
+    description: "Titre du document à présenter"
+    example: "DICI AF DYNAMIC MULTI FACTOR EUROP EQ AE"

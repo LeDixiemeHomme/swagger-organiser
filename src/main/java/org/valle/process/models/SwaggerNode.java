@@ -139,20 +139,9 @@ public record SwaggerNode(
         Map<String, Object> components = new HashMap<>();
         if (node().has("components")) {
             node().get("components").fields().forEachRemaining(entry -> {
-                // Chaque schéma dans un fichier séparé (ici une map)
-                components.put(entry.getKey(), entry.getValue());
-            });
-        }
-        return components;
-    }
-
-    public Map<String, Object> decomposeComponentSchemas() {
-        // Extraction des components/schemas
-        Map<String, Object> components = new HashMap<>();
-        if (node().has("components") && node().get("components").has("schemas")) {
-            node().get("components").get("schemas").fields().forEachRemaining(entry -> {
-                // Chaque schéma dans un fichier séparé (ici une map)
-                components.put(entry.getKey(), entry.getValue());
+                entry.getValue().fields().forEachRemaining(field -> {
+                    components.put(field.getKey(), field.getValue());
+                });
             });
         }
         return components;

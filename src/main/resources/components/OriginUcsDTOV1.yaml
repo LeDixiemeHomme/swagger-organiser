@@ -1,0 +1,59 @@
+---
+title: "OriginUcsDTOV1"
+type: "object"
+description: "Données relatives aux ucs à l'origine de l'option financière"
+required:
+- "code"
+- "label"
+- "isin_code"
+properties:
+  code:
+    type: "string"
+    description: "Code unité de compte"
+    pattern: "^(?!\\s*$).+"
+    example: "001111"
+  label:
+    type: "string"
+    description: "Libellé unité de compte"
+    pattern: "^(?!\\s*$).+"
+    example: "RIVOLI AVENIR PATRIMOINE"
+  triggering_threshold:
+    type: "number"
+    format: "double"
+    description: "Seuil de déclenchement \n à renseigner si code = 'SP', 'SL', 'SR',\
+      \ 'SW' ou 'CL'"
+    pattern: "^(?!\\s*$).+"
+    example: 50
+  amount:
+    type: "number"
+    format: "double"
+    description: "Montant  à arbitrer (en €) \n à renseigner si code = 'IP'"
+    example: 100
+  rate:
+    type: "number"
+    format: "double"
+    description: "Pourcentage à arbitrer \n à renseigner si code = 'SL', 'SR' ou 'SP'"
+    example: 0.2
+  order_number:
+    type: "integer"
+    description: "numéro d'ordre. Permet d'indiquer à quel support de prélèvement\
+      \ correspond chaque support de destination \n à renseigner si code = 'SR', 'SW'\
+      \ ou 'SL'"
+    format: "int32"
+    example: 1
+  isin_code:
+    type: "string"
+    description: "Code Isin du support"
+    example: "FR001400BL08"
+  nature_code:
+    type: "string"
+    description: "Code nature du support : \n - EE : European equity (Actions europé\
+      ennes) \n - FE : French equity (Actions françaises) \n - IE : International\
+      \ equity (Actions internationales) \n - DI : Diversifié \n - FF : Fonds à formule\
+      \ \n - ME : Monetary euro (Monétaire euro) \n - EU : Euro (Numéraire) \n - IB\
+      \ : International bonds (Obligations internationales) \n - EB : Europeen bonds\
+      \ (Obligations européennes) \n - UO : UC Obligataire \n - EC : Eurocroissance\
+      \ \n - IS : SCPI \n - IO : OPCI \n - IC : SCI \n - TC : Titre de créance \n\
+      - SF : SAF Monétarisé \n - OE : Action Euro \n - PR : Point Retraite \n - ET\
+      \ : Exchange-Traded Funds"
+    example: "IS"

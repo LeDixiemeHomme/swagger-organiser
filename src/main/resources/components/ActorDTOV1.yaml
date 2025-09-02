@@ -1,0 +1,39 @@
+---
+title: "ActorDTOV1"
+type: "object"
+description: "Données de l'utilisateur à l'initiative de l'appel"
+required:
+- "id"
+- "uom_code"
+- "agency_code"
+- "type"
+properties:
+  id:
+    type: "string"
+    description: "Matricule"
+    example: "01"
+    pattern: "^(?!\\s*$).+"
+  uom_code:
+    type: "string"
+    description: "Code caisse regionale sur 5 chiffres"
+    example: 20000
+    pattern: "^(?!\\s*$).+"
+  agency_code:
+    type: "string"
+    description: "Code agence de connexion sur 5 chiffres"
+    example: "07612"
+    pattern: "^(?!\\s*$).+"
+  type:
+    type: "string"
+    enum:
+    - "01"
+    - "02"
+    - "03"
+    - "04"
+    - "05"
+    description: "Type. Valeurs possibles:\n  -  01 : conseiller/agent \n - 02 : client/personne\
+      \ physique connue du système d'information \n - 03 : personne physique non connue\
+      \ du système d'information (intervenant au travers d'un contrat d'entreprise)\
+      \ \n - 04 : prospect \n  -  05 : traitement informatique non déclenché par un\
+      \ humain (automate)"
+    example: "01"

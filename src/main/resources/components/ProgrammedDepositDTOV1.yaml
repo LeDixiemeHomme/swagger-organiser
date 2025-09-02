@@ -1,0 +1,75 @@
+---
+title: "ProgrammedDepositDTOV1"
+type: "object"
+description: "Données relatives au versement régulier (VR). A renseigner dans le cas\
+  \ d'un versement régulier"
+required:
+- "periodicity_code"
+- "amount"
+- "ncr_fees_rate"
+- "cr_fees_rate"
+- "specific_fees_rate"
+- "polco_outstanding_amount"
+- "is_polco_eligible"
+- "has_annual_revaluation"
+- "account"
+properties:
+  periodicity_code:
+    type: "string"
+    description: "Code de periodicite:\n - J : Journalière \n - M : Mensuelle \n -\
+      \ T : Trimestrielle \n - S : Semestrielle \n - A : Annuelle \n - U : Unique\
+      \ \n - PO : Fréquence variable"
+    example: "M"
+    pattern: "^(?!\\s*$).+"
+  amount:
+    type: "number"
+    format: "double"
+    description: "Montant brut versements periodiques (en €)"
+    example: 3000
+  ncr_fees_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais standard NCR sur VR"
+    example: 2.5
+  cr_fees_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais standard CR sur VR"
+    example: 0
+  specific_fees_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais à appliquer sur VR (peut-être différent du taux de\
+      \ frais standard si le conseiller saisi une décôte)"
+    example: 2.4
+  polco_outstanding_amount:
+    type: "number"
+    format: "double"
+    description: "Encours client POLCO (Politique commerciale) pour VR"
+    example: 1000
+  is_polco_eligible:
+    type: "boolean"
+    description: "Booléen indiquant l'éligibilité au taux POLCO (Politique commerciale)\
+      \ sur VR"
+  has_annual_revaluation:
+    type: "boolean"
+    description: "Booléen indiquant la présence de revalorisation annuelle pour le\
+      \ versement régulier"
+  revaluation_amount:
+    type: "number"
+    format: "double"
+    description: "montant de revalorisation (en €) (à renseigner si has_annual_revaluation\
+      \ = true, soit le montant soit le taux doit être renseigné)"
+    example: 500
+  revaluation_rate:
+    type: "number"
+    format: "double"
+    description: "taux de revalorisation (à renseigner si has_annual_revaluation =\
+      \ true, soit le montant soit le taux doit être renseigné)"
+    example: 1.5
+  account:
+    allOf:
+    - $ref: "../components/AccountDTOV1.yaml"
+    - type: "object"
+    - required:
+      - "lender_id"

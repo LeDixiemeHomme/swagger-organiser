@@ -1,0 +1,13 @@
+---
+title: "EnforcementOutputDTOV1"
+type: "object"
+properties:
+  archiveId:
+    type: "string"
+    description: "Id Archive"
+    example: 202200690781566
+  functionPolicyNumber:
+    type: "integer"
+    format: "int32"
+    description: "Numéro de fonction de police"
+    example: 0

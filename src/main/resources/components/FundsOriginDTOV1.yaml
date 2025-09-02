@@ -1,0 +1,51 @@
+---
+title: "FundsOriginDTOV1"
+type: "object"
+description: "Informations sur l'origine des fonds. A renseigner si présence de FRC\
+  \ (has_frc = true)"
+required:
+- "code"
+- "label"
+- "amount"
+properties:
+  code:
+    type: "string"
+    description: "Code de l'origine des fonds :\n - BM : VENTE DE BIEN MOBILIERS \n\
+      \ - CA : CESSION D'ACTIFS PROFESSIONNELS \n - CB : CESSION BIEN IMMOB>5 ANS\
+      \ \n - DO : DON \n - EP : EPARGNE GROUPE CA (> 5 ANS) \n - GJ : GAINS AU JEU\
+      \ \n - HD : NE PLUS UTILISER(DON/HERITAGE) \n - HE : HERITAGE / SUCCESSION \n\
+      \ - MF : MONTAGE FINANCIER \n - PR : PRESTATION A.D.I OU INDEMNITE \n - RP :\
+      \ REVENUS PROFESSIONNELS \n - TR : EPARGNE < 5ANS OU HORS CA \n - VI : VENTE\
+      \ IMMOBILIERE BIEN < 5 ANS  \n - EP : EPARGNE GROUPE CA (> 5 ANS) \n - TR :\
+      \ EPARGNE < 5ANS OU HORS CA \n - CB : VENTE IMMOBILIERE \n - HD : HERITAGE /\
+      \ DON / SUCCESSION \n - PR : PRESTATION A.D.I OU INDEMNITE \n - RP : REVENUS\
+      \ PROFESSIONNELS \n - CA : CESSION ACTIFS PROFESSIONNELS \n - BM : VENTE DE\
+      \ BIENS MOBILIERS \n - GJ : GAINS AU JEU \n - MF : MONTAGE FINANCIER \n - CM\
+      \ : CRYPTO MONNAIES \n - VO : VENTE D'OEUVRES D'ART \n - VM : VENTE METAUX PRECIEUX/BIJOUX\
+      \ \n - AO : AUTRE "
+    pattern: "^(?!\\s*$).+"
+    example: "BM"
+  label:
+    type: "string"
+    description: "Libellé origine des fonds"
+    pattern: "^(?!\\s*$).+"
+    example: "VENTE DE BIENS MOBILIERS"
+  details:
+    type: "string"
+    description: "Détails sur l'origine des fonds"
+    pattern: "^(?!\\s*$).+"
+    example: "texte libre"
+  payment_date:
+    type: "string"
+    format: "date-time"
+    description: "Date de versement des fonds"
+    example: "2023-03-08T10:39:24"
+  establishment:
+    type: "string"
+    description: "Etablissement d'origine des fonds"
+    example: "texte libre"
+  amount:
+    type: "number"
+    format: "double"
+    description: "Montant des fonds (en €)"
+    example: 200000

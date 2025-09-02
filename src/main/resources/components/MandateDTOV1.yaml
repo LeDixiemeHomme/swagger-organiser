@@ -1,0 +1,64 @@
+---
+title: "MandateDTOV1"
+type: "object"
+description: "Données relatives au mandat. A renseigner si présence d'un mandat"
+required:
+- "management_objective_id"
+- "management_objective_label"
+- "mandatory_id"
+- "mandatory_label"
+- "mandate_management_expense_rate"
+- "insurer_mandate_rate"
+- "distributor_mandate_rate"
+- "agent_mandate_rate"
+- "lender_id"
+properties:
+  management_objective_id:
+    type: "string"
+    description: "Id objectif de gestion"
+    pattern: "^(?!\\s*$).+"
+    example: "A05"
+  management_objective_label:
+    type: "string"
+    description: "Libellé de l'objectif de gestion"
+    pattern: "^(?!\\s*$).+"
+    example: "ALLOCATION RESPONSABLE"
+  mandatory_id:
+    type: "string"
+    description: "id du mandataire"
+    pattern: "^(?!\\s*$).+"
+    example: "LCL"
+  mandatory_label:
+    type: "string"
+    description: "Libellé entité mandataire"
+    pattern: "^(?!\\s*$).+"
+    example: "TODO"
+  mandate_management_expense_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais de gestion mandat"
+    pattern: "^(?!\\s*$).+"
+    example: 0.3
+  insurer_mandate_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais mandat assureur"
+    pattern: "^(?!\\s*$).+"
+    example: 0.1
+  distributor_mandate_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais mandat distributeur"
+    pattern: "^(?!\\s*$).+"
+    example: 0.1
+  agent_mandate_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais de gestion mandat mandataire"
+    pattern: "^(?!\\s*$).+"
+    example: 0.1
+  lender_id:
+    type: "string"
+    description: "Identifiant du créancier SEPA (ICS) du mandataire"
+    pattern: "^(?!\\s*$).+"
+    example: "FR88ZZZ237434"

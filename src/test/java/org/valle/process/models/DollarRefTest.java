@@ -38,7 +38,7 @@ class DollarRefTest {
         String rawValue = "#/components/schemas/OperationInputDTOV1";
         DollarRef dollarRef = new DollarRef(rawValue);
 
-        JacksonUtils jacksonUtils = new JacksonUtils(new File("src/test/resources/swagger-cobaye.yml"));
+        JacksonUtils jacksonUtils = new JacksonUtils(new File("src/test/resources/cleared/swagger-cobaye.yml"));
 
         JsonNode objectMap = jacksonUtils.readValue();
         // Act

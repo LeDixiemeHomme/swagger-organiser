@@ -1,0 +1,56 @@
+---
+title: "RppDTOV1"
+type: "object"
+description: "Données relatives aux rachats partiels programmés. A renseigner si pré\
+  sence de rachats partiels programmés"
+required:
+- "type"
+- "periodicity_code"
+- "operation_taxation_code"
+- "first_day"
+- "amount"
+- "amount_indicator_code"
+- "account"
+properties:
+  type:
+    type: "string"
+    description: "Type de RPP :\n - 01 : Libre revenus - Fixe \n - 02 : Capital proté\
+      gé - VA \n - 03 : Capital protégé - Versements\n - 04 : Prélèvemt décès - Lion\
+      \ Avenir \n - 05 : Prélèvemt décès - Familio \n - 06 : Capital protégé - VA+Versement\
+      \ \n - 99 : Capital Fractionné - Pacte"
+    example: "01"
+    pattern: "^(?!\\s*$).+"
+  periodicity_code:
+    type: "string"
+    description: "Code périodicité RPP :\n - J : Journalière \n - M : Mensuelle \n\
+      \ - T : Trimestrielle \n - S : Semestrielle \n - A : Annuelle \n - U : Unique\
+      \ \n - PO : Fréquence variable"
+    example: "M"
+  operation_taxation_code:
+    type: "string"
+    example: "01"
+    description: "Code type option fiscale: \n - IR :    Impôt sur le revenu \n -\
+      \ PFL :    Prélèvement forfaitaire libératoire \n - EXOD :    Exonération lié\
+      e à la durée du contrat \n - EXOMIC :    Exonération pour incitation à la consommation\
+      \ \n - EXOFM :    Exonération cas de force majeure \n - TRANSF :    Pas de fiscalité\
+      \ appliquée \n - NR :    Fiscalité non résident \n - EXORV :    Exonération\
+      \ fiscale \n - EXODSK :    Transformation DSK \n - ANONYM :    Sortie anonyme\
+      \      \n - EXOTF :    Exonération, Décès Terme Fixe \n - PFO :    Prélèvement\
+      \ forfaitaire obligatoire"
+  first_day:
+    type: "integer"
+    description: "Jour du pp"
+    example: 10
+  amount:
+    type: "number"
+    format: "double"
+    description: "Montant des RPP (en €)"
+    example: 500
+  amount_indicator_code:
+    type: "string"
+    example: "B"
+    description: "Code Indicateur brut/net :\n - B : Brut \n - N : Net"
+  account:
+    allOf:
+    - $ref: "../components/AccountDTOV1.yaml"
+    - type: "object"

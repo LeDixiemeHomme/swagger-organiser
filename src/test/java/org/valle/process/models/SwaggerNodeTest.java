@@ -28,7 +28,7 @@ class SwaggerNodeTest {
             Set<String> expectedReferences
     ) {
         // Arrange
-        JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/" + inputFileName));
+        JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/cleared/" + inputFileName));
         JsonNode objectMap = jacksonUtils.readValue();
         // Act
         Set<String> actual = findRefs(objectMap.get("components").get("schemas").get(schemaName), objectMap, new HashSet<>());
@@ -71,7 +71,7 @@ class SwaggerNodeTest {
             Set<String> expectedReferences
     ) {
         // Arrange
-        JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/" + inputFileName));
+        JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/cleared/" + inputFileName));
         JsonNode jsonNode = jacksonUtils.readValue();
         SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
         // Act
@@ -162,19 +162,6 @@ class SwaggerNodeTest {
         Map<String, Object> actual = swaggerNode.decomposePaths();
         // Assert
         assertThat(actual).hasSize(2);
-    }
-
-    @Test
-    void test_decomposeComponentSchemas_OK() {
-        // Arrange
-        File swaggerFile = new File("src/test/resources/decomposed/swagger-initial.yml");
-        JacksonUtils jacksonUtils = new JacksonUtils(swaggerFile);
-        JsonNode jsonNode = jacksonUtils.readValue();
-        SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
-        // Act
-        Map<String, Object> actual = swaggerNode.decomposeComponentSchemas();
-        // Assert
-        assertThat(actual).hasSize(3);
     }
 
     @Test

@@ -1,0 +1,11 @@
+---
+type: "object"
+properties:
+  code:
+    type: "string"
+    description: "Code de l'erreur"
+    example: "E-40X-XXX | E-500"
+  message:
+    type: "string"
+    description: "Message d'erreur fonctionnel ou technique"
+    example: "<Erreur fonctionnelle> | Erreur serveur interne"

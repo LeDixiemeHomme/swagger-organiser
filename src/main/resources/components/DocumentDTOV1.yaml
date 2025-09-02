@@ -1,0 +1,44 @@
+---
+type: "object"
+properties:
+  code:
+    type: "string"
+    description: "Code Produit"
+    example: "TP002"
+  label:
+    type: "string"
+    description: "Nom du document utilisé pour affichage sur le parcours générique"
+    example: "Document Label"
+  label_to_present:
+    type: "string"
+    description: "Libellé complet du document, à afficher dans le parcours de signature.\
+      \ Libellé générique complété pour certains documents du nom de produit et/ou\
+      \ du numéro de contrat"
+    example: "Demande d'adhésion au contrat [nom_produit] n° [id_contrat]"
+  url:
+    type: "string"
+    description: "URL du document sur FM"
+    example: "https://dev-fm.predica.group.gca/caagis-fm-ihmpucc/getfile/20220216153129842_1PC2D2FG_ad9fa32842e4f59d89f410a090ee3784.PDF"
+  documents_to_present:
+    type: "array"
+    items:
+      $ref: "../components/DocumentToPresentDTOV1.yaml"
+  archive_id:
+    type: "string"
+    description: "Id Archive"
+    example: "202200690781566"
+  page_count:
+    type: "integer"
+    description: "Nombre de page du document"
+    format: "int32"
+    example: 2
+  signature_presentation_type:
+    type: "string"
+    description: "Type de présentation pour la signature du document, permet d'afficher\
+      \ le bon protocole de consentement en fonction des cas de figure. Cette valeur\
+      \ est composée de la concaténation des codes suivants en fonction des particularité\
+      s de l'acte d'adhésion :\n - RBC (Recueil de bon consentement, si investissement\
+      \ sur au moins un support de type FAF ou UCO)\n - SDF (Spécifités de fonctionnement,\
+      \ si investissement sur au moin un support atypique)\n - MDA (Mandat, si pré\
+      sence d'un mandat)."
+    example: "RBC SDF MDA"

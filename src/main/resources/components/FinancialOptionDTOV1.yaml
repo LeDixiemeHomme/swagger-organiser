@@ -1,0 +1,68 @@
+---
+title: "FinancialOptionDTOV1"
+type: "object"
+description: "Données relatives aux options financières. A renseigner si présence\
+  \ d'option(s) financière(s)"
+required:
+- "id"
+- "code"
+- "label"
+- "fees_rate"
+- "status_code"
+- "destination_ucs"
+properties:
+  id:
+    type: "string"
+    description: "identifiant de l'option financière"
+    example: "OPTSP1"
+    pattern: "^(?!\\s*$).+"
+  code:
+    type: "string"
+    description: "Code de l'option financière:\n - IP : Investissement progressif\
+      \ \n - RE : Réallocation d'actifs \n - SP : Sécurisation de la plus value \n\
+      \ - DY : Ecretage \n - SL : Stop loss \n - SR : Stop loss relatif \n - SW :\
+      \ Stop win \n - CL : Cliquetage des Performances \n - IM : IP Mandat"
+    example: "SP"
+    pattern: "^(?!\\s*$).+"
+  label:
+    type: "string"
+    description: "Libellé de l'option financière"
+    example: "Sécurisation de la plus value"
+    pattern: "^(?!\\s*$).+"
+  fees_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais associé à l'option financière"
+    example: 0.2
+    pattern: "^(?!\\s*$).+"
+  periodicity_code:
+    type: "string"
+    description: "Code périodicité de l'option financière (à renseigner si code =\
+      \ 'IP' ou 'RE') :\n - J : Journalière \n - M : Mensuelle \n - T : Trimestrielle\
+      \ \n - S : Semestrielle \n - A : Annuelle \n - U : Unique \n - PO : Fréquence\
+      \ variable"
+    example: "M"
+  duration_unit_code:
+    type: "string"
+    description: "Unité de durée de l'option financière (à renseigner si code = 'IP'\
+      \ ou 'CL' ou 'SP') :\n - A : Année \n - M : Mois \n "
+    example: "A"
+  duration:
+    type: "integer"
+    description: "durée de l'option financière (à renseigner si code = 'IP' ou 'CL'\
+      \ ou 'SP')"
+    example: 2
+  status_code:
+    type: "string"
+    description: "Code statut : \n - A : Actif \n - T : Terminée \n - R : Résilié\
+      e \n - N : Annulée \n - E : En attente"
+    example: "A"
+    pattern: "^(?!\\s*$).+"
+  origin_ucs:
+    type: "array"
+    items:
+      $ref: "../components/OriginUcsDTOV1.yaml"
+  destination_ucs:
+    type: "array"
+    items:
+      $ref: "../components/DestinationUcsDTOV1.yaml"

@@ -1,0 +1,24 @@
+---
+title: "DeathGuaranteeDTOV1"
+type: "object"
+description: "Garantie décès. A renseigner si une garantie décès optionnelle est souscrite"
+required:
+- "id"
+- "code"
+- "label"
+properties:
+  id:
+    type: "string"
+    description: "Id de la garantie décès optionnelle"
+    example: "TODO"
+    pattern: "^(?!\\s*$).+"
+  code:
+    type: "string"
+    description: "Code de la garantie décès optionnelle"
+    example: "TODO"
+    pattern: "^(?!\\s*$).+"
+  label:
+    type: "string"
+    description: "Texte de la garantie décès optionnelle"
+    example: "TODO"
+    pattern: "^(?!\\s*$).+"

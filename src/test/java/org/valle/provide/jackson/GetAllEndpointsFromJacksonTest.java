@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GetAllEndpointsFromJacksonTest {
 
-    public static final String SWAGGER_FILE_PATH = "src/test/resources/swagger-cobaye.yml";
+    public static final String SWAGGER_FILE_PATH = "src/test/resources/cleared/swagger-cobaye.yml";
 
     @Test
     void provide() {

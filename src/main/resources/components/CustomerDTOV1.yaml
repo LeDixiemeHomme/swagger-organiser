@@ -1,0 +1,19 @@
+---
+title: "CustomerDTOV1"
+type: "object"
+description: "Données relatives au client"
+required:
+- "id"
+- "uom_code"
+- "agency_code"
+properties:
+  id:
+    type: "string"
+    description: "Identifiant du client"
+    example: 9000035679
+    pattern: "^(?!\\s*$).+"
+  uom_code:
+    type: "string"
+    description: "Code caisse regionale sur 5 chiffres"
+    example: 20000
+    pattern: "^(?!\\s*$).+"

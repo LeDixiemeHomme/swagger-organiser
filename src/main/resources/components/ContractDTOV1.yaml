@@ -1,0 +1,119 @@
+---
+title: "ContractDTOV1"
+type: "object"
+description: "Données relatives au contrat"
+required:
+- "id"
+- "uc_management_expense_rate"
+- "euro_management_expense_rate"
+- "free_deposit_ncr_fees_rate"
+- "has_marketable_management_expense"
+- "has_consulting_service"
+- "offer"
+- "initial_payment"
+- "investment_repartitions"
+- "beneficiary_clause"
+properties:
+  id:
+    type: "string"
+    description: "Identifiant du contrat"
+    example: 98751867433
+    pattern: "^(?!\\s*$).+"
+  accounting_decree_date:
+    type: "string"
+    format: "date-time"
+    description: "Date arrêté comptable pour les clients ayant choisis d'être en exercice\
+      \ décalé. (si PER)"
+    example: "2023-03-08T10:39:24"
+  retirement_regime_enrollment_date:
+    type: "string"
+    format: "date-time"
+    description: "Date prévue de départ à la retraite (si PER)"
+    example: "2023-03-08T10:39:24"
+  insured_member_quality_code:
+    type: "string"
+    description: "Code qualité de l'adhérent (si PER) : \n - 1 : Chef d'exploitation\
+      \ \n - 2 : Conjoint d'agriculteur \n - 3 : Aide familial \n - 4 : Agriculteur\
+      \ retraité  \n - 5 : Commerçant \n - 6 : Artisan \n - 7 : Profession libérale\
+      \ ou indépendante   \n - 8 : Chef d'entreprise \n - 9 : Sans objet   \n - A\
+      \ : Auto-entrepreneur \n - B : Jeune installé \n - C : Retraité professionnel\
+      \   \n - D : Conjoint du professionnel \n - E : Enfant du professionnel   \n\
+      \ - F : Autre professionnel \n - G : conjoint salarié de l'exploitation  \n\
+      \ - H : Salarié de l’exploitation   \n - I : Travailleur Non Salarié non agricole\
+      \ \n - J : Conjoint collaborateur  \n - K : Chef d’exploitation ou d’entreprise\
+      \ agricole  \n - L : Enfant de l’agriculteur \n - M : Autre agriculteur \n -\
+      \ N : Particulier \n - O : PRO-BIC/BNC \n - P : PRO-AUTRES \n - Q : AGRI-CHEF\
+      \ D'EXPLOITATION OU D'ENTREPRISE AGRICOLE \n - R : AGRI-AIDE FAMILIALE \n -\
+      \ S : AGRI-CONJOINT COLLABORATEUR \n - T : MICRO ENTREPRENEUR \n - U : DIRIGEANTS\
+      \ ASSIMILES SALARIES \n - V : DIRIGEANTS NON-SALARIES NON MADELIN"
+    example: "C"
+    pattern: "^(?!\\s*$).+"
+  management_profil_code:
+    type: "string"
+    description: "Code du profil de risque du client"
+    example: 2
+    pattern: "^(?!\\s*$).+"
+  management_profil_label:
+    type: "string"
+    description: "Libellé du profil de risque du client"
+    example: "Prudent"
+    pattern: "^(?!\\s*$).+"
+  tax_framework_code:
+    type: "string"
+    description: "code du cadre fiscal :\n - 01 : Epargne handicap  \n - 02 : Rente\
+      \ survie  \n - 03 : Contrat de capitalisation nominatif \n - 04 : Contrat de\
+      \ capitalisation anonyme \n - 05 : Alsace / Moselle\n - 06 : Versements volontaires\
+      \ déductibles \n - 07 : Versements volontaires non déductibles / Epargne salariale"
+    example: "01"
+    pattern: "^(?!\\s*$).+"
+  fees_discount_reason_code:
+    type: "integer"
+    description: "Code du motif de la décôte du taux de frais standard sur VI ou VR.\
+      \ A renseigner uniquement si le conseiller a saisi une décôte par rapport au\
+      \ taux standard proposé."
+    example: 3
+  uc_management_expense_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais de gestion sur l'encours UC (Obligatoire pour la gamme\
+      \ UC)"
+    example: 0.95
+  euro_management_expense_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de frais de gestion sur l'encours Euro (Obligatoire pour la\
+      \ gamme UC)"
+    example: 0.8
+  free_deposit_ncr_fees_rate:
+    type: "number"
+    format: "double"
+    description: "Taux de Frais standard NCR sur VL."
+    example: 3.2
+  has_marketable_management_expense:
+    type: "boolean"
+    description: "Booléen indiquant la présence de frais de gestion négociable"
+  has_consulting_service:
+    type: "boolean"
+    description: "Booléen indiquant la présence du service conseil"
+  offer:
+    $ref: "../components/OfferDTOV1.yaml"
+  initial_payment:
+    $ref: "../components/InitialPaymentDTOV1.yaml"
+  programmed_deposit:
+    $ref: "../components/ProgrammedDepositDTOV1.yaml"
+  rpp:
+    $ref: "../components/RppDTOV1.yaml"
+  investment_repartitions:
+    type: "array"
+    items:
+      $ref: "../components/InvestmentRepartitionDTOV1.yaml"
+  beneficiary_clause:
+    $ref: "../components/BeneficiaryClauseDTOV1.yaml"
+  death_guarantee:
+    $ref: "../components/DeathGuaranteeDTOV1.yaml"
+  financial_options:
+    type: "array"
+    items:
+      $ref: "../components/FinancialOptionDTOV1.yaml"
+  mandate:
+    $ref: "../components/MandateDTOV1.yaml"

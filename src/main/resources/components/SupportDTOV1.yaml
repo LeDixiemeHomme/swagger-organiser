@@ -1,0 +1,58 @@
+---
+title: "SupportDTOV1"
+type: "object"
+description: "Données relatives à(aux) objet(s) sur le(s)quel(s) est(sont) réparti(s)\
+  \ le montant de l'investissement"
+required:
+- "code"
+- "isin_code"
+- "label"
+- "amf_typology_label"
+properties:
+  code:
+    type: "string"
+    description: "Code du support"
+    example: "001116"
+  isin_code:
+    type: "string"
+    description: "Code Isin du support"
+    example: "FR001400BL08"
+  label:
+    type: "string"
+    description: "Libellé du support"
+    example: "IMPACT TRANSITION BY CA SEPT 2022"
+    pattern: "^(?!\\s*$).+"
+  rate:
+    type: "number"
+    format: "double"
+    description: "Taux investi sur le support (en %). \n Soit le montant soit le taux\
+      \ doit être renseigné"
+    example: 100
+  amount:
+    type: "number"
+    format: "double"
+    description: "Montant investi sur le support (en €) \n Soit le montant soit le\
+      \ taux doit être renseigné"
+    example: 1000
+  amf_typology_label:
+    type: "string"
+    description: "Libellé classe AMF"
+    example: "Immobilier"
+  type_code:
+    type: "string"
+    description: "Code type de support spécifique : \n - U : UC NON FAF \n - F : UC\
+      \ FAF \n - M : MONETAIRE \n - C : EUROCROISSANCE \n - Z : PART PM EUROCROISSANCE\
+      \ \n - E : PART PTD EUROCROISSANCE \n - P : Support point \n - 8 : Euro 98"
+    example: "U"
+  nature_code:
+    type: "string"
+    description: "Code nature du support : \n - EE : European equity (Actions europé\
+      ennes) \n - FE : French equity (Actions françaises) \n - IE : International\
+      \ equity (Actions internationales) \n - DI : Diversifié \n - FF : Fonds à formule\
+      \ \n - ME : Monetary euro (Monétaire euro) \n - EU : Euro (Numéraire) \n - IB\
+      \ : International bonds (Obligations internationales) \n - EB : Europeen bonds\
+      \ (Obligations européennes) \n - UO : UC Obligataire \n - EC : Eurocroissance\
+      \ \n - IS : SCPI \n - IO : OPCI \n - IC : SCI \n - TC : Titre de créance \n\
+      - SF : SAF Monétarisé \n - OE : Action Euro \n - PR : Point Retraite \n - ET\
+      \ : Exchange-Traded Funds"
+    example: "IS"

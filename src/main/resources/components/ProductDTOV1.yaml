@@ -1,0 +1,39 @@
+---
+title: "ProductDTOV1"
+type: "object"
+description: "Donnée relatives au produit"
+required:
+- "code"
+- "label"
+properties:
+  code:
+    type: "string"
+    description: "Code produit"
+    example: "HG6831"
+    pattern: "^(?!\\s*$).+"
+  label:
+    type: "string"
+    description: "libellé du produit"
+    example: "LCL ACUITY EVOLUTION"
+    pattern: "^(?!\\s*$).+"
+  offer_function_code:
+    type: "string"
+    description: "Code option 'offre-produit' sélectionnée: Code spécifiant le fonctionnement\
+      \ d'un produit au sein d'une offre L'option est rattachée à un mode de gestion."
+    example: "OPT025"
+  offer_function_label:
+    type: "string"
+    description: "Libellé de l'option offre-produit (formule)"
+    example: "Access"
+    pattern: "^(?!\\s*$).+"
+  range_code:
+    type: "string"
+    description: "code type/gamme de produit : \n - F : Epargne en Unités de Compte\
+      \ \n - N : Epargne en numéraire \n  - I : Rente \n  - A : Prévoyance Santé de\
+      \ type rente invalidité (Dépendance) \n - 1 : Prévoyance Santé de type indemnité\
+      s journalières \n - 8 : Prévoyance Temporaire Décès \n - O : Financement et\
+      \ Assistance Obsèques \n - 0 : Prévoyance de type rente générique \n - J : Pré\
+      voyance de type Indemnité journalière générique \n - V : Prévoyance de type\
+      \ service générique \n - Q : Préovyance de type Capital générique"
+    example: "F"
+    pattern: "^(?!\\s*$).+"

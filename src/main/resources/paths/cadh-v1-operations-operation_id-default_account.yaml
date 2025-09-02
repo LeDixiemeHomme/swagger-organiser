@@ -1,0 +1,128 @@
+---
+get:
+  tags:
+  - "Récupération du numéro de compte bancaire"
+  summary: "Service de récupération du numéro de compte bancaire"
+  description: "Compte bancaire rattach&eacute; au versement initial lors de l'adh&eacute;sion\
+    \ <br> Temps de r&eacute;ponse maximal 0,400s."
+  operationId: "getDefaultAccount"
+  parameters:
+  - name: "Authorization"
+    in: "header"
+    description: "Le token pour authentifier le service appelant"
+    required: true
+    schema:
+      type: "string"
+      default: "Bearer JWT Token"
+  - name: "X-Passport"
+    in: "header"
+    description: "Le token utilisé pour propager l'identité de l'utilisateur"
+    required: true
+    schema:
+      type: "string"
+      default: "<JWT Token>"
+  - name: "Correlationid"
+    in: "header"
+    description: "L’identifiant de corrélation permet d’assurer la traçabilité des\
+      \ actions initiées par l’application consommatrice."
+    required: true
+    schema:
+      type: "string"
+      default: "f77270a9-b280-43e2-96e1-66c290d702b1"
+  - name: "operation_id"
+    in: "path"
+    description: "L’uuid de l'opération d'adhésion épargne"
+    required: true
+    schema:
+      type: "string"
+      default: "f6c290d70-b280-43e2-96e1-66c290d02b1"
+  responses:
+    "200":
+      description: "OK"
+      content:
+        application/json:
+          schema:
+            $ref: "../components/DefaultAccountOutputDTOV1.yaml"
+          examples:
+            "200":
+              description: "Compte bancaire de réference (lié au VI)"
+              value:
+                iban: "FR0330002000110000123456T00"
+                number: "0000123456T"
+                bic_code: "CRLYFRPPXXX"
+                owner: "M Jean Dupont"
+    "400":
+      description: "Un ou plusieurs param&egrave;tres d'entr&eacute;e sont incorrects\
+        \ ou une erreur fonctionnelle est survenue"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "../components/CaaErrorMessage.yaml"
+          examples:
+            E-400-000:
+              description: "E-400-000"
+              value:
+              - code: "E-400-000"
+                message: "Un ou plusieurs paramètres d'entrée sont incorrects ou une\
+                  \ erreur fonctionnelle est survenue"
+            E-400-001:
+              description: "E-400-001"
+              value:
+              - code: "E-400-001"
+                message: "Autre message 400"
+    "404":
+      description: "Aucun numéro de compte ne correspond au numéro d'opération saisi"
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "../components/CaaErrorMessage.yaml"
+          examples:
+            E-404-000:
+              description: "E-404-000"
+              value:
+                code: "E-404-000,"
+                message: "Aucun numéro de compte ne correspond au numéro d'opération\
+                  \ saisi"
+    "401":
+      description: "Acc&egrave;s refus&eacute;"
+      content:
+        application/json:
+          schema:
+            $ref: "../components/CaaErrorMessage.yaml"
+          examples:
+            E-401-000:
+              description: "E-401-000"
+              value:
+                code: "E-401-000"
+                message: "Accès refusé"
+    "403":
+      description: "Accès interdit"
+      content:
+        application/json:
+          schema:
+            $ref: "../components/CaaErrorMessage.yaml"
+          examples:
+            E-403-000:
+              description: "E-403-000"
+              value:
+                code: "E-403-000"
+                message: "Accès interdit, la fonctionnalité adhésion est désactivé\
+                  e"
+    "500":
+      description: "Erreur serveur interne"
+      content:
+        application/json:
+          schema:
+            $ref: "../components/CaaErrorMessage.yaml"
+          examples:
+            E-500:
+              description: "E-500"
+              value:
+                code: "E-500"
+                message: "Erreur serveur interne"
+  security:
+  - bearerAuth: []

@@ -1,0 +1,10 @@
+---
+title: "OperationOutputDTOV1"
+type: "object"
+required:
+- "id"
+properties:
+  id:
+    type: "string"
+    example: "4d7d6c3a-5c7b-4d67-9fba-93c6db215018"
+    pattern: "^(?!\\s*$).+"
