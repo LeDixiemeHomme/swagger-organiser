@@ -3,9 +3,7 @@ package org.valle.process;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.SwaggerNode;
-import org.valle.process.models.SwaggerRawValue;
 import org.valle.provide.GetSwaggerNode;
-import org.valle.provide.GetSwaggerRawValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,32 +12,21 @@ import java.util.Map;
 @AllArgsConstructor
 public class DecomposeSwaggerImpl implements DecomposeSwagger {
 
-    private final GetSwaggerRawValue getSwaggerRawValue;
-
     private final GetSwaggerNode getSwaggerNode;
 
     @Override
-    public Map<String, Object> execute() {
+    public Map<String, SwaggerNode> execute() {
 
         SwaggerNode swaggerNode = this.getSwaggerNode.provide();
 
-        SwaggerNode.addPathReference(swaggerNode.node().get("paths"));
-        SwaggerNode.addFileReference(swaggerNode.node().get("components"));
+        Map<String, SwaggerNode> decomposed = new HashMap<>();
 
-        SwaggerRawValue swaggerRawValue = this.getSwaggerRawValue.provide();
+        decomposed.put("paths", swaggerNode.addPathReference().decomposePaths());
+        decomposed.put("components", swaggerNode.addFileReference().decomposeComponent());
 
-        // remplacer les ref par des ref vers les fichiers externes
-
-        SwaggerRawValue rawValueWithRef = swaggerRawValue
+        decomposed.put("main", swaggerNode
                 .removeComponents()
-//                .removePaths()
-                .changePathReferences();
-//                .changeComponentsReferences();
-
-        Map<String, Object> decomposed = new HashMap<>();
-        decomposed.put("paths", swaggerNode.decomposePaths());
-        decomposed.put("components", swaggerNode.decomposeComponent());
-        decomposed.put("main", rawValueWithRef.rawValue());
+                .changePathReferences());
 
         return decomposed;
     }

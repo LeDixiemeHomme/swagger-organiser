@@ -1,11 +1,12 @@
 package org.valle.process.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -81,9 +82,31 @@ public record SwaggerNode(
         return refs;
     }
 
-    public static void addFileReference(JsonNode node) {
-        if (node.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+    public SwaggerNode removeComponents() {
+        ((ObjectNode) this.node()).remove("components");
+        return this;
+    }
+
+    public SwaggerNode changePathReferences() {
+        JsonNode paths = this.node().get("paths");
+        paths.fields().forEachRemaining(entry -> {
+            String key = entry.getKey();
+            String withoutFirstSlash = key.startsWith("/") ? key.substring(1) : key;
+            String ref = withoutFirstSlash
+                    .replace("/", "-")
+                    .replace("{", "")
+                    .replace("}", "");
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            node.put("$ref", "paths/%s.%s".formatted(ref, "yaml"));
+            entry.setValue(node);
+        });
+        return this;
+    }
+
+    public SwaggerNode addFileReference() {
+        JsonNode components = this.node();
+        if (components.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = components.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
@@ -91,59 +114,57 @@ public record SwaggerNode(
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
                     field.setValue(new TextNode(dollarRef.getFileReference() + ".yaml"));
                 } else {
-                    addFileReference(field.getValue());
+                    new SwaggerNode(field.getValue()).addFileReference();
                 }
             }
-        } else if (node.isArray()) {
-            for (JsonNode item : node) {
-                addFileReference(item);
+        } else if (components.isArray()) {
+            for (JsonNode item : components) {
+                new SwaggerNode(item).addFileReference();
             }
         }
+        return this;
     }
 
-    public static void addPathReference(JsonNode node) {
-        if (node.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> field = fields.next();
-                // condition d'ajout dans la liste des références
-                if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
-                    DollarRef dollarRef = new DollarRef(field.getValue().asText());
-                    field.setValue(new TextNode(dollarRef.getPathReference()));
-                } else {
-                    addFileReference(field.getValue());
-                }
-            }
-        } else if (node.isArray()) {
-            for (JsonNode item : node) {
-                addFileReference(item);
+    public SwaggerNode addPathReference() {
+        JsonNode paths = this.node().get("paths");
+        Iterator<Map.Entry<String, JsonNode>> fields = paths.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            // condition d'ajout dans la liste des références
+            if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
+                DollarRef dollarRef = new DollarRef(field.getValue().asText());
+                field.setValue(new TextNode(dollarRef.getPathReference()));
             }
         }
+        return this;
     }
 
-    public Map<String, Object> decomposePaths() {
+    public SwaggerNode decomposePaths() {
         // Extraction des paths
-        Map<String, Object> paths = new HashMap<>();
+        ObjectNode paths = new ObjectMapper().createObjectNode();
         this.node().get("paths").fields().forEachRemaining(entry -> {
             // Chaque endpoint dans un fichier séparé (ici une map)
             String key = entry.getKey();
             String withoutFirstSlash = key.startsWith("/") ? key.substring(1) : key;
-            String ref = withoutFirstSlash.replace("/", "-").replace("{", "").replace("}", "");
-            paths.put(ref, entry.getValue());
+            String ref = withoutFirstSlash
+                    .replace("/", "-")
+                    .replace("{", "")
+                    .replace("}", "");
+            paths.putIfAbsent(ref, entry.getValue());
         });
-        return paths;
+        return new SwaggerNode(paths);
     }
 
-    public Map<String, Object> decomposeComponent() {
+    public SwaggerNode decomposeComponent() {
         // Extraction des components/schemas
-        Map<String, Object> components = new HashMap<>();
+        ObjectNode components = new ObjectMapper().createObjectNode();
         if (node().has("components")) {
             node().get("components").fields().forEachRemaining(entry -> {
                 entry.getValue().fields().forEachRemaining(field -> {
-                    components.put(field.getKey(), field.getValue());
+                    components.putIfAbsent(field.getKey(), field.getValue());
                 });
             });
         }
-        return components;
+        return new SwaggerNode(components);
     }
 }

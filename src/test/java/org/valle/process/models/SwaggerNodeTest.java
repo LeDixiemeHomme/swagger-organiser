@@ -9,7 +9,6 @@ import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -159,9 +158,9 @@ class SwaggerNodeTest {
         JsonNode jsonNode = jacksonUtils.readValue();
         SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
         // Act
-        Map<String, Object> actual = swaggerNode.decomposePaths();
+        SwaggerNode actual = swaggerNode.decomposePaths();
         // Assert
-        assertThat(actual).hasSize(2);
+        assertThat(actual.node().properties()).hasSize(2);
     }
 
     @Test
@@ -172,8 +171,8 @@ class SwaggerNodeTest {
         JsonNode jsonNode = jacksonUtils.readValue();
         SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
         // Act
-        Map<String, Object> actual = swaggerNode.decomposeComponent();
+        SwaggerNode actual = swaggerNode.decomposeComponent();
         // Assert
-        assertThat(actual).hasSize(3);
+        assertThat(actual.node().properties()).hasSize(3);
     }
 }

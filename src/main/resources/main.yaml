@@ -1,8 +1,19 @@
 ---
-components: {}
+openapi: "3.0.1"
+info:
+  title: "Subscription API"
+  description: "Swagger for subscription API Internet/Intranet : API de l'acte d'adhé\
+    sion épargne retraite individuelle"
+  termsOfService: "termsOfServiceUrl"
+  contact:
+    name: "contact"
+  license:
+    name: "license"
+  version: "version 1"
 servers:
 - url: "/"
-openapi: "3.0.1"
+tags:
+- name: "Acte d'adhésion"
 paths:
   /cadh/v1/operations:
     $ref: "paths/cadh-v1-operations.yaml"
@@ -14,15 +25,3 @@ paths:
     $ref: "paths/cadh-v1-operations-operation_id-validity.yaml"
   /cadh/v1/operations/{operation_id}/enforcement:
     $ref: "paths/cadh-v1-operations-operation_id-enforcement.yaml"
-info:
-  title: "Subscription API"
-  description: "Swagger for subscription API Internet/Intranet : API de l'acte d'adhé\
-    sion épargne retraite individuelle"
-  termsOfService: "termsOfServiceUrl"
-  contact:
-    name: "contact"
-  license:
-    name: "license"
-  version: "version 1"
-tags:
-- name: "Acte d'adhésion"
