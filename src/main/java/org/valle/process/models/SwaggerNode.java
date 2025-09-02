@@ -167,4 +167,21 @@ public record SwaggerNode(
         }
         return new SwaggerNode(components);
     }
+
+    public SwaggerNode removeElementsByName(
+            Set<EndPoint> endPointsToRemove,
+            Set<String> schemasToRemove
+    ) {
+        endPointsToRemove.forEach(endPointToRm ->
+                ((ObjectNode) this.node().get("paths")).remove(endPointToRm.path()));
+
+        schemasToRemove.forEach(schemaToRm -> {
+            JsonNode components = this.node().get("components");
+            components.fields().forEachRemaining(entry -> {
+                ((ObjectNode) entry.getValue()).remove(schemaToRm);
+            });
+        });
+
+        return this;
+    }
 }

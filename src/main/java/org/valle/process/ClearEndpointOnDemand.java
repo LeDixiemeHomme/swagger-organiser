@@ -1,10 +1,10 @@
 package org.valle.process;
 
 import org.valle.process.models.EndPoint;
+import org.valle.process.models.SwaggerNode;
 
-import java.util.Map;
 import java.util.Set;
 
 public interface ClearEndpointOnDemand {
-    Map<String, Object> execute(Set<EndPoint> toBeCleared);
+    SwaggerNode execute(Set<EndPoint> toBeCleared);
 }

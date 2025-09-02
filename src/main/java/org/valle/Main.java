@@ -13,7 +13,6 @@ import org.valle.process.models.SwaggerNode;
 import org.valle.provide.jackson.GetAllEndpointsFromJackson;
 import org.valle.provide.jackson.GetAllSchemasFromJacksonImpl;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
-import org.valle.provide.jackson.GetSwaggerRawValueJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
@@ -43,7 +42,6 @@ public class Main {
 
         ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
                 getAllEndpoints,
-                new GetSwaggerRawValueJacksonImpl(jacksonUtilsCobaye),
                 new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye)
         );
 
@@ -57,7 +55,7 @@ public class Main {
 
         System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCleaned).provide().size());
         showEndpointsCleaned.execute();
-        clearEndpointOnDemand.execute(endpointsToClean);
+        SwaggerNode cleaned = clearEndpointOnDemand.execute(endpointsToClean);
         System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCleaned).provide().size());
         showEndpointsCleaned.execute();
 
