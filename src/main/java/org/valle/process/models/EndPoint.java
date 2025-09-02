@@ -1,17 +1,12 @@
 package org.valle.process.models;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-
-import java.util.List;
 
 @Builder
 public record EndPoint(
         @NotNull String method,
-        @NotNull String path,
-        @Nullable String requestBody,
-        @NotNull List<String> linkedSchemas
+        @NotNull String path
 ) {
     @Override
     public boolean equals(Object obj) {

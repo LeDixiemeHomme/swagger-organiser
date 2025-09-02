@@ -22,6 +22,17 @@ class DollarRefTest {
     }
 
     @Test
+    void test_getFileReference() {
+        // Arrange
+        String rawValue = "#/components/schemas/OperationInputDTOV1";
+        DollarRef dollarRef = new DollarRef(rawValue);
+        // Act
+        String actual = dollarRef.getFileReference();
+        // Assert
+        assertThat(actual).isEqualTo("../components/OperationInputDTOV1");
+    }
+
+    @Test
     void test_getReferencedNode() {
         // Arrange
         String rawValue = "#/components/schemas/OperationInputDTOV1";

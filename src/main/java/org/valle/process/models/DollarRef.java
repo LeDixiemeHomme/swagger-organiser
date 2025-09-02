@@ -17,6 +17,16 @@ public record DollarRef(
         return parts[parts.length - 1];
     }
 
+    public String getFileReference() {
+        String[] parts = rawValue.split("/");
+        return "../components/%s".formatted(parts[parts.length - 1]);
+    }
+
+    public String getPathReference() {
+        String[] parts = rawValue.split("/");
+        return "../paths/%s".formatted(parts[parts.length - 1]);
+    }
+
     public JsonNode getReferencedNode(JsonNode jsonNode) {
         String[] parts = rawValue.split("/");
         JsonNode currentNode = jsonNode;

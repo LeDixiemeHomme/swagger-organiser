@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.EndPoint;
 import org.valle.provide.GetAllEndpoints;
+import org.valle.provide.GetSwaggerNode;
 import org.valle.provide.GetSwaggerRawValue;
-import org.valle.provide.GetSwaggerValue;
 
 import java.util.Map;
 import java.util.Set;
@@ -18,12 +18,12 @@ public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
 
     private final GetSwaggerRawValue getSwaggerRawValue;
 
-    private final GetSwaggerValue getSwaggerValue;
+    private final GetSwaggerNode getSwaggerNode;
 
     @Override
     public Map<String, Object> execute(Set<EndPoint> toBeCleared) {
 
-        Set<String> schemasToRemove = this.getSwaggerValue.provide().getSchemaNamesToBeRemoved(
+        Set<String> schemasToRemove = this.getSwaggerNode.provide().getSchemaNamesToBeRemoved(
                 this.getAllEndpoints.provide(),
                 toBeCleared
         );

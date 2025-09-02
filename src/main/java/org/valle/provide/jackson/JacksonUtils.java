@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
+import org.valle.process.models.Extension;
 
 import java.io.File;
 import java.util.Map;
@@ -37,9 +38,9 @@ public class JacksonUtils {
         }
     }
 
-    public void writeValue(JsonNode node, File targetSwaggerFile) {
+    public void writeValue(JsonNode node) {
         try {
-            this.mapper.writeValue(targetSwaggerFile, node);
+            this.mapper.writeValue(this.swaggerFile, node);
         } catch (Exception e) {
             throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
         }
@@ -61,19 +62,27 @@ public class JacksonUtils {
         }
     }
 
+    public Extension getSwaggerFileExtension() {
+        String path = this.swaggerFile.getPath();
+        if (path.endsWith(".yml") || path.endsWith(".yaml")) {
+            return Extension.YAML;
+        } else if (path.endsWith(".json")) {
+            return Extension.JSON;
+        } else {
+            throw new IllegalArgumentException("Unsupported file type: " + path);
+        }
+    }
+
     /**
      * YAMLFactory hérite de JsonFactory.
      *
      * @return Une factory JSON ou YAML en fonction de l'extension du fichier swagger
      */
     public JsonFactory getParseFactory() {
-        String path = this.swaggerFile.getPath();
-        if (path.endsWith(".yml") || path.endsWith(".yaml")) {
-            return new YAMLFactory();
-        } else if (path.endsWith(".json")) {
-            return new JsonFactory();
-        } else {
-            throw new IllegalArgumentException("Unsupported file type: " + path);
-        }
+        Extension extension = this.getSwaggerFileExtension();
+        return switch (extension) {
+            case YAML -> new YAMLFactory();
+            case JSON -> new JsonFactory();
+        };
     }
 }

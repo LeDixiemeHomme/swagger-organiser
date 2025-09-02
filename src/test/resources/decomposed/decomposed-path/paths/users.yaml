@@ -1,0 +1,17 @@
+get:
+  summary: Liste des utilisateurs
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../components/User.yml'
+    '400':
+      description: Erreur
+      content:
+        application/json:
+          schema:
+            $ref: '../components/Error.yml'
+
+

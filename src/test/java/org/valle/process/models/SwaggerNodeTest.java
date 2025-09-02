@@ -1,6 +1,7 @@
 package org.valle.process.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -8,12 +9,12 @@ import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.valle.process.models.SwaggerNode.findRefs;
-import static org.valle.process.models.SwaggerNode.getAllNamedReferencesOfAPath;
 
 class SwaggerNodeTest {
 
@@ -71,8 +72,10 @@ class SwaggerNodeTest {
     ) {
         // Arrange
         JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/" + inputFileName));
+        JsonNode jsonNode = jacksonUtils.readValue();
+        SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
         // Act
-        Set<String> actual = getAllNamedReferencesOfAPath(endPoint, jacksonUtils.readValue());
+        Set<String> actual = swaggerNode.getAllNamedReferencesOfAPath(endPoint);
         // Assert
         assertThat(actual)
                 .usingRecursiveComparison()
@@ -146,5 +149,44 @@ class SwaggerNodeTest {
                         Set.of("Order", "Address", "Customer")
                 )
         );
+    }
+
+    @Test
+    void test_decomposePaths_OK() {
+        // Arrange
+        File swaggerFile = new File("src/test/resources/decomposed/swagger-initial.yml");
+        JacksonUtils jacksonUtils = new JacksonUtils(swaggerFile);
+        JsonNode jsonNode = jacksonUtils.readValue();
+        SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
+        // Act
+        Map<String, Object> actual = swaggerNode.decomposePaths();
+        // Assert
+        assertThat(actual).hasSize(2);
+    }
+
+    @Test
+    void test_decomposeComponentSchemas_OK() {
+        // Arrange
+        File swaggerFile = new File("src/test/resources/decomposed/swagger-initial.yml");
+        JacksonUtils jacksonUtils = new JacksonUtils(swaggerFile);
+        JsonNode jsonNode = jacksonUtils.readValue();
+        SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
+        // Act
+        Map<String, Object> actual = swaggerNode.decomposeComponentSchemas();
+        // Assert
+        assertThat(actual).hasSize(3);
+    }
+
+    @Test
+    void test_decomposeComponent_OK() {
+        // Arrange
+        File swaggerFile = new File("src/test/resources/decomposed/swagger-initial.yml");
+        JacksonUtils jacksonUtils = new JacksonUtils(swaggerFile);
+        JsonNode jsonNode = jacksonUtils.readValue();
+        SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
+        // Act
+        Map<String, Object> actual = swaggerNode.decomposeComponent();
+        // Assert
+        assertThat(actual).hasSize(3);
     }
 }

@@ -13,6 +13,9 @@ public class GetSwaggerRawValueJacksonImpl implements GetSwaggerRawValue {
 
     @Override
     public SwaggerRawValue provide() {
-        return new SwaggerRawValue(jacksonUtils.readRawValue());
+        return SwaggerRawValue.builder()
+                .rawValue(jacksonUtils.readRawValue())
+                .extension(jacksonUtils.getSwaggerFileExtension())
+                .build();
     }
 }
