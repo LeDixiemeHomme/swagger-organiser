@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,13 +16,13 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 
+@Builder(toBuilder = true)
 public record SwaggerNode(
-        @NotNull @Valid JsonNode node
+        @NotNull @Valid JsonNode node,
+        @NotNull @Valid Extension extension
 ) {
 
-    public Set<String> getSchemaNamesToBeRemoved(
-            Set<EndPoint> endPointsToBeRemoved
-    ) {
+    public Set<String> getSchemaNamesToBeRemoved(Set<EndPoint> endPointsToBeRemoved) {
 
         Set<EndPoint> endPointsToKeep = new HashSet<>(this.getAllEndpoints());
         endPointsToKeep.removeAll(endPointsToBeRemoved);
@@ -96,7 +97,7 @@ public record SwaggerNode(
                     .replace("{", "")
                     .replace("}", "");
             ObjectNode node = new ObjectMapper().createObjectNode();
-            node.put("$ref", "paths/%s.%s".formatted(ref, "yaml"));
+            node.put("$ref", "paths/%s.%s".formatted(ref, this.extension().toString().toLowerCase()));
             entry.setValue(node);
         });
         return this;
@@ -110,14 +111,15 @@ public record SwaggerNode(
                 // condition d'ajout dans la liste des références
                 if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
-                    field.setValue(new TextNode(dollarRef.getFileReference() + ".yaml"));
+                    String refValue = dollarRef.getComponentFileReference() + ".%s".formatted(this.extension().toString().toLowerCase());
+                    field.setValue(new TextNode(refValue));
                 } else {
-                    new SwaggerNode(field.getValue()).addComponentFileReferences();
+                    this.toBuilder().node(field.getValue()).build().addComponentFileReferences();
                 }
             }
         } else if (this.node().isArray()) {
             for (JsonNode item : this.node()) {
-                new SwaggerNode(item).addComponentFileReferences();
+                this.toBuilder().node(item).build().addComponentFileReferences();
             }
         }
         return this;
@@ -131,7 +133,7 @@ public record SwaggerNode(
             // condition d'ajout dans la liste des références
             if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
                 DollarRef dollarRef = new DollarRef(field.getValue().asText());
-                field.setValue(new TextNode(dollarRef.getPathReference()));
+                field.setValue(new TextNode(dollarRef.getPathFileReference()));
             }
         }
         return this;
@@ -150,7 +152,7 @@ public record SwaggerNode(
                     .replace("}", "");
             paths.putIfAbsent(ref, entry.getValue());
         });
-        return new SwaggerNode(paths);
+        return this.toBuilder().node(paths).build();
     }
 
     public SwaggerNode decomposeComponent() {
@@ -163,7 +165,7 @@ public record SwaggerNode(
                 });
             });
         }
-        return new SwaggerNode(components);
+        return this.toBuilder().node(components).build();
     }
 
     public SwaggerNode removeElementsByName(

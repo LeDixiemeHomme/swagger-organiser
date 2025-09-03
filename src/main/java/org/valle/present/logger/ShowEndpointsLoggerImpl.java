@@ -8,6 +8,7 @@ import java.util.Set;
 
 @Slf4j
 public class ShowEndpointsLoggerImpl implements ShowEndpoints {
+
     @Override
     public void display(Set<EndPoint> endPoints) {
         endPoints.forEach(endPoint -> {

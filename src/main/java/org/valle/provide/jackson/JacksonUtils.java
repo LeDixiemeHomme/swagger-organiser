@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import org.valle.process.models.Extension;
+import org.valle.process.models.SwaggerNode;
 
 import java.io.File;
-import java.util.Map;
 
 public class JacksonUtils {
 
@@ -20,6 +20,13 @@ public class JacksonUtils {
     public JacksonUtils(File swaggerFile) {
         this.swaggerFile = swaggerFile;
         this.mapper = new ObjectMapper(this.getParseFactory());
+    }
+
+    public SwaggerNode getSwaggerNode() {
+        return SwaggerNode.builder()
+                .node(this.readValue())
+                .extension(this.getSwaggerFileExtension())
+                .build();
     }
 
     public JsonNode readValue() {

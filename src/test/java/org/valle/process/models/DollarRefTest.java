@@ -22,12 +22,12 @@ class DollarRefTest {
     }
 
     @Test
-    void test_getFileReference() {
+    void test_getComponentFileReference() {
         // Arrange
         String rawValue = "#/components/schemas/OperationInputDTOV1";
         DollarRef dollarRef = new DollarRef(rawValue);
         // Act
-        String actual = dollarRef.getFileReference();
+        String actual = dollarRef.getComponentFileReference();
         // Assert
         assertThat(actual).isEqualTo("../components/OperationInputDTOV1");
     }

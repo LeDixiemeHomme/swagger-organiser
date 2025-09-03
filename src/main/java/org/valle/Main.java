@@ -22,7 +22,7 @@ public class Main {
         JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
 
         ShowEndpointsImpl showEndpointsCobaye = new ShowEndpointsImpl(
-                jacksonUtilsCobaye,
+                new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye),
                 new ShowEndpointsLoggerImpl()
         );
 

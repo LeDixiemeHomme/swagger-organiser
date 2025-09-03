@@ -17,12 +17,12 @@ public record DollarRef(
         return parts[parts.length - 1];
     }
 
-    public String getFileReference() {
+    public String getComponentFileReference() {
         String[] parts = rawValue.split("/");
         return "../components/%s".formatted(parts[parts.length - 1]);
     }
 
-    public String getPathReference() {
+    public String getPathFileReference() {
         String[] parts = rawValue.split("/");
         return "../paths/%s".formatted(parts[parts.length - 1]);
     }

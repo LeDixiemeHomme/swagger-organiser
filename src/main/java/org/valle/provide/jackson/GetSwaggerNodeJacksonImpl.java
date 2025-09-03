@@ -13,6 +13,6 @@ public class GetSwaggerNodeJacksonImpl implements GetSwaggerNode {
 
     @Override
     public SwaggerNode provide() {
-        return new SwaggerNode(jacksonUtils.readValue());
+        return this.jacksonUtils.getSwaggerNode();
     }
 }
