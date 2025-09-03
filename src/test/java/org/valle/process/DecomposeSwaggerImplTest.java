@@ -2,7 +2,7 @@ package org.valle.process;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
-import org.valle.persist.PersistResultNodeImpl;
+import org.valle.persist.jackson.PersistResultNodeImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;

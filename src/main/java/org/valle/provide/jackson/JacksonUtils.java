@@ -30,33 +30,9 @@ public class JacksonUtils {
         }
     }
 
-    public Map<String, Object> readRawValue() {
-        try {
-            return this.mapper.readValue(this.swaggerFile, Map.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to read value from swagger file: " + swaggerFile.getPath(), e);
-        }
-    }
-
     public void writeValue(JsonNode node) {
         try {
             this.mapper.writeValue(this.swaggerFile, node);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
-        }
-    }
-
-    public void writeRawValue(Map<String, Object> objectMap, File targetSwaggerFile) {
-        try {
-            this.mapper.writeValue(targetSwaggerFile, objectMap);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
-        }
-    }
-
-    public void writeRawValueToSwaggerFile(Map<String, Object> objectMap) {
-        try {
-            this.mapper.writeValue(this.swaggerFile, objectMap);
         } catch (Exception e) {
             throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
         }

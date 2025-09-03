@@ -14,19 +14,26 @@ public class DecomposeSwaggerImpl implements DecomposeSwagger {
 
     @Override
     public DecomposedSwagger execute() {
-
+        // 1 - Récupérer le contenu du swagger
         SwaggerNode swaggerNode = this.getSwaggerNode.provide();
 
-        // ici on récupère les paths et components
-        SwaggerNode paths = swaggerNode.addPathFileReferences().decomposePaths();
-        SwaggerNode components = swaggerNode.addComponentFileReferences().decomposeComponent();
+        // 2 - Modifie les ref des paths et components pour ajouter les ref des fichiers components
+        SwaggerNode swaggerWithRefs = swaggerNode
+                .addPathFileReferences()
+                .addComponentFileReferences();
 
-        SwaggerNode main = swaggerNode
+        // 3 - Récupère le contenu des paths et components
+        SwaggerNode paths = swaggerWithRefs.decomposePaths();
+        SwaggerNode components = swaggerWithRefs.decomposeComponent();
+
+        // 4 - Supprime les components du swagger principal
+        SwaggerNode decomposedMain = swaggerWithRefs
                 .removeComponents()
+                // 5 - Modifie les refs des paths pour ajouter les refs des fichiers paths
                 .changePathReferences();
 
         return DecomposedSwagger.builder()
-                .main(main)
+                .main(decomposedMain)
                 .paths(paths)
                 .components(components)
                 .build();

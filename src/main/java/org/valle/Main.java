@@ -2,16 +2,14 @@ package org.valle;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.valle.persist.PersistResultNodeImpl;
+import org.valle.persist.jackson.PersistResultNodeImpl;
 import org.valle.present.logger.ShowEndpointsLoggerImpl;
 import org.valle.process.ClearEndpointOnDemandImpl;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.ShowEndpointsImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
-import org.valle.process.models.SwaggerNode;
 import org.valle.provide.jackson.GetAllEndpointsFromJackson;
-import org.valle.provide.jackson.GetAllSchemasFromJacksonImpl;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
@@ -23,7 +21,6 @@ public class Main {
     public static void main(String[] args) {
 
         JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
-        JacksonUtils jacksonUtilsCleaned = new JacksonUtils(new File("src/main/resources/swagger-cleaned.yml"));
 
         GetAllEndpointsFromJackson getAllEndpoints = new GetAllEndpointsFromJackson(jacksonUtilsCobaye);
 
@@ -32,11 +29,6 @@ public class Main {
                 new ShowEndpointsLoggerImpl()
         );
 
-        ShowEndpointsImpl showEndpointsCleaned = new ShowEndpointsImpl(
-                new GetAllEndpointsFromJackson(jacksonUtilsCleaned),
-                new ShowEndpointsLoggerImpl()
-        );
-        System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCobaye).provide().size());
         showEndpointsCobaye.execute();
 
         ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
@@ -52,11 +44,7 @@ public class Main {
                         .build()
         );
 
-        System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCleaned).provide().size());
-        showEndpointsCleaned.execute();
-        SwaggerNode cleaned = clearEndpointOnDemand.execute(endpointsToClean);
-        System.out.println(new GetAllSchemasFromJacksonImpl(jacksonUtilsCleaned).provide().size());
-        showEndpointsCleaned.execute();
+        clearEndpointOnDemand.execute(endpointsToClean);
 
         JacksonUtils jacksonUtilsInitial = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
 
