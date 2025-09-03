@@ -3,7 +3,6 @@ package org.valle.process;
 import org.junit.jupiter.api.Test;
 import org.valle.process.models.EndPoint;
 import org.valle.process.models.SwaggerNode;
-import org.valle.provide.jackson.GetAllEndpointsFromJackson;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
@@ -15,10 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ClearEndpointOnDemandImplTest {
     JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
 
-    GetAllEndpointsFromJackson getAllEndpoints = new GetAllEndpointsFromJackson(jacksonUtilsCobaye);
-
     ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
-            getAllEndpoints,
             new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye)
     );
 

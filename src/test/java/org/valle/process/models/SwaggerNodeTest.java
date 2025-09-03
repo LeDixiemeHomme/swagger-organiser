@@ -175,4 +175,18 @@ class SwaggerNodeTest {
         // Assert
         assertThat(actual.node().properties()).hasSize(3);
     }
+
+    public static final String SWAGGER_FILE_PATH = "src/test/resources/cleared/swagger-cobaye.yml";
+
+    @Test
+    void test_getAllEndpoints() {
+        // Arrange
+        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File(SWAGGER_FILE_PATH));
+        JsonNode jsonNode = jacksonUtilsCobaye.readValue();
+        SwaggerNode swaggerNode = new SwaggerNode(jsonNode);
+        // Act
+        var endpoints = swaggerNode.getAllEndpoints();
+        // Assert
+        assertThat(endpoints).hasSize(5);
+    }
 }

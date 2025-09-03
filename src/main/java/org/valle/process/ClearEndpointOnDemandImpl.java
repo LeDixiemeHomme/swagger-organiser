@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.EndPoint;
 import org.valle.process.models.SwaggerNode;
-import org.valle.provide.GetAllEndpoints;
 import org.valle.provide.GetSwaggerNode;
 
 import java.util.Set;
@@ -13,19 +12,17 @@ import java.util.Set;
 @AllArgsConstructor
 public class ClearEndpointOnDemandImpl implements ClearEndpointOnDemand {
 
-    private final GetAllEndpoints getAllEndpoints;
-
     private final GetSwaggerNode getSwaggerNode;
 
     @Override
     public SwaggerNode execute(Set<EndPoint> toBeCleared) {
-
+        // 1 - Récupérer le contenu du swagger
         SwaggerNode swaggerNode = this.getSwaggerNode.provide();
 
-        Set<String> schemasToRemove = swaggerNode.getSchemaNamesToBeRemoved(
-                this.getAllEndpoints.provide(),
-                toBeCleared
-        );
+        // 2 - Récupérer les schemas associés aux endpoints à supprimer
+        Set<String> schemasToRemove = swaggerNode.getSchemaNamesToBeRemoved(toBeCleared);
+
+        // 3 - Supprimer les endpoints et les schemas associés
         SwaggerNode clearedSwagger = swaggerNode.removeElementsByName(toBeCleared, schemasToRemove);
 
         log.debug("Swagger cleared: {}", clearedSwagger);

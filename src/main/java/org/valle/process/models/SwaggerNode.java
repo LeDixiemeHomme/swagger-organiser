@@ -20,11 +20,10 @@ public record SwaggerNode(
 ) {
 
     public Set<String> getSchemaNamesToBeRemoved(
-            Set<EndPoint> allEndPoints,
             Set<EndPoint> endPointsToBeRemoved
     ) {
 
-        Set<EndPoint> endPointsToKeep = new HashSet<>(allEndPoints);
+        Set<EndPoint> endPointsToKeep = new HashSet<>(this.getAllEndpoints());
         endPointsToKeep.removeAll(endPointsToBeRemoved);
 
         Set<String> schemasToKeep = endPointsToKeep.stream()
@@ -182,5 +181,30 @@ public record SwaggerNode(
         });
 
         return this;
+    }
+
+    public Set<EndPoint> getAllEndpoints() {
+        // Lecture des endpoints du swagger
+        JsonNode paths = this.node().get("paths");
+
+        Iterator<Map.Entry<String, JsonNode>> pathsFields = paths.fields();
+        Set<EndPoint> endpoints = new HashSet<>();
+
+        while (pathsFields.hasNext()) {
+            Map.Entry<String, JsonNode> pField = pathsFields.next();
+            String path = pField.getKey();
+            JsonNode methods = pField.getValue();
+            Iterator<Map.Entry<String, JsonNode>> methodsFields = methods.fields();
+            while (methodsFields.hasNext()) {
+                Map.Entry<String, JsonNode> mField = methodsFields.next();
+                endpoints.add(
+                        EndPoint.builder()
+                                .method(mField.getKey())
+                                .path(path)
+                                .build()
+                );
+            }
+        }
+        return endpoints;
     }
 }

@@ -9,7 +9,6 @@ import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.ShowEndpointsImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
-import org.valle.provide.jackson.GetAllEndpointsFromJackson;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
@@ -22,17 +21,14 @@ public class Main {
 
         JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
 
-        GetAllEndpointsFromJackson getAllEndpoints = new GetAllEndpointsFromJackson(jacksonUtilsCobaye);
-
         ShowEndpointsImpl showEndpointsCobaye = new ShowEndpointsImpl(
-                getAllEndpoints,
+                jacksonUtilsCobaye,
                 new ShowEndpointsLoggerImpl()
         );
 
         showEndpointsCobaye.execute();
 
         ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
-                getAllEndpoints,
                 new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye)
         );
 

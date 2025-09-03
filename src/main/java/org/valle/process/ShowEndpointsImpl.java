@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.present.ShowEndpoints;
 import org.valle.process.models.EndPoint;
-import org.valle.provide.GetAllEndpoints;
+import org.valle.process.models.SwaggerNode;
+import org.valle.provide.jackson.JacksonUtils;
 
 import java.util.Set;
 
@@ -12,12 +13,12 @@ import java.util.Set;
 @AllArgsConstructor
 public class ShowEndpointsImpl implements GetAndShowEndpoints {
 
-    private final GetAllEndpoints getAllEndpoints;
+    private final JacksonUtils jacksonUtils;
     private final ShowEndpoints showEndpoints;
 
     @Override
     public void execute() {
-        Set<EndPoint> endPoints = getAllEndpoints.provide();
+        Set<EndPoint> endPoints = new SwaggerNode(jacksonUtils.readValue()).getAllEndpoints();
         log.info("Found {} endPoints", endPoints.size());
         showEndpoints.display(endPoints);
     }
