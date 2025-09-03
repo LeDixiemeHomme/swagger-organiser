@@ -1,9 +1,7 @@
 package org.valle.process;
 
-import org.valle.process.models.SwaggerNode;
-
-import java.util.Map;
+import org.valle.process.models.DecomposedSwagger;
 
 public interface DecomposeSwagger {
-    Map<String, SwaggerNode> execute();
+    DecomposedSwagger execute();
 }

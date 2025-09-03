@@ -1,6 +1,5 @@
 package org.valle;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.persist.PersistResultNodeImpl;
@@ -8,6 +7,7 @@ import org.valle.present.logger.ShowEndpointsLoggerImpl;
 import org.valle.process.ClearEndpointOnDemandImpl;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.ShowEndpointsImpl;
+import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
 import org.valle.process.models.SwaggerNode;
 import org.valle.provide.jackson.GetAllEndpointsFromJackson;
@@ -16,7 +16,6 @@ import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -65,12 +64,10 @@ public class Main {
                 new GetSwaggerNodeJacksonImpl(jacksonUtilsInitial)
         );
 
-        Map<String, SwaggerNode> decomposed = decomposeSwagger.execute();
+        DecomposedSwagger decomposed = decomposeSwagger.execute();
         log.info("decoposed swagger: {}", decomposed);
 
-        JsonNode paths = decomposed.get("paths").node();
-
-        paths.fields().forEachRemaining(entry -> {
+        decomposed.paths().node().fields().forEachRemaining(entry -> {
             // create dir src/main/resources/paths
             File pathsDir = new File("src/main/resources/paths");
             if (pathsDir.exists()) {
@@ -81,9 +78,7 @@ public class Main {
             new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
         });
 
-        JsonNode components = decomposed.get("components").node();
-
-        components.fields().forEachRemaining(entry -> {
+        decomposed.components().node().fields().forEachRemaining(entry -> {
             File pathsDir = new File("src/main/resources/components");
             if (pathsDir.exists()) {
                 pathsDir.delete();
@@ -93,8 +88,7 @@ public class Main {
             new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
         });
 
-        JsonNode main = decomposed.get("main").node();
         JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/main/resources/main.yaml"));
-        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) main);
+        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) decomposed.main().node());
     }
 }

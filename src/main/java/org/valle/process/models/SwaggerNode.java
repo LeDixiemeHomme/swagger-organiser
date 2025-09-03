@@ -103,10 +103,9 @@ public record SwaggerNode(
         return this;
     }
 
-    public SwaggerNode addFileReference() {
-        JsonNode components = this.node();
-        if (components.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = components.fields();
+    public SwaggerNode addComponentFileReferences() {
+        if (this.node().isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = this.node().fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
@@ -114,18 +113,18 @@ public record SwaggerNode(
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
                     field.setValue(new TextNode(dollarRef.getFileReference() + ".yaml"));
                 } else {
-                    new SwaggerNode(field.getValue()).addFileReference();
+                    new SwaggerNode(field.getValue()).addComponentFileReferences();
                 }
             }
-        } else if (components.isArray()) {
-            for (JsonNode item : components) {
-                new SwaggerNode(item).addFileReference();
+        } else if (this.node().isArray()) {
+            for (JsonNode item : this.node()) {
+                new SwaggerNode(item).addComponentFileReferences();
             }
         }
         return this;
     }
 
-    public SwaggerNode addPathReference() {
+    public SwaggerNode addPathFileReferences() {
         JsonNode paths = this.node().get("paths");
         Iterator<Map.Entry<String, JsonNode>> fields = paths.fields();
         while (fields.hasNext()) {

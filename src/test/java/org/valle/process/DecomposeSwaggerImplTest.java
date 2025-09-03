@@ -1,15 +1,13 @@
 package org.valle.process;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.valle.persist.PersistResultNodeImpl;
-import org.valle.process.models.SwaggerNode;
+import org.valle.process.models.DecomposedSwagger;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
-import java.util.Map;
 
 class DecomposeSwaggerImplTest {
 
@@ -25,11 +23,9 @@ class DecomposeSwaggerImplTest {
     void test_execute_OK() {
         // Arrange
         // Act
-        Map<String, SwaggerNode> actual = decomposeSwagger.execute();
+        DecomposedSwagger actual = decomposeSwagger.execute();
         // Assert
-        JsonNode paths = actual.get("paths").node();
-
-        paths.fields().forEachRemaining(entry -> {
+        actual.paths().node().fields().forEachRemaining(entry -> {
             // create dir src/test/resources/decomposed/test-res/paths
             File pathsDir = new File("src/test/resources/decomposed/test-res/paths");
             if (pathsDir.exists()) {
@@ -40,9 +36,7 @@ class DecomposeSwaggerImplTest {
             new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
         });
 
-        JsonNode components = actual.get("components").node();
-
-        components.fields().forEachRemaining(entry -> {
+        actual.components().node().fields().forEachRemaining(entry -> {
             File pathsDir = new File("src/test/resources/decomposed/test-res/components");
             if (pathsDir.exists()) {
                 pathsDir.delete();
@@ -52,8 +46,7 @@ class DecomposeSwaggerImplTest {
             new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
         });
 
-        JsonNode main = actual.get("main").node();
         JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/main.yaml"));
-        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) main);
+        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) actual.main().node());
     }
 }
