@@ -48,13 +48,14 @@ public class JacksonUtils {
 
     public Extension getSwaggerFileExtension() {
         String path = this.swaggerFile.getPath();
-        if (path.endsWith(".yml") || path.endsWith(".yaml")) {
-            return Extension.YAML;
-        } else if (path.endsWith(".json")) {
-            return Extension.JSON;
-        } else {
-            throw new IllegalArgumentException("Unsupported file type: " + path);
-        }
+
+        if (path.endsWith(".yml")) return Extension.YML;
+
+        if (path.endsWith(".yaml")) return Extension.YAML;
+
+        if (path.endsWith(".json")) return Extension.JSON;
+
+        throw new IllegalArgumentException("Unsupported file type: " + path);
     }
 
     /**
@@ -65,7 +66,8 @@ public class JacksonUtils {
     public JsonFactory getParseFactory() {
         Extension extension = this.getSwaggerFileExtension();
         return switch (extension) {
-            case YAML -> new YAMLFactory()
+            case YML, YAML -> new YAMLFactory()
+                    // generation sans les --- au début du fichier
                     .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
             case JSON -> new JsonFactory();
         };
