@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.valle.process.models.DecomposedSwagger;
-import org.valle.provide.jackson.fromfile.GetSwaggerNodeJacksonFromFileImpl;
+import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
 

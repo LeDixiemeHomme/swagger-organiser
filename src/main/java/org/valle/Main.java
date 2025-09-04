@@ -12,7 +12,7 @@ import org.valle.process.models.EndPoint;
 import org.valle.process.models.SwaggerNode;
 import org.valle.provide.GetSwaggerNode;
 import org.valle.provide.fromnode.GetSwaggerNodeFromNodeImpl;
-import org.valle.provide.jackson.fromfile.GetSwaggerNodeJacksonFromFileImpl;
+import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
 import java.util.Set;

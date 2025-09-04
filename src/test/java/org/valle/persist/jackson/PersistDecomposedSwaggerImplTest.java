@@ -6,7 +6,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.valle.process.DecomposeSwagger;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.models.DecomposedSwagger;
-import org.valle.provide.jackson.fromfile.GetSwaggerNodeJacksonFromFileImpl;
+import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
 

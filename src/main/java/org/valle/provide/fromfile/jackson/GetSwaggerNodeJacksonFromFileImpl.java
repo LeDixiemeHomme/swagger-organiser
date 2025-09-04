@@ -1,4 +1,4 @@
-package org.valle.provide.jackson.fromfile;
+package org.valle.provide.fromfile.jackson;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
