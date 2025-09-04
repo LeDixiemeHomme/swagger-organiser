@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.persist.PersistDecomposedSwagger;
 import org.valle.process.models.DecomposedSwagger;
-import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 
@@ -25,8 +24,8 @@ public class PersistDecomposedSwaggerImpl implements PersistDecomposedSwagger {
                 pathsDir.delete();
             }
             pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File(basePath + "/paths/%s.%s".formatted(entry.getKey(), strExtension)));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
+            File file = new File(basePath + "/paths/%s.%s".formatted(entry.getKey(), strExtension));
+            new PersistResultNodeImpl(file).persist((ObjectNode) entry.getValue());
         });
 
         toPersist.components().node().fields().forEachRemaining(entry -> {
@@ -35,11 +34,11 @@ public class PersistDecomposedSwaggerImpl implements PersistDecomposedSwagger {
                 pathsDir.delete();
             }
             pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File(basePath + "/components/%s.%s".formatted(entry.getKey(), strExtension)));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
+            File file = new File(basePath + "/components/%s.%s".formatted(entry.getKey(), strExtension));
+            new PersistResultNodeImpl(file).persist((ObjectNode) entry.getValue());
         });
 
-        JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File(basePath + "/main.%s".formatted(strExtension)));
-        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) toPersist.main().node());
+        File file = new File(basePath + "/main.%s".formatted(strExtension));
+        new PersistResultNodeImpl(file).persist((ObjectNode) toPersist.main().node());
     }
 }

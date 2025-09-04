@@ -13,12 +13,15 @@ import java.util.Set;
 public class ShowEndpointsImpl implements GetAndShowEndpoints {
 
     private final GetSwaggerNode getSwaggerNode;
+
     private final ShowEndpoints showEndpoints;
 
     @Override
     public void execute() {
         Set<EndPoint> endPoints = this.getSwaggerNode.provide().getAllEndpoints();
+
         log.info("Found {} endPoints", endPoints.size());
+
         showEndpoints.display(endPoints);
     }
 }

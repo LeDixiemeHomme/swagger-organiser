@@ -4,16 +4,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.persist.PersistResult;
-import org.valle.utils.JacksonUtils;
+
+import java.io.File;
+
+import static org.valle.utils.JacksonUtils.writeValue;
 
 @Slf4j
 @AllArgsConstructor
 public class PersistResultNodeImpl implements PersistResult<ObjectNode> {
 
-    private final JacksonUtils jacksonUtils;
+    private final File swaggerFile;
 
     @Override
     public void persist(ObjectNode toPersist) {
-        this.jacksonUtils.writeValue(toPersist);
+        writeValue(swaggerFile, toPersist);
     }
 }

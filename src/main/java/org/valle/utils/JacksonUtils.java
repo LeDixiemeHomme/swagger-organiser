@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import lombok.Getter;
 import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
 
@@ -13,51 +12,47 @@ import java.io.File;
 
 public class JacksonUtils {
 
-    private final File swaggerFile;
-
-    @Getter
-    private final ObjectMapper mapper;
-
-    public JacksonUtils(File swaggerFile) {
-        this.swaggerFile = swaggerFile;
-        this.mapper = new ObjectMapper(this.getParseFactory());
-        // active l'indentation pour les json
-        this.mapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
+    private JacksonUtils() {
     }
 
-    public SwaggerNode getSwaggerNode() {
+    public static SwaggerNode getSwaggerNode(File swaggerFile) {
         return SwaggerNode.builder()
-                .node(this.readValue())
-                .extension(this.getSwaggerFileExtension())
+                .node(readValue(swaggerFile))
+                .extension(Extension.getSwaggerFileExtension(swaggerFile))
                 .build();
     }
 
-    public JsonNode readValue() {
+    public static SwaggerNode getSwaggerNode(String swaggerString, Extension extension) {
+        return SwaggerNode.builder()
+                .node(readValue(swaggerString, extension))
+                .extension(extension)
+                .build();
+    }
+
+    public static JsonNode readValue(File swaggerFile) {
         try {
-            return this.mapper.readTree(this.swaggerFile);
+            Extension extension = Extension.getSwaggerFileExtension(swaggerFile);
+            return createMapper(extension).readTree(swaggerFile);
         } catch (Exception e) {
             throw new RuntimeException("Failed to read value from swagger file: " + swaggerFile.getPath(), e);
         }
     }
 
-    public void writeValue(JsonNode node) {
+    public static void writeValue(File swaggerFile, JsonNode node) {
         try {
-            this.mapper.writeValue(this.swaggerFile, node);
+            Extension extension = Extension.getSwaggerFileExtension(swaggerFile);
+            createMapper(extension).writeValue(swaggerFile, node);
         } catch (Exception e) {
             throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
         }
     }
 
-    public Extension getSwaggerFileExtension() {
-        String path = this.swaggerFile.getPath();
-
-        if (path.endsWith(".yml")) return Extension.YML;
-
-        if (path.endsWith(".yaml")) return Extension.YAML;
-
-        if (path.endsWith(".json")) return Extension.JSON;
-
-        throw new IllegalArgumentException("Unsupported file type: " + path);
+    public static JsonNode readValue(String swaggerString, Extension extension) {
+        try {
+            return createMapper(extension).readTree(swaggerString);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read value from swagger string: " + swaggerString, e);
+        }
     }
 
     /**
@@ -65,13 +60,19 @@ public class JacksonUtils {
      *
      * @return Une factory JSON ou YAML en fonction de l'extension du fichier swagger
      */
-    public JsonFactory getParseFactory() {
-        Extension extension = this.getSwaggerFileExtension();
+    static JsonFactory getParseFactory(Extension extension) {
         return switch (extension) {
             case YML, YAML -> new YAMLFactory()
                     // generation sans les --- au début du fichier
                     .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
             case JSON -> new JsonFactory();
         };
+    }
+
+    static ObjectMapper createMapper(Extension extension) {
+        ObjectMapper mapper = new ObjectMapper(getParseFactory(extension));
+        // active l'indentation pour les json
+        mapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
+        return mapper;
     }
 }

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 import java.util.HashSet;
@@ -14,6 +13,8 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.valle.process.models.SwaggerNode.findRefs;
+import static org.valle.utils.JacksonUtils.getSwaggerNode;
+import static org.valle.utils.JacksonUtils.readValue;
 
 class SwaggerNodeTest {
 
@@ -27,8 +28,8 @@ class SwaggerNodeTest {
             Set<String> expectedReferences
     ) {
         // Arrange
-        JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/cleared/" + inputFileName));
-        JsonNode objectMap = jacksonUtils.readValue();
+        File file = new File(INPUT_SWAGGER_BASE_PATH + "/cleared/" + inputFileName);
+        JsonNode objectMap = readValue(file);
         // Act
         Set<String> actual = findRefs(objectMap.get("components").get("schemas").get(schemaName), objectMap, new HashSet<>());
         // Assert
@@ -70,8 +71,8 @@ class SwaggerNodeTest {
             Set<String> expectedReferences
     ) {
         // Arrange
-        JacksonUtils jacksonUtils = new JacksonUtils(new File(INPUT_SWAGGER_BASE_PATH + "/cleared/" + inputFileName));
-        SwaggerNode swaggerNode = jacksonUtils.getSwaggerNode();
+        File file = new File(INPUT_SWAGGER_BASE_PATH + "/cleared/" + inputFileName);
+        SwaggerNode swaggerNode = getSwaggerNode(file);
         // Act
         Set<String> actual = swaggerNode.getAllNamedReferencesOfAPath(endPoint);
         // Assert
@@ -153,8 +154,7 @@ class SwaggerNodeTest {
     void test_decomposePaths_OK() {
         // Arrange
         File swaggerFile = new File("src/test/resources/decomposed/swagger-initial.yml");
-        JacksonUtils jacksonUtils = new JacksonUtils(swaggerFile);
-        SwaggerNode swaggerNode = jacksonUtils.getSwaggerNode();
+        SwaggerNode swaggerNode = getSwaggerNode(swaggerFile);
         // Act
         SwaggerNode actual = swaggerNode.decomposePaths();
         // Assert
@@ -165,8 +165,7 @@ class SwaggerNodeTest {
     void test_decomposeComponent_OK() {
         // Arrange
         File swaggerFile = new File("src/test/resources/decomposed/swagger-initial.yml");
-        JacksonUtils jacksonUtils = new JacksonUtils(swaggerFile);
-        SwaggerNode swaggerNode = jacksonUtils.getSwaggerNode();
+        SwaggerNode swaggerNode = getSwaggerNode(swaggerFile);
         // Act
         SwaggerNode actual = swaggerNode.decomposeComponent();
         // Assert
@@ -178,8 +177,8 @@ class SwaggerNodeTest {
     @Test
     void test_getAllEndpoints() {
         // Arrange
-        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File(SWAGGER_FILE_PATH));
-        SwaggerNode swaggerNode = jacksonUtilsCobaye.getSwaggerNode();
+        File file = new File(SWAGGER_FILE_PATH);
+        SwaggerNode swaggerNode = getSwaggerNode(file);
         // Act
         var endpoints = swaggerNode.getAllEndpoints();
         // Assert

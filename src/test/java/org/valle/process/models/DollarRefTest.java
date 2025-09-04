@@ -2,11 +2,11 @@ package org.valle.process.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
-import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.valle.utils.JacksonUtils.readValue;
 
 class DollarRefTest {
 
@@ -38,9 +38,9 @@ class DollarRefTest {
         String rawValue = "#/components/schemas/OperationInputDTOV1";
         DollarRef dollarRef = new DollarRef(rawValue);
 
-        JacksonUtils jacksonUtils = new JacksonUtils(new File("src/test/resources/cleared/swagger-cobaye.yml"));
+        File file = new File("src/test/resources/cleared/swagger-cobaye.yml");
 
-        JsonNode objectMap = jacksonUtils.readValue();
+        JsonNode objectMap = readValue(file);
         // Act
         JsonNode actual = dollarRef.getReferencedNode(objectMap);
         // Assert
