@@ -1,14 +1,15 @@
 package org.valle;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.valle.persist.jackson.PersistResultNodeImpl;
+import org.valle.persist.jackson.PersistDecomposedSwaggerImpl;
 import org.valle.present.logger.ShowEndpointsLoggerImpl;
 import org.valle.process.ClearEndpointOnDemandImpl;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.ShowEndpointsImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
+import org.valle.process.models.SwaggerNode;
+import org.valle.provide.fromnode.GetSwaggerNodeFromNodeImpl;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.utils.JacksonUtils;
 
@@ -17,22 +18,15 @@ import java.util.Set;
 
 @Slf4j
 public class Main {
+
+    public static final String COBAYE_PATH = "src/main/resources/swagger-cobaye.yml";
+
     public static void main(String[] args) {
 
-        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
+        JacksonUtils jacksonUtilsCobaye = new JacksonUtils(new File(COBAYE_PATH));
 
-        ShowEndpointsImpl showEndpointsCobaye = new ShowEndpointsImpl(
-                new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye),
-                new ShowEndpointsLoggerImpl()
-        );
+        new ShowEndpointsImpl(new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye), new ShowEndpointsLoggerImpl()).execute();
 
-        showEndpointsCobaye.execute();
-
-        ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
-                new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye)
-        );
-
-        // demander quels endpoints à supprimer via la console
         Set<EndPoint> endpointsToClean = Set.of(
                 EndPoint.builder()
                         .method("post")
@@ -40,39 +34,14 @@ public class Main {
                         .build()
         );
 
-        clearEndpointOnDemand.execute(endpointsToClean);
+        SwaggerNode cleared = new ClearEndpointOnDemandImpl(new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye)).execute(endpointsToClean);
 
-        JacksonUtils jacksonUtilsInitial = new JacksonUtils(new File("src/main/resources/swagger-cobaye.yml"));
+        new ShowEndpointsImpl(new GetSwaggerNodeFromNodeImpl(cleared), new ShowEndpointsLoggerImpl()).execute();
 
-        DecomposeSwaggerImpl decomposeSwagger = new DecomposeSwaggerImpl(
-                new GetSwaggerNodeJacksonImpl(jacksonUtilsInitial)
-        );
+        DecomposedSwagger decomposed = new DecomposeSwaggerImpl(new GetSwaggerNodeJacksonImpl(jacksonUtilsCobaye)).execute();
 
-        DecomposedSwagger decomposed = decomposeSwagger.execute();
         log.info("decoposed swagger: {}", decomposed);
 
-        decomposed.paths().node().fields().forEachRemaining(entry -> {
-            // create dir src/main/resources/paths
-            File pathsDir = new File("src/main/resources/paths");
-            if (pathsDir.exists()) {
-                pathsDir.delete();
-            }
-            pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/main/resources/paths/%s.yaml".formatted(entry.getKey())));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
-        });
-
-        decomposed.components().node().fields().forEachRemaining(entry -> {
-            File pathsDir = new File("src/main/resources/components");
-            if (pathsDir.exists()) {
-                pathsDir.delete();
-            }
-            pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/main/resources/components/%s.yaml".formatted(entry.getKey())));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
-        });
-
-        JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/main/resources/main.yaml"));
-        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) decomposed.main().node());
+        new PersistDecomposedSwaggerImpl("src/main/resources").persist(decomposed);
     }
 }
