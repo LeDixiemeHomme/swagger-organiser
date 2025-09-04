@@ -1,23 +1,25 @@
 package org.valle.process;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.junit.jupiter.api.Test;
-import org.valle.persist.jackson.PersistResultNodeImpl;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
 import org.valle.provide.jackson.JacksonUtils;
 
 import java.io.File;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 class DecomposeSwaggerImplTest {
 
-    private static final String SWAGGER_FILE_PATH_YML = "src/test/resources/decomposed/swagger-initial.yml";
-    private static final String SWAGGER_FILE_PATH_JSON = "src/test/resources/decomposed/swagger-initial.json";
+    private static final String SWAGGER_FILE_PATH_FORM = "src/test/resources/decomposed/swagger-initial.%s";
 
-    @Test
-    void test_execute_yaml_OK() {
+    @ParameterizedTest
+    @ValueSource(strings = {"yml", "yaml", "json"})
+    void test_execute_OK(String extension) {
         // Arrange
-        JacksonUtils jacksonUtilsInitial = new JacksonUtils(new File(SWAGGER_FILE_PATH_YML));
+        JacksonUtils jacksonUtilsInitial = new JacksonUtils(new File(SWAGGER_FILE_PATH_FORM.formatted(extension)));
 
         DecomposeSwagger decomposeSwagger = new DecomposeSwaggerImpl(
                 new GetSwaggerNodeJacksonImpl(jacksonUtilsInitial)
@@ -25,64 +27,14 @@ class DecomposeSwaggerImplTest {
         // Act
         DecomposedSwagger actual = decomposeSwagger.execute();
         // Assert
-        actual.paths().node().fields().forEachRemaining(entry -> {
-            // create dir src/test/resources/decomposed/test-res/paths
-            File pathsDir = new File("src/test/resources/decomposed/test-res/paths");
-            if (pathsDir.exists()) {
-                pathsDir.delete();
-            }
-            pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/paths/%s.yaml".formatted(entry.getKey())));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
+        assertThat(new JacksonUtils(new File("src/test/resources/decomposed/test-res/main.%s".formatted(extension))).readValue()).isEqualTo(actual.main().node());
+        actual.paths().node().fields().forEachRemaining(field -> {
+            JsonNode expected = new JacksonUtils(new File("src/test/resources/decomposed/test-res/paths/%s.%s".formatted(field.getKey(), extension))).readValue();
+            assertThat(expected).isEqualTo(field.getValue());
         });
-
-        actual.components().node().fields().forEachRemaining(entry -> {
-            File pathsDir = new File("src/test/resources/decomposed/test-res/components");
-            if (pathsDir.exists()) {
-                pathsDir.delete();
-            }
-            pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/components/%s.yaml".formatted(entry.getKey())));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
+        actual.components().node().fields().forEachRemaining(field -> {
+            JsonNode expected = new JacksonUtils(new File("src/test/resources/decomposed/test-res/components/%s.%s".formatted(field.getKey(), extension))).readValue();
+            assertThat(expected).isEqualTo(field.getValue());
         });
-
-        JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/main.yaml"));
-        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) actual.main().node());
-    }
-
-    @Test
-    void test_execute_json_OK() {
-        // Arrange
-        JacksonUtils jacksonUtilsInitial = new JacksonUtils(new File(SWAGGER_FILE_PATH_JSON));
-
-        DecomposeSwagger decomposeSwagger = new DecomposeSwaggerImpl(
-                new GetSwaggerNodeJacksonImpl(jacksonUtilsInitial)
-        );
-        // Act
-        DecomposedSwagger actual = decomposeSwagger.execute();
-        // Assert
-        actual.paths().node().fields().forEachRemaining(entry -> {
-            // create dir src/test/resources/decomposed/test-res/paths
-            File pathsDir = new File("src/test/resources/decomposed/test-res/paths");
-            if (pathsDir.exists()) {
-                pathsDir.delete();
-            }
-            pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/paths/%s.json".formatted(entry.getKey())));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
-        });
-
-        actual.components().node().fields().forEachRemaining(entry -> {
-            File pathsDir = new File("src/test/resources/decomposed/test-res/components");
-            if (pathsDir.exists()) {
-                pathsDir.delete();
-            }
-            pathsDir.mkdirs();
-            JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/components/%s.json".formatted(entry.getKey())));
-            new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) entry.getValue());
-        });
-
-        JacksonUtils jacksonUtilsTmp = new JacksonUtils(new File("src/test/resources/decomposed/test-res/main.json"));
-        new PersistResultNodeImpl(jacksonUtilsTmp).persist((ObjectNode) actual.main().node());
     }
 }

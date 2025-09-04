@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import lombok.Getter;
 import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
@@ -64,7 +65,8 @@ public class JacksonUtils {
     public JsonFactory getParseFactory() {
         Extension extension = this.getSwaggerFileExtension();
         return switch (extension) {
-            case YAML -> new YAMLFactory();
+            case YAML -> new YAMLFactory()
+                    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
             case JSON -> new JsonFactory();
         };
     }

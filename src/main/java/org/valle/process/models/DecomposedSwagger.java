@@ -11,4 +11,7 @@ public record DecomposedSwagger(
         @Valid @Nullable SwaggerNode paths,
         @Valid @Nullable SwaggerNode components
 ) {
+    public Extension getExtension() {
+        return this.main.extension();
+    }
 }
