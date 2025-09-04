@@ -21,6 +21,8 @@ public class JacksonUtils {
     public JacksonUtils(File swaggerFile) {
         this.swaggerFile = swaggerFile;
         this.mapper = new ObjectMapper(this.getParseFactory());
+        // active l'indentation pour les json
+        this.mapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
     }
 
     public SwaggerNode getSwaggerNode() {

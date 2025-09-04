@@ -1,1 +1,27 @@
-{"get":{"summary":"Liste des utilisateurs","responses":{"200":{"description":"OK","content":{"application/json":{"schema":{"$ref":"../components/User.json"}}}},"400":{"description":"Erreur","content":{"application/json":{"schema":{"$ref":"../components/Error.json"}}}}}}}
+{
+  "get" : {
+    "summary" : "Liste des utilisateurs",
+    "responses" : {
+      "200" : {
+        "description" : "OK",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "../components/User.json"
+            }
+          }
+        }
+      },
+      "400" : {
+        "description" : "Erreur",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "../components/Error.json"
+            }
+          }
+        }
+      }
+    }
+  }
+}
