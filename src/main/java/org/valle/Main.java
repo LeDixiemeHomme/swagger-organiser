@@ -42,6 +42,6 @@ public class Main {
 
         log.info("decoposed swagger: {}", decomposed);
 
-        new PersistDecomposedSwaggerImpl("src/main/resources").persist(decomposed);
+        new PersistDecomposedSwaggerImpl("src/main/resources/gene-res").persist(decomposed);
     }
 }
