@@ -1,10 +1,9 @@
-package org.valle.provide.jackson.fromstring;
+package org.valle.provide.fromstring.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
-import org.valle.provide.fromstring.jackson.GetSwaggerNodeJacksonFromStringImpl;
 
 import java.io.File;
 
