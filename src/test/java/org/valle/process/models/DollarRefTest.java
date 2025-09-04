@@ -2,7 +2,7 @@ package org.valle.process.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 

@@ -10,7 +10,7 @@ import org.valle.process.ShowEndpointsImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 import java.util.Set;

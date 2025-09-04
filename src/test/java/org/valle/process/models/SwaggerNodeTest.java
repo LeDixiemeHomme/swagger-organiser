@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 import java.util.HashSet;

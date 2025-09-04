@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.valle.process.models.EndPoint;
 import org.valle.process.models.SwaggerNode;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 import java.util.Set;

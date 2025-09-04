@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 

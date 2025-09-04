@@ -7,7 +7,7 @@ import org.valle.process.DecomposeSwagger;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.provide.jackson.GetSwaggerNodeJacksonImpl;
-import org.valle.provide.jackson.JacksonUtils;
+import org.valle.utils.JacksonUtils;
 
 import java.io.File;
 

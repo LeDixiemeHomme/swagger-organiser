@@ -1,4 +1,4 @@
-package org.valle.provide.jackson;
+package org.valle.utils;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
