@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
+import org.valle.process.exceptions.EndPointNotFoundException;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,10 +42,15 @@ public record SwaggerNode(
     }
 
     public Set<String> getAllNamedReferencesOfAPath(EndPoint endPoint) {
-        JsonNode selectedPath = this.node()
-                .get("paths")
-                .get(endPoint.path())
-                .get(endPoint.method());
+        JsonNode selectedPath;
+        try {
+            selectedPath = this.node()
+                    .get("paths")
+                    .get(endPoint.path())
+                    .get(endPoint.method());
+        } catch (NullPointerException e) {
+            throw new EndPointNotFoundException(endPoint, this);
+        }
         return findRefs(selectedPath, this.node(), new HashSet<>());
     }
 
