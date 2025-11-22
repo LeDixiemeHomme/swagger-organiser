@@ -1,6 +1,7 @@
 plugins {
     id("java")
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "org.valle"
@@ -41,5 +42,5 @@ tasks.test {
 }
 
 application {
-    mainClass.set("org.valle.Main")
+    mainClass.set("org.valle.present.picocli.CliApp")
 }
