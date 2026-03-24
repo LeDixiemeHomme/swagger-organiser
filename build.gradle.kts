@@ -46,3 +46,7 @@ tasks.test {
 application {
     mainClass.set("org.valle.present.picocli.CliApp")
 }
+
+tasks.shadowJar {
+    mergeServiceFiles()
+}

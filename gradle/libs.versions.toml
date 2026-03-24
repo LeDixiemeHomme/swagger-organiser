@@ -36,4 +36,3 @@ mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.
 
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
-
