@@ -178,8 +178,18 @@ public record SwaggerNode(
             Set<EndPoint> endPointsToRemove,
             Set<String> schemasToRemove
     ) {
-        endPointsToRemove.forEach(endPointToRm ->
-                ((ObjectNode) this.node().get("paths")).remove(endPointToRm.path()));
+        JsonNode paths = this.node().get("paths");
+        if (paths instanceof ObjectNode pathsObjectNode) {
+            endPointsToRemove.forEach(endPointToRm -> {
+                JsonNode pathNode = pathsObjectNode.get(endPointToRm.path());
+                if (pathNode instanceof ObjectNode pathObjectNode) {
+                    pathObjectNode.remove(endPointToRm.method());
+                    if (pathObjectNode.isEmpty()) {
+                        pathsObjectNode.remove(endPointToRm.path());
+                    }
+                }
+            });
+        }
 
         schemasToRemove.forEach(schemaToRm -> {
             JsonNode components = this.node().get("components");
