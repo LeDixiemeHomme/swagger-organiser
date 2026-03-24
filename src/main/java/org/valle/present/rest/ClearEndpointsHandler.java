@@ -8,7 +8,7 @@ import org.valle.process.models.EndPoint;
 import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
 import org.valle.provide.fromstring.jackson.GetSwaggerNodeJacksonFromStringImpl;
-import org.valle.utils.JacksonUtils;
+import org.valle.utils.ZipUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
  * Handler REST — {@code POST /swagger/clear-endpoints}
  *
  * <p>Supprime un ou plusieurs endpoints d'un fichier Swagger (JSON ou YAML) ainsi que les schémas
- * de composants qui leur sont exclusivement associés, puis retourne le fichier nettoyé dans le
- * même format que l'entrée.
+ * de composants qui leur sont exclusivement associés, puis retourne le swagger nettoyé sous forme
+ * d'archive ZIP décomposée.
  *
  * <p>La suppression des schémas est intelligente : un schéma partagé par plusieurs endpoints
  * n'est supprimé que si <em>tous</em> les endpoints qui le référencent sont eux-mêmes supprimés.
@@ -45,34 +45,33 @@ import java.util.stream.Collectors;
  * </table>
  *
  * <h3>Corps de la requête</h3>
- * <p>Le fichier Swagger peut être envoyé de deux façons :
  * <ul>
  *   <li><b>multipart/form-data</b> — champ nommé {@code file} (recommandé, compatible Bruno/curl {@code -F})</li>
- *   <li><b>Corps brut</b> — {@code application/octet-stream} ou sans Content-Type (compatible curl {@code --data-binary})</li>
+ *   <li><b>Corps brut</b> — {@code application/octet-stream} (compatible curl {@code --data-binary})</li>
  * </ul>
  *
  * <h3>Réponse</h3>
  * <ul>
- *   <li>{@code 200 OK} — fichier Swagger nettoyé, {@code Content-Type: application/yaml} ou {@code application/json}</li>
+ *   <li>{@code 200 OK} — archive ZIP ({@code Content-Type: application/zip}) contenant
+ *       un unique fichier Swagger nettoyé :
+ *     <pre>
+ * swagger-cleared.zip
+ * └── swagger-cleared.yml   (ou .json selon l'extension fournie)
+ *     </pre>
+ *   </li>
  *   <li>{@code 400 Bad Request} — paramètre manquant, endpoint introuvable ou format invalide</li>
  *   <li>{@code 405 Method Not Allowed} — méthode HTTP autre que POST</li>
  *   <li>{@code 500 Internal Server Error} — erreur inattendue côté serveur</li>
  * </ul>
  *
- * <h3>Exemples</h3>
+ * <h3>Exemple curl</h3>
  * <pre>
- * # Supprimer un endpoint (curl multipart)
  * curl -X POST \
  *   "http://localhost:8080/swagger/clear-endpoints?extension=yml&endpoints=get:/cadh/v1/operations" \
- *   -F "file=@swagger.yml" --output cleared.yml
- *
- * # Supprimer plusieurs endpoints
- * curl -X POST \
- *   "http://localhost:8080/swagger/clear-endpoints?extension=yml&endpoints=get:/cadh/v1/operations,post:/cadh/v1/operations/{id}/documents" \
- *   -F "file=@swagger.yml" --output cleared.yml
+ *   -F "file=@swagger.yml" --output swagger-cleared.zip
  * </pre>
  *
- * @see DecomposeHandler pour décomposer le swagger nettoyé en plusieurs fichiers
+ * @see DecomposeHandler pour décomposer un swagger sans suppression d'endpoints
  */
 @Slf4j
 public class ClearEndpointsHandler implements HttpHandler {
@@ -116,16 +115,22 @@ public class ClearEndpointsHandler implements HttpHandler {
             log.info("REST ClearEndpoints — extension={}, {} endpoint(s) à supprimer, {} octets",
                     extension, endpointsToRemove.size(), fileBytes.length);
 
+            // 1 — Supprimer les endpoints
             String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
             SwaggerNode clearedNode = new ClearEndpointOnDemandImpl(
                     new GetSwaggerNodeJacksonFromStringImpl(fileContent, extension))
                     .execute(endpointsToRemove);
 
-            byte[] result = JacksonUtils.writeValueAsBytes(clearedNode);
-            RestUtils.sendBytes(exchange, 200, RestUtils.resolveContentType(extension), result);
+            // 2 — Zipper le fichier nettoyé
+            String filename = "swagger-cleared." + extensionParam.toLowerCase();
+            byte[] zipBytes = ZipUtils.buildFromNode(clearedNode, filename);
 
-            log.info("REST ClearEndpoints — {} endpoint(s) supprimé(s), {} octets retournés",
-                    endpointsToRemove.size(), result.length);
+            exchange.getResponseHeaders().set("Content-Disposition",
+                    "attachment; filename=\"swagger-cleared.zip\"");
+            RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
+
+            log.info("REST ClearEndpoints — {} endpoint(s) supprimé(s), ZIP retourné ({} octets)",
+                    endpointsToRemove.size(), zipBytes.length);
 
         } catch (IllegalArgumentException e) {
             log.warn("REST ClearEndpoints — paramètre invalide : {}", e.getMessage());

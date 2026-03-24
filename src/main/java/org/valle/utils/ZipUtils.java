@@ -16,6 +16,23 @@ public class ZipUtils {
     private ZipUtils() {}
 
     /**
+     * Construit une archive ZIP contenant un unique fichier Swagger nettoyé.
+     *
+     * @param node     le swagger nettoyé
+     * @param filename nom du fichier dans l'archive (ex : {@code swagger-cleared.yml})
+     * @return les octets de l'archive ZIP
+     * @throws IOException en cas d'erreur de sérialisation
+     */
+    public static byte[] buildFromNode(org.valle.process.models.SwaggerNode node, String filename)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            addEntry(zos, filename, JacksonUtils.writeValueAsBytes(node));
+        }
+        return baos.toByteArray();
+    }
+
+    /**
      * Construit une archive ZIP contenant les fichiers d'un swagger décomposé.
      *
      * <p>Structure de l'archive :
