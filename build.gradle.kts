@@ -1,6 +1,7 @@
 plugins {
     id("java")
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "org.valle"
@@ -34,6 +35,8 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.25.3")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
 }
 
 tasks.test {
@@ -41,5 +44,5 @@ tasks.test {
 }
 
 application {
-    mainClass.set("org.valle.Main")
+    mainClass.set("org.valle.present.picocli.CliApp")
 }

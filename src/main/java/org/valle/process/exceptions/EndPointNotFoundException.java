@@ -16,7 +16,7 @@ public class EndPointNotFoundException extends RuntimeException {
     private final SwaggerNode swaggerNode;
 
     public EndPointNotFoundException(EndPoint endPoint, SwaggerNode swaggerNode) {
-        super(MESSAGE.formatted(endPoint, swaggerNode.node()));
+        super(MESSAGE.formatted(endPoint, swaggerNode.node().toString().substring(0, Math.min(100, swaggerNode.node().toString().length()))));
         this.endPoint = endPoint;
         this.swaggerNode = swaggerNode;
     }

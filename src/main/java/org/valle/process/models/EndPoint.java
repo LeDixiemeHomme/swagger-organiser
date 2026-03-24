@@ -15,4 +15,9 @@ public record EndPoint(
         EndPoint other = (EndPoint) obj;
         return method.equals(other.method) && path.equals(other.path);
     }
+
+    public static EndPoint fromString(String string) {
+        String[] parts = string.split(":");
+        return EndPoint.builder().method(parts[0]).path(parts[1]).build();
+    }
 }
