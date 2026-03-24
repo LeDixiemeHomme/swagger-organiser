@@ -1,6 +1,7 @@
 package org.valle.process.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -183,5 +184,71 @@ class SwaggerNodeTest {
         var endpoints = swaggerNode.getAllEndpoints();
         // Assert
         assertThat(endpoints).hasSize(5);
+    }
+
+    @Test
+    void test_removeElementsByName_should_remove_only_requested_method_and_keep_path_when_not_empty() throws Exception {
+        // Arrange
+        JsonNode root = new ObjectMapper().readTree("""
+                {
+                  "paths": {
+                    "/users": {
+                      "get": {"summary": "get users"},
+                      "post": {"summary": "create user"}
+                    }
+                  },
+                  "components": {
+                    "schemas": {
+                      "User": {"type": "object"}
+                    }
+                  }
+                }
+                """);
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(root)
+                .extension(Extension.YML)
+                .build();
+
+        // Act
+        swaggerNode.removeElementsByName(
+                Set.of(EndPoint.builder().method("get").path("/users").build()),
+                Set.of()
+        );
+
+        // Assert
+        assertThat(swaggerNode.node().get("paths").get("/users").get("get")).isNull();
+        assertThat(swaggerNode.node().get("paths").get("/users").get("post")).isNotNull();
+    }
+
+    @Test
+    void test_removeElementsByName_should_remove_path_when_last_method_is_removed() throws Exception {
+        // Arrange
+        JsonNode root = new ObjectMapper().readTree("""
+                {
+                  "paths": {
+                    "/users": {
+                      "get": {"summary": "get users"}
+                    }
+                  },
+                  "components": {
+                    "schemas": {
+                      "User": {"type": "object"}
+                    }
+                  }
+                }
+                """);
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(root)
+                .extension(Extension.YML)
+                .build();
+
+        // Act
+        swaggerNode.removeElementsByName(
+                Set.of(EndPoint.builder().method("get").path("/users").build()),
+                Set.of()
+        );
+
+        // Assert
+        assertThat(swaggerNode.node().get("paths").get("/users")).isNull();
     }
 }
