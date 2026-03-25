@@ -38,6 +38,22 @@ public class JacksonUtils {
         }
     }
 
+    public static byte[] writeValueAsBytes(SwaggerNode swaggerNode) {
+        try {
+            return createMapper(swaggerNode.extension()).writeValueAsBytes(swaggerNode.node());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize SwaggerNode to bytes", e);
+        }
+    }
+
+    public static byte[] writeValueAsBytes(JsonNode node, Extension extension) {
+        try {
+            return createMapper(extension).writeValueAsBytes(node);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize JsonNode to bytes", e);
+        }
+    }
+
     public static void writeValue(File swaggerFile, JsonNode node) {
         try {
             Extension extension = Extension.getSwaggerFileExtension(swaggerFile);

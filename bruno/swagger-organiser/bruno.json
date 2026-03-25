@@ -1,0 +1,19 @@
+{
+  "version": "1",
+  "name": "swagger-organiser",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "size": 0.0005292892456054688,
+  "filesCount": 3,
+  "protobuf": {
+    "protoFiles": [
+      {
+        "path": "../../Projects/swagger-organiser/src/main/proto/swagger_organizer.proto",
+        "type": "file"
+      }
+    ]
+  }
+}

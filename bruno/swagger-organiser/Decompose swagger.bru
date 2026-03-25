@@ -1,0 +1,23 @@
+meta {
+  name: Decompose swagger
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/decompose?extension=yml
+  body: file
+  auth: none
+}
+
+params:query {
+  extension: yml
+}
+
+body:multipart-form {
+  ~file: @file({{swaggerFilePath}})
+}
+
+body:file {
+  file: @file(C:\dev\Projects\swagger-organiser\src\main\resources\swagger-cobaye.yml) @contentType(text/yaml; charset=utf-8)
+}
