@@ -2,6 +2,7 @@ plugins {
     id("java")
     application
     alias(libs.plugins.shadow)
+    alias(libs.plugins.openapi.generator)
 }
 
 group = "org.valle"
@@ -41,6 +42,30 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+// ── OpenAPI Generator ────────────────────────────────────────────────────────
+// Génère une documentation HTML interactive (html2) à partir de openapi.yml.
+// Résultat : build/generated/swagger-doc/index.html
+openApiGenerate {
+    generatorName.set("html2")
+    inputSpec.set("${rootDir}/src/main/resources/openapi.yml")
+    outputDir.set(layout.buildDirectory.dir("generated/swagger-doc").get().asFile.path)
+    skipValidateSpec.set(false)
+    // Pas de stubs ni de modèles générés — doc uniquement
+    generateApiTests.set(false)
+    generateModelTests.set(false)
+    generateApiDocumentation.set(false)
+    generateModelDocumentation.set(false)
+}
+
+// Inclure le index.html généré dans le JAR sous swagger-doc/
+tasks.named<ProcessResources>("processResources") {
+    dependsOn("openApiGenerate")
+    from(layout.buildDirectory.dir("generated/swagger-doc")) {
+        include("index.html")
+        into("swagger-doc")
+    }
 }
 
 application {

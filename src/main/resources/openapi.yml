@@ -1,0 +1,273 @@
+openapi: 3.0.3
+
+info:
+  title: Swagger Organiser API
+  description: |
+    API REST permettant de **nettoyer** et de **décomposer** des fichiers Swagger/OpenAPI.
+
+    ## Endpoints disponibles
+
+    | Méthode | Chemin | Description |
+    |---------|--------|-------------|
+    | `POST` | `/clear-endpoints` | Supprime des endpoints et leurs schémas associés |
+    | `POST` | `/decompose` | Décompose un swagger en plusieurs fichiers dans un ZIP |
+    | `GET`  | `/openapi` | Retourne cette spécification OpenAPI (YAML brut) |
+    | `GET`  | `/swagger-ui` | Interface graphique Swagger UI |
+  version: 1.0.0
+  contact:
+    name: swagger-organiser
+
+servers:
+  - url: http://localhost:8080
+    description: Serveur local
+
+tags:
+  - name: swagger
+    description: Opérations de transformation de fichiers Swagger/OpenAPI
+
+paths:
+
+  /swagger/clear-endpoints:
+    post:
+      tags:
+        - swagger
+      summary: Supprimer des endpoints d'un fichier Swagger
+      description: |
+        Supprime un ou plusieurs endpoints du fichier Swagger fourni, ainsi que les schémas
+        de composants qui leur sont **exclusivement** associés (les schémas partagés sont conservés).
+
+        Le fichier nettoyé est retourné dans une archive ZIP.
+      operationId: clearEndpoints
+      parameters:
+        - name: extension
+          in: query
+          required: true
+          description: "Format du fichier Swagger : `json`, `yml` ou `yaml`"
+          schema:
+            type: string
+            enum: [json, yml, yaml]
+          example: yml
+        - name: endpoints
+          in: query
+          required: true
+          description: |
+            Liste d'endpoints à supprimer, séparés par des virgules.
+            Format : `method:/path`
+          schema:
+            type: string
+          example: "get:/cadh/v1/operations,post:/cadh/v1/operations/{id}/documents"
+      requestBody:
+        required: true
+        description: Fichier Swagger à nettoyer (multipart ou corps brut)
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Fichier Swagger (JSON ou YAML)
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Contenu brut du fichier Swagger
+      responses:
+        "200":
+          description: Fichier Swagger nettoyé retourné dans une archive ZIP
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="swagger-cleared.zip"'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+              example: "(archive ZIP contenant swagger-cleared.yml)"
+        "400":
+          description: |
+            Requête invalide — causes possibles :
+            - Paramètre `extension` manquant ou vide
+            - Paramètre `endpoints` manquant ou vide
+            - Corps de la requête vide
+            - Endpoint introuvable dans le swagger fourni
+            - Extension inconnue (autre que `json`, `yml`, `yaml`)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                extension_manquante:
+                  summary: Extension manquante
+                  value: "Paramètre 'extension' manquant (json, yml, yaml)."
+                endpoints_manquants:
+                  summary: Endpoints manquants
+                  value: "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2)."
+                body_vide:
+                  summary: Corps vide
+                  value: "Le corps de la requête est vide — envoyez le fichier Swagger."
+        "405":
+          description: Méthode HTTP non supportée — seul `POST` est accepté
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Méthode non supportée — utilisez POST."
+        "500":
+          description: Erreur interne inattendue
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Erreur interne : ..."
+
+  /swagger/decompose:
+    post:
+      tags:
+        - swagger
+      summary: Décomposer un fichier Swagger en plusieurs fichiers
+      description: |
+        Décompose un fichier Swagger monolithique en une structure multi-fichiers :
+
+        ```
+        swagger-decomposed.zip
+        ├── main.yml                    ← fichier principal avec $ref vers paths/ et components/
+        ├── paths/
+        │   ├── cadh-v1-operations.yml  ← un fichier par path
+        │   └── ...
+        └── components/
+            ├── OperationDTO.yml        ← un fichier par schéma de composant
+            └── ...
+        ```
+
+        L'archive ZIP résultante est directement exploitable avec des outils comme Swagger UI
+        ou des générateurs de code supportant les `$ref` inter-fichiers.
+      operationId: decomposeSwagger
+      parameters:
+        - name: extension
+          in: query
+          required: true
+          description: "Format du fichier Swagger : `json`, `yml` ou `yaml`"
+          schema:
+            type: string
+            enum: [json, yml, yaml]
+          example: yml
+      requestBody:
+        required: true
+        description: Fichier Swagger à décomposer (multipart ou corps brut)
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Fichier Swagger (JSON ou YAML)
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Contenu brut du fichier Swagger
+      responses:
+        "200":
+          description: Swagger décomposé retourné dans une archive ZIP
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="swagger-decomposed.zip"'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+              example: "(archive ZIP contenant main.yml + paths/ + components/)"
+        "400":
+          description: |
+            Requête invalide — causes possibles :
+            - Paramètre `extension` manquant ou vide
+            - Corps de la requête vide
+            - Extension inconnue (autre que `json`, `yml`, `yaml`)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                extension_manquante:
+                  summary: Extension manquante
+                  value: "Paramètre 'extension' manquant (json, yml, yaml)."
+                body_vide:
+                  summary: Corps vide
+                  value: "Le corps de la requête est vide — envoyez le fichier Swagger."
+        "405":
+          description: Méthode HTTP non supportée — seul `POST` est accepté
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Méthode non supportée — utilisez POST."
+        "500":
+          description: Erreur interne inattendue
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Erreur interne : ..."
+
+  /openapi:
+    get:
+      tags:
+        - swagger
+      summary: Retourne la spécification OpenAPI de cette API
+      description: Sert le fichier `openapi.yml` décrivant l'API swagger-organiser.
+      operationId: getOpenApiSpec
+      responses:
+        "200":
+          description: Spécification OpenAPI au format YAML
+          content:
+            application/yaml:
+              schema:
+                type: string
+        "500":
+          description: Erreur lors du chargement de la spec
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /swagger-ui:
+    get:
+      tags:
+        - swagger
+      summary: Interface Swagger UI
+      description: |
+        Affiche l'interface graphique **Swagger UI** chargée depuis le CDN `unpkg.com`.
+
+        La page HTML embarquée pointe automatiquement sur `/openapi` pour charger
+        la spécification YAML de cette API.
+
+        > Ouvrir directement dans un navigateur : `http://localhost:8080/swagger-ui`
+      operationId: getSwaggerUi
+      responses:
+        "200":
+          description: Page HTML Swagger UI
+          content:
+            text/html:
+              schema:
+                type: string
+        "405":
+          description: Méthode HTTP non supportée — seul `GET` est accepté
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Méthode non supportée — utilisez GET."
+

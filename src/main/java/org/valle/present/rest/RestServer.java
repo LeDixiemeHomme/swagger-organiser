@@ -28,14 +28,16 @@ public class RestServer {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/swagger/clear-endpoints", new ClearEndpointsHandler());
-        server.createContext("/swagger/decompose",        new DecomposeHandler());
+        server.createContext("/clear-endpoints", new ClearEndpointsHandler());
+        server.createContext("/decompose",        new DecomposeHandler());
+        server.createContext("/swagger-ui",       new SwaggerUiHandler());
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor()); // Java 21 virtual threads
         server.start();
 
         log.info("Serveur REST démarré sur le port {}", port);
-        log.info("  POST http://localhost:{}/swagger/clear-endpoints?extension=yml&endpoints=method:/path", port);
-        log.info("  POST http://localhost:{}/swagger/decompose?extension=yml", port);
+        log.info("  GET  http://localhost:{}/swagger-ui  ← Swagger UI (interface graphique)", port);
+        log.info("  POST http://localhost:{}/clear-endpoints?extension=yml&endpoints=method:/path", port);
+        log.info("  POST http://localhost:{}/decompose?extension=yml", port);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Arrêt du serveur REST...");

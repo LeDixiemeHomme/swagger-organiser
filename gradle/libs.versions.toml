@@ -10,6 +10,7 @@ jakarta-annotation = "3.0.0"
 hibernate-validator = "7.0.5.Final"
 glassfish-el = "4.0.2"
 shadow = "8.1.1"
+openapi-generator = "7.11.0"
 assertj = "3.25.3"
 junit = "5.10.0"
 mockito = "5.11.0"
@@ -36,3 +37,4 @@ mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.
 
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
