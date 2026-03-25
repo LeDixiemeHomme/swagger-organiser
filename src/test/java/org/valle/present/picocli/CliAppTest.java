@@ -13,6 +13,7 @@ import org.valle.persist.PersistResult;
 import org.valle.process.ClearEndpointOnDemand;
 import org.valle.process.DecomposeSwagger;
 import org.valle.process.GetAndShowEndpoints;
+import org.valle.process.KeepEndpointOnDemand;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
 import org.valle.process.models.SwaggerNode;
@@ -34,6 +35,7 @@ class CliAppTest {
     @Mock GetSwaggerNode        mockProvider;
     @Mock GetAndShowEndpoints   mockShow;
     @Mock ClearEndpointOnDemand mockClear;
+    @Mock KeepEndpointOnDemand  mockKeep;
     @Mock SwaggerNode           mockClearedNode;
     @Mock GetSwaggerNode        mockClearedProvider;
     @Mock DecomposeSwagger      mockDecompose;
@@ -52,6 +54,7 @@ class CliAppTest {
         cliApp.swaggerNodeFactory      = f    -> mockProvider;
         cliApp.showFactory             = gsn  -> mockShow;
         cliApp.clearFactory            = gsn  -> mockClear;
+        cliApp.keepFactory             = gsn  -> mockKeep;
         cliApp.nodeProviderFactory     = node -> mockClearedProvider;
         cliApp.decomposeFactory        = gsn  -> mockDecompose;
         cliApp.persistDecomposedFactory = path -> mockPersistDecomposed;
@@ -59,6 +62,7 @@ class CliAppTest {
 
         // Stubs communs (lenient = pas d'erreur si non utilises dans certains tests)
         lenient().when(mockClear.execute(any())).thenReturn(mockClearedNode);
+        lenient().when(mockKeep.execute(any())).thenReturn(mockClearedNode);
         lenient().when(mockDecompose.execute()).thenReturn(mockDecomposedSwagger);
         lenient().when(mockClearedNode.node()).thenReturn(mockObjectNode);
     }
@@ -218,6 +222,108 @@ class CliAppTest {
 
             assertThat(capturedFile.get().getPath())
                     .isEqualTo(new File(CliApp.RESULT_PATH).getPath());
+        }
+    }
+
+    // =========================================================================
+    // Tests de l'option --endPointToKeep (-toKeep)
+    // =========================================================================
+
+    @Nested
+    class KeepEndpoints {
+
+        @Test
+        void should_call_keep_and_not_clear_when_only_toKeep_is_provided() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling");
+
+            verify(mockKeep).execute(any());
+            verify(mockClear, never()).execute(any());
+        }
+
+        @Test
+        void should_pass_single_endpoint_to_keep() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling");
+
+            verify(mockKeep).execute(Set.of(
+                    EndPoint.builder().method("get").path("/profiling").build()
+            ));
+        }
+
+        @Test
+        void should_pass_multiple_endpoints_to_keep_when_comma_separated() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling,post:/surveys");
+
+            verify(mockKeep).execute(Set.of(
+                    EndPoint.builder().method("get").path("/profiling").build(),
+                    EndPoint.builder().method("post").path("/surveys").build()
+            ));
+        }
+
+        @Test
+        void should_prefer_toKeep_over_toRm_when_both_are_provided() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling", "-toRm", "post:/surveys");
+
+            verify(mockKeep).execute(any());
+            verify(mockClear, never()).execute(any());
+        }
+
+        @Test
+        void should_pass_toKeep_endpoints_and_ignore_toRm_when_both_are_provided() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling", "-toRm", "post:/surveys");
+
+            verify(mockKeep).execute(Set.of(
+                    EndPoint.builder().method("get").path("/profiling").build()
+            ));
+        }
+
+        @Test
+        void should_call_show_before_keep() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling");
+
+            InOrder order = inOrder(mockShow, mockKeep);
+            order.verify(mockShow).execute();
+            order.verify(mockKeep).execute(any());
+        }
+
+        @Test
+        void should_decompose_after_keep_when_d_flag_is_set() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling", "-d");
+
+            InOrder order = inOrder(mockKeep, mockDecompose);
+            order.verify(mockKeep).execute(any());
+            order.verify(mockDecompose).execute();
+        }
+
+        @Test
+        void should_persist_kept_node_when_pf_is_set_but_d_is_absent() {
+            cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling", "-pf");
+
+            verify(mockPersistResult).persist(mockObjectNode);
+            verify(mockPersistDecomposed, never()).persist(any());
+        }
+    }
+
+    // =========================================================================
+    // Tests d'erreur : aucune option de filtrage fournie
+    // =========================================================================
+
+    @Nested
+    class ErrorCases {
+
+        @Test
+        void should_return_non_zero_exit_code_when_neither_toRm_nor_toKeep_is_provided() {
+            int exitCode = cli().execute("-sf", "any.yml");
+
+            assertThat(exitCode).isNotEqualTo(0);
+        }
+
+        @Test
+        void should_not_call_any_service_when_neither_option_is_provided() {
+            cli().execute("-sf", "any.yml");
+
+            verify(mockShow,  never()).execute();
+            verify(mockClear, never()).execute(any());
+            verify(mockKeep,  never()).execute(any());
         }
     }
 }
