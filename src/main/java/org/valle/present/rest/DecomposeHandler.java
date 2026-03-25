@@ -3,6 +3,7 @@ package org.valle.present.rest;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.valle.process.DecomposeSwagger;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.Extension;
@@ -76,6 +77,24 @@ import java.util.Map;
 @Slf4j
 public class DecomposeHandler implements HttpHandler {
 
+    /** Crée le service de décomposition à partir du contenu et de l'extension du fichier. */
+    @FunctionalInterface
+    interface DecomposeFactory {
+        DecomposeSwagger create(String content, Extension extension);
+    }
+
+    /** Construit l'archive ZIP à partir d'un swagger décomposé. */
+    @FunctionalInterface
+    interface ZipBuildFactory {
+        byte[] build(DecomposedSwagger decomposed) throws IOException;
+    }
+
+    // Package-private pour injection dans les tests
+    DecomposeFactory decomposeFactory = (content, ext) ->
+            new DecomposeSwaggerImpl(new GetSwaggerNodeJacksonFromStringImpl(content, ext));
+
+    ZipBuildFactory zipBuildFactory = RestUtils::buildZip;
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -103,11 +122,9 @@ public class DecomposeHandler implements HttpHandler {
             log.info("REST Decompose — extension={}, {} octets reçus", extension, fileBytes.length);
 
             String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
-            DecomposedSwagger decomposed = new DecomposeSwaggerImpl(
-                    new GetSwaggerNodeJacksonFromStringImpl(fileContent, extension))
-                    .execute();
+            DecomposedSwagger decomposed = decomposeFactory.create(fileContent, extension).execute();
 
-            byte[] zipBytes = RestUtils.buildZip(decomposed);
+            byte[] zipBytes = zipBuildFactory.build(decomposed);
 
             exchange.getResponseHeaders().set("Content-Disposition",
                     "attachment; filename=\"swagger-decomposed.zip\"");

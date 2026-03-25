@@ -3,6 +3,7 @@ package org.valle.present.rest;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.valle.process.ClearEndpointOnDemand;
 import org.valle.process.ClearEndpointOnDemandImpl;
 import org.valle.process.models.EndPoint;
 import org.valle.process.models.Extension;
@@ -76,6 +77,24 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ClearEndpointsHandler implements HttpHandler {
 
+    /** Crée le service de suppression d'endpoints à partir du contenu et de l'extension. */
+    @FunctionalInterface
+    interface ClearFactory {
+        ClearEndpointOnDemand create(String content, Extension extension);
+    }
+
+    /** Construit l'archive ZIP à partir du nœud Swagger nettoyé et du nom de fichier. */
+    @FunctionalInterface
+    interface ZipBuildFactory {
+        byte[] build(SwaggerNode node, String filename) throws IOException;
+    }
+
+    // Package-private pour injection dans les tests
+    ClearFactory clearFactory = (content, ext) ->
+            new ClearEndpointOnDemandImpl(new GetSwaggerNodeJacksonFromStringImpl(content, ext));
+
+    ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -117,13 +136,12 @@ public class ClearEndpointsHandler implements HttpHandler {
 
             // 1 — Supprimer les endpoints
             String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
-            SwaggerNode clearedNode = new ClearEndpointOnDemandImpl(
-                    new GetSwaggerNodeJacksonFromStringImpl(fileContent, extension))
+            SwaggerNode clearedNode = clearFactory.create(fileContent, extension)
                     .execute(endpointsToRemove);
 
             // 2 — Zipper le fichier nettoyé
             String filename = "swagger-cleared." + extensionParam.toLowerCase();
-            byte[] zipBytes = ZipUtils.buildFromNode(clearedNode, filename);
+            byte[] zipBytes = zipBuildFactory.build(clearedNode, filename);
 
             exchange.getResponseHeaders().set("Content-Disposition",
                     "attachment; filename=\"swagger-cleared.zip\"");
