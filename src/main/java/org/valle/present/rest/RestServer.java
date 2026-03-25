@@ -15,8 +15,9 @@ import java.util.concurrent.Executors;
  *
  * <h3>Endpoints</h3>
  * <ul>
- *   <li>{@code POST /swagger/clear-endpoints} — supprime des endpoints, retourne le fichier nettoyé</li>
- *   <li>{@code POST /swagger/decompose}        — décompose le swagger, retourne une archive ZIP</li>
+ *   <li>{@code POST /clear-endpoints} — supprime des endpoints, retourne le fichier nettoyé</li>
+ *   <li>{@code POST /keep-endpoints}  — conserve uniquement les endpoints fournis, supprime les autres</li>
+ *   <li>{@code POST /decompose}       — décompose le swagger, retourne une archive ZIP</li>
  * </ul>
  */
 @Slf4j
@@ -29,6 +30,7 @@ public class RestServer {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/clear-endpoints", new ClearEndpointsHandler());
+        server.createContext("/keep-endpoints",  new KeepEndpointsHandler());
         server.createContext("/decompose",        new DecomposeHandler());
         server.createContext("/swagger-ui",       new SwaggerUiHandler());
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor()); // Java 21 virtual threads
@@ -37,6 +39,7 @@ public class RestServer {
         log.info("Serveur REST démarré sur le port {}", port);
         log.info("  GET  http://localhost:{}/swagger-ui  ← Swagger UI (interface graphique)", port);
         log.info("  POST http://localhost:{}/clear-endpoints?extension=yml&endpoints=method:/path", port);
+        log.info("  POST http://localhost:{}/keep-endpoints?extension=yml&endpoints=method:/path", port);
         log.info("  POST http://localhost:{}/decompose?extension=yml", port);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
