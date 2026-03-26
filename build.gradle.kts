@@ -69,6 +69,24 @@ tasks.named<ProcessResources>("processResources") {
 }
 
 application {
+    mainClass.set("org.valle.Main")
+    applicationName = "swagger-organiser"
+    applicationDefaultJvmArgs = listOf("-Dfile.encoding=UTF-8")
+}
+
+// Lance le serveur REST : ./gradlew runRest [--args="8080"]
+tasks.register<JavaExec>("runRest") {
+    group = "application"
+    description = "Démarre le serveur REST (défaut port 8080)"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("org.valle.present.rest.RestServer")
+}
+
+// Lance la CLI : ./gradlew runCli --args="-sf src/main/resources/swagger-cobaye.yml -toRm post:/cadh/v1/operations -pf -d"
+tasks.register<JavaExec>("runCli") {
+    group = "application"
+    description = "Lance la CLI picocli"
+    classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("org.valle.present.picocli.CliApp")
 }
 
