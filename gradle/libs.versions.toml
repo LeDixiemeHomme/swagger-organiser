@@ -11,7 +11,7 @@ hibernate-validator = "7.0.5.Final"
 glassfish-el = "4.0.2"
 shadow = "8.1.1"
 openapi-generator = "7.11.0"
-assertj = "3.25.3"
+assertj = "3.27.7"
 junit = "5.10.0"
 mockito = "5.11.0"
 

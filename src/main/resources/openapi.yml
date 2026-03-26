@@ -6,13 +6,14 @@ info:
     API REST permettant de **nettoyer** et de **décomposer** des fichiers Swagger/OpenAPI.
 
     ## Endpoints disponibles
-
-    | Méthode | Chemin | Description |
-    |---------|--------|-------------|
-    | `POST` | `/clear-endpoints` | Supprime des endpoints et leurs schémas associés |
-    | `POST` | `/decompose` | Décompose un swagger en plusieurs fichiers dans un ZIP |
-    | `GET`  | `/openapi` | Retourne cette spécification OpenAPI (YAML brut) |
-    | `GET`  | `/swagger-ui` | Interface graphique Swagger UI |
+    ```
+    | Méthode | Chemin              | Description                                                        |
+    |---------|---------------------|--------------------------------------------------------------------|
+    | `POST`  | `/clear-endpoints`  | Supprime des endpoints et leurs schémas associés                   |
+    | `POST`  | `/keep-endpoints`   | Conserve uniquement les endpoints listés, supprime tous les autres |
+    | `POST`  | `/decompose`        | Décompose un swagger en plusieurs fichiers dans un ZIP             |
+    | `GET`   | `/swagger-ui`       | Interface graphique Swagger UI                                     |
+    ```
   version: 1.0.0
   contact:
     name: swagger-organiser
@@ -27,7 +28,7 @@ tags:
 
 paths:
 
-  /swagger/clear-endpoints:
+  /clear-endpoints:
     post:
       tags:
         - swagger
@@ -45,7 +46,7 @@ paths:
           description: "Format du fichier Swagger : `json`, `yml` ou `yaml`"
           schema:
             type: string
-            enum: [json, yml, yaml]
+            enum: [ json, yml, yaml ]
           example: yml
         - name: endpoints
           in: query
@@ -126,7 +127,108 @@ paths:
                 type: string
               example: "Erreur interne : ..."
 
-  /swagger/decompose:
+  /keep-endpoints:
+    post:
+      tags:
+        - swagger
+      summary: Conserver uniquement certains endpoints d'un fichier Swagger
+      description: |
+        Conserve un ou plusieurs endpoints du fichier Swagger fourni et **supprime tous les autres**,
+        ainsi que les schémas de composants qui leur sont exclusivement associés.
+
+        Un schéma partagé par un endpoint conservé et un endpoint supprimé est **gardé**.
+
+        Le fichier filtré est retourné dans une archive ZIP.
+      operationId: keepEndpoints
+      parameters:
+        - name: extension
+          in: query
+          required: true
+          description: "Format du fichier Swagger : `json`, `yml` ou `yaml`"
+          schema:
+            type: string
+            enum: [ json, yml, yaml ]
+          example: yml
+        - name: endpoints
+          in: query
+          required: true
+          description: |
+            Liste d'endpoints à **conserver**, séparés par des virgules.
+            Format : `method:/path`
+          schema:
+            type: string
+          example: "get:/cadh/v1/operations,post:/cadh/v1/operations/{id}/documents"
+      requestBody:
+        required: true
+        description: Fichier Swagger à filtrer (multipart ou corps brut)
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Fichier Swagger (JSON ou YAML)
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Contenu brut du fichier Swagger
+      responses:
+        "200":
+          description: Fichier Swagger filtré retourné dans une archive ZIP
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="swagger-kept.zip"'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+              example: "(archive ZIP contenant swagger-kept.yml)"
+        "400":
+          description: |
+            Requête invalide — causes possibles :
+            - Paramètre `extension` manquant ou vide
+            - Paramètre `endpoints` manquant ou vide
+            - Corps de la requête vide
+            - Endpoint introuvable dans le swagger fourni
+            - Extension inconnue (autre que `json`, `yml`, `yaml`)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                extension_manquante:
+                  summary: Extension manquante
+                  value: "Paramètre 'extension' manquant (json, yml, yaml)."
+                endpoints_manquants:
+                  summary: Endpoints manquants
+                  value: "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2)."
+                body_vide:
+                  summary: Corps vide
+                  value: "Le corps de la requête est vide — envoyez le fichier Swagger."
+        "405":
+          description: Méthode HTTP non supportée — seul `POST` est accepté
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Méthode non supportée — utilisez POST."
+        "500":
+          description: Erreur interne inattendue
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Erreur interne : ..."
+
+  /decompose:
     post:
       tags:
         - swagger
@@ -155,7 +257,7 @@ paths:
           description: "Format du fichier Swagger : `json`, `yml` ou `yaml`"
           schema:
             type: string
-            enum: [json, yml, yaml]
+            enum: [ json, yml, yaml ]
           example: yml
       requestBody:
         required: true
@@ -222,37 +324,17 @@ paths:
                 type: string
               example: "Erreur interne : ..."
 
-  /openapi:
-    get:
-      tags:
-        - swagger
-      summary: Retourne la spécification OpenAPI de cette API
-      description: Sert le fichier `openapi.yml` décrivant l'API swagger-organiser.
-      operationId: getOpenApiSpec
-      responses:
-        "200":
-          description: Spécification OpenAPI au format YAML
-          content:
-            application/yaml:
-              schema:
-                type: string
-        "500":
-          description: Erreur lors du chargement de la spec
-          content:
-            text/plain:
-              schema:
-                type: string
-
   /swagger-ui:
     get:
       tags:
         - swagger
       summary: Interface Swagger UI
       description: |
-        Affiche l'interface graphique **Swagger UI** chargée depuis le CDN `unpkg.com`.
+        Affiche l'interface graphique **Swagger UI** générée par `openapi-generator` (html2)
+        à partir de `openapi.yml`.
 
-        La page HTML embarquée pointe automatiquement sur `/openapi` pour charger
-        la spécification YAML de cette API.
+        La page HTML est embarquée dans le JAR via la tâche Gradle `openApiGenerate` et servie
+        directement depuis le classpath.
 
         > Ouvrir directement dans un navigateur : `http://localhost:8080/swagger-ui`
       operationId: getSwaggerUi
@@ -270,4 +352,10 @@ paths:
               schema:
                 type: string
               example: "Méthode non supportée — utilisez GET."
-
+        "500":
+          description: Documentation introuvable ou illisible
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Documentation Swagger introuvable — relancez ./gradlew openApiGenerate."
