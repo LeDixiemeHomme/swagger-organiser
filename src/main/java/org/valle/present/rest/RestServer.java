@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
  *   <li>{@code POST /clear-endpoints} — supprime des endpoints, retourne le fichier nettoyé</li>
  *   <li>{@code POST /keep-endpoints}  — conserve uniquement les endpoints fournis, supprime les autres</li>
  *   <li>{@code POST /decompose}       — décompose le swagger, retourne une archive ZIP</li>
+ *   <li>{@code POST /merge}           — fusionne un swagger décomposé (ZIP) en un seul fichier</li>
  * </ul>
  */
 @Slf4j
@@ -32,6 +33,7 @@ public class RestServer {
         server.createContext("/clear-endpoints", new ClearEndpointsHandler());
         server.createContext("/keep-endpoints",  new KeepEndpointsHandler());
         server.createContext("/decompose",        new DecomposeHandler());
+        server.createContext("/merge",            new MergeHandler());
         server.createContext("/swagger-ui",       new SwaggerUiHandler());
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor()); // Java 21 virtual threads
         server.start();
@@ -41,6 +43,7 @@ public class RestServer {
         log.info("  POST http://localhost:{}/clear-endpoints?extension=yml&endpoints=method:/path", port);
         log.info("  POST http://localhost:{}/keep-endpoints?extension=yml&endpoints=method:/path", port);
         log.info("  POST http://localhost:{}/decompose?extension=yml", port);
+        log.info("  POST http://localhost:{}/merge?extension=yml", port);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Arrêt du serveur REST...");

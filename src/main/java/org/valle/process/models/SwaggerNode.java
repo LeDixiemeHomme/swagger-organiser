@@ -119,6 +119,22 @@ public record SwaggerNode(
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
                     String refValue = dollarRef.getComponentFileReference() + ".%s".formatted(this.extension().toString().toLowerCase());
                     field.setValue(new TextNode(refValue));
+                } else if (field.getKey().equals("mapping") && field.getValue().isObject()) {
+                    // Les valeurs de discriminator.mapping sont des références vers des schémas
+                    // (ex: '#/components/schemas/Foo') qui ne sont pas des champs $ref mais doivent
+                    // également pointer vers les fichiers décomposés.
+                    Iterator<Map.Entry<String, JsonNode>> mappingEntries = field.getValue().fields();
+                    while (mappingEntries.hasNext()) {
+                        Map.Entry<String, JsonNode> entry = mappingEntries.next();
+                        if (entry.getValue().isTextual()) {
+                            String mappingValue = entry.getValue().asText();
+                            if (mappingValue.startsWith("#/components/schemas/")) {
+                                DollarRef dollarRef = new DollarRef(mappingValue);
+                                String refValue = dollarRef.getComponentFileReference() + ".%s".formatted(this.extension().toString().toLowerCase());
+                                entry.setValue(new TextNode(refValue));
+                            }
+                        }
+                    }
                 } else {
                     this.toBuilder().node(field.getValue()).build().addComponentFileReferences();
                 }
@@ -172,6 +188,51 @@ public record SwaggerNode(
             });
         }
         return this.toBuilder().node(components).build();
+    }
+
+    /**
+     * Ajoute au nœud principal ({@code main}) une section {@code components} destinée à la
+     * génération de code (ex : openapi-generator). Chaque schéma et chaque security scheme
+     * de l'original est remplacé par un simple {@code $ref} vers le fichier décomposé
+     * correspondant ({@code ./components/<Nom>.<ext>}).
+     *
+     * <p>Exemple de résultat pour un schéma {@code Foo} en extension {@code yml} :
+     * <pre>
+     * components:
+     *   schemas:
+     *     Foo:
+     *       $ref: "./components/Foo.yml"
+     * </pre>
+     *
+     * @param originalComponents le nœud {@code components} du swagger original
+     *                           (avant toute transformation), peut être {@code null}
+     * @param extension          l'extension de fichier cible (yml, yaml, json)
+     * @return {@code this} pour chaînage
+     */
+    public SwaggerNode addCodeGenerationComponents(JsonNode originalComponents, Extension extension) {
+        if (originalComponents == null || !originalComponents.isObject()) {
+            return this;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode codeGenComponents = mapper.createObjectNode();
+
+        originalComponents.fields().forEachRemaining(sectionEntry -> {
+            // sectionEntry.getKey() = "schemas", "securitySchemes", etc.
+            JsonNode sectionContent = sectionEntry.getValue();
+            if (sectionContent.isObject()) {
+                ObjectNode sectionNode = mapper.createObjectNode();
+                sectionContent.fields().forEachRemaining(schemaEntry -> {
+                    ObjectNode ref = mapper.createObjectNode();
+                    ref.put("$ref", "./components/%s.%s".formatted(
+                            schemaEntry.getKey(), extension.toString().toLowerCase()));
+                    sectionNode.set(schemaEntry.getKey(), ref);
+                });
+                codeGenComponents.set(sectionEntry.getKey(), sectionNode);
+            }
+        });
+
+        ((ObjectNode) this.node()).set("components", codeGenComponents);
+        return this;
     }
 
     public SwaggerNode removeElementsByName(
