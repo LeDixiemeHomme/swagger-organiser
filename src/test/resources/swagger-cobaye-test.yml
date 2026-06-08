@@ -1,0 +1,1791 @@
+openapi: 3.0.1
+info:
+  title: DECISEO-API
+  description: >-
+    Swagger for DECISEO API Internet/Intranet : Questionnaire pour déterminer un
+    profil d'investissement
+  version: v1.2.0
+  contact:
+    name: Ligrons-Tigres
+servers:
+  -   url: /deciseo/v1
+tags:
+  -   name: Profiling
+  -   name: Survey
+  -   name: Versements
+
+paths:
+  /profiling:
+    post:
+      tags:
+        - Profiling
+      summary: Creation et renvoi de la préconisation
+      description: >-
+        Permet d'enregistrer les réponses choisies par le client au questionnaire qui lui a été posé, et de définir son profil d'investissement en fonction de ses réponses. <br />
+        Pour un acte d'adhésion uniquement on définit aussi  l'offre, le produit, l'éventuelle formule et le portefeuille d'investissement à préconiser <br />
+        Pour un acte de versement libre LCL, il est également possible de renvoyer le portefeuille préconiser pour le client
+        <br /><br />
+        Temps de r&eacute;ponse maximum: 200 ms
+      operationId: postInvestProfiling
+      parameters:
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+              default: Bearer JWT Token
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+              default: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+              default: Bearer JWT Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestSurveyAnswersInputDtoV1'
+            examples:
+              WithoutContractExample:
+                summary: Exemple pour un acte d'adhésion
+                value:
+                  act_code: CADH
+                  customer_id: '00005035455'
+                  customer_uom_code: '80200'
+                  initial_payment_amount: 1000
+                  regular_payment_amount: 150
+                  survey_questions_answers:
+                    '1': 1
+                    '2': 2
+                    '3': 1
+                    '4': 1
+                    '5': 1
+              WithContractExample:
+                summary: Exemple pour un acte post-adhésion
+                value:
+                  act_code: VEEX
+                  customer_id: '00005035455'
+                  customer_uom_code: '80200'
+                  contract_id: '98740978926'
+                  product_code: UCIX 3
+                  product_option_code: "OPT003"
+                  survey_questions_answers:
+                    '1': 1
+                    '2': 2
+                    '3': 1
+                    '4': 1
+                    '5': 1
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestProfilingOutput'
+              examples:
+                WithContractResponse:
+                  summary: Exemple pour un acte post-adhésion
+                  value:
+                    id: "4875c710-1173-4843-a20f-bbddecb28c53"
+                    act_code: "VEEX"
+                    customer_id: "00005035455"
+                    customer_uom_code: "80200"
+                    product_code: "UCIX 3"
+                    product_option_code: "OPT003"
+                    delivery_channel: "IT"
+                    profile_code: 3
+                    profile_label: "Dynamique"
+                    contract_id: "98740978926"
+                    survey_questions:
+                      -   number: 1
+                          label: "L'objectif de votre projet?"
+                          type: "OBJECTIF"
+                          answer:
+                            number: 1
+                            label: "Transmettre un capital"
+                    recommended_allocation:
+                      is_active: false
+                      financial_operations:
+                        -   code: "VL"
+                            invested_supports:
+                              -   isin_code: "FR001400BL08"
+                                  rate: 25.12
+                                  is_euro: false
+
+                    creation_date: "2025-03-08T10:39:24"
+
+
+                WithoutContractResponse:
+                  summary: Exemple pour un acte d'adhésion
+                  value:
+                    id: "4875c710-1173-4843-a20f-bbddecb28c53"
+                    act_code: "CADH"
+                    customer_id: "00005035455"
+                    customer_uom_code: "80200"
+                    agency_code: "07612"
+                    product_code: "UCIX 3"
+                    product_option_code: "OPT003"
+                    delivery_channel: "IT"
+                    profile_code: 3
+                    profile_label: "Dynamique"
+                    offer_code: 00574
+                    initial_payment_amount: 1000
+                    regular_payment_amount: 150
+                    survey_questions:
+                      -   number: 1
+                          label: "L'objectif de votre projet?"
+                          type: "OBJECTIF"
+                          answer:
+                            number: 1
+                            label: "Transmettre un capital"
+                    recommended_allocation:
+                      is_active: true
+                      financial_operations:
+                        -   code: "VI"
+                            invested_supports:
+                              -   isin_code: "FR001400BL08"
+                                  rate: 25.12
+                                  is_euro: false
+                        -   code: "VR"
+                            invested_supports:
+                              -   isin_code: "LU2443436352"
+                                  rate: 13
+                                  is_euro: false
+                    creation_date: "2025-03-08T10:39:24"
+
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                IFC2120:
+                  description: >-
+                    Erreur lors d'un appel à Zconnect, le message d'erreur peut
+                    varier. Exemples : NUMERO DE QUESTION OBLIGATOIRE.
+                  value:
+                    -   code: E-400-002
+                        message: IFC2120 FUNCTIONAL ERROR
+                E-400-001:
+                  description: >
+                    Erreur business qui apparait lorsque les paramètres en
+                    entrées sont incomplets.
+                    
+                    Cette erreur est générique. Lorsque l'on a un message plus
+                    precis on affiche le message.
+                  value:
+                    -   code: E-400-001
+                        message: Un ou plusieurs paramètres d'entrée sont incorrects
+                    -   code: E-400-001
+                        message: act_code must not be null
+                E-400-004:
+                  description: >-
+                    Erreur quand valeur(s) manquante(s) dans le body de la
+                    requête.
+                  value:
+                    -   code: E-400-004
+                        message: Le paramètre customer id est obligatoire
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        '404':
+          description: Aucune resource correspondante aux critères saisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-404-000:
+                  description: Erreur introuvable g&eacute;n&eacute;rique
+                  value:
+                    code: E-404-000
+                    message: Aucune resource correspondante aux critères saisis
+                E-404-001:
+                  description: >-
+                    Erreur business qui apparait lorsque les informations de la préconisation client sont introuvables.
+                  value:
+                    code: E-404-001
+                    message: Données du profil d'investissement introuvables
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /profiling/{profiling_id}:
+    get:
+      tags:
+        - Profiling
+      summary: Renvoie les données de la préconisation
+      description: >-
+        Renvoie les informations de la préconisation client enregistr&eacute;es lors du parcours avant-vente. <br />
+        Pour une préconisation d'un acte d'adhésion uniquement sont aussi renvoyés l'offre, le produit, l'éventuelle formule et le portefeuille d'investissement à préconiser <br />
+        Pour un acte de versement libre LCL, le portefeuille d’investissement à préconiser peut également être renvoyé
+        <br /><br /> Temps de r&eacute;ponse maximum: 250 ms
+      operationId: getInvestProfiling
+      parameters:
+        -   name: profiling_id
+            in: path
+            description: Identifiant de la préconisation
+            required: true
+            schema:
+              type: string
+              format: uuid
+            example: 4875c710-1173-4843-a20f-bbddecb28c53
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+            example: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+            example: Bearer JWT Token
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestProfilingOutput'
+              examples:
+                WithContractResponse:
+                  summary: Exemple pour un acte post-adhésion
+                  value:
+                    id: "4875c710-1173-4843-a20f-bbddecb28c53"
+                    act_code: "VEEX"
+                    customer_id: "00005035455"
+                    customer_uom_code: "80200"
+                    product_code: "UCIX 3"
+                    product_option_code: "OPT003"
+                    delivery_channel: "IT"
+                    profile_code: 3
+                    profile_label: "Dynamique"
+                    contract_id: "98740978926"
+                    survey_questions:
+                      -   number: 1
+                          label: "L'objectif de votre projet?"
+                          type: "OBJECTIF"
+                          answer:
+                            number: 1
+                            label: "Transmettre un capital"
+                    recommended_allocation:
+                      is_active: false
+                      financial_operations:
+                        -   code: "VL"
+                            invested_supports:
+                              -   isin_code: "FR001400BL08"
+                                  rate: 25.12
+                                  is_euro: false
+
+                    creation_date: "2025-03-08T10:39:24"
+
+                WithoutContractResponse:
+                  summary: Exemple pour un acte d'adhésion
+                  value:
+                    id: "4875c710-1173-4843-a20f-bbddecb28c53"
+                    act_code: "CADH"
+                    customer_id: "00005035455"
+                    customer_uom_code: "80200"
+                    agency_code: "07612"
+                    product_code: "UCIX 3"
+                    product_option_code: "OPT003"
+                    delivery_channel: "IT"
+                    profile_code: 3
+                    profile_label: "Dynamique"
+                    offer_code: 00574
+                    initial_payment_amount: 1000
+                    regular_payment_amount: 150
+                    survey_questions:
+                      -   number: 1
+                          label: "L'objectif de votre projet?"
+                          type: "OBJECTIF"
+                          answer:
+                            number: 1
+                            label: "Transmettre un capital"
+                    recommended_allocation:
+                      is_active: true
+                      financial_operations:
+                        -   code: "VI"
+                            invested_supports:
+                              -   isin_code: "FR001400BL08"
+                                  rate: 25.12
+                                  is_euro: false
+                        -   code: "VR"
+                            invested_supports:
+                              -   isin_code: "LU2443436352"
+                                  rate: 13
+                                  is_euro: false
+                    creation_date: "2025-03-08T10:39:24"
+
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                E-400-005:
+                  description: Erreur lorsqu'aucun uuid valide n'a été fournis.
+                  value:
+                    -   code: E-400-005
+                        message: Le paramètre uuid est obligatoire
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        '404':
+          description: Aucune resource correspondante aux critères saisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-404-000:
+                  description: Erreur introuvable g&eacute;n&eacute;rique
+                  value:
+                    code: E-404-000
+                    message: Aucune resource correspondante aux critères saisis
+                E-404-001:
+                  description: >-
+                    Erreur business qui apparait lorsque les informations de la préconisation client sont introuvables.
+                  value:
+                    code: E-404-001
+                    message: Données du profil d'investissement introuvables
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /profiling/{profiling_id}/supports:
+    get:
+      tags:
+        - Profiling
+      summary: Renvoie les supports de la préconisation.
+      description: >-
+        Renvoie les supports de la préconisation.<br /><br /> Temps de
+        r&eacute;ponse maximum: 250 ms
+      deprecated: true
+      operationId: getInvestProfilingSupports
+      parameters:
+        -   name: profiling_id
+            in: path
+            description: Identifiant de la préconisation
+            required: true
+            schema:
+              type: string
+              format: uuid
+            example: 4875c710-1173-4843-a20f-bbddecb28c53
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+            example: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+            example: Bearer JWT Token
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupportDtoV1'
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                IFC2120:
+                  description: >-
+                    Erreur lors d'un appel à Zconnect, le message d'erreur peut
+                    varier. Exemples : NUMERO DE QUESTION OBLIGATOIRE.
+                  value:
+                    -   code: E-400-ZConnect-002
+                        message: NUMERO DE CONTRAT INCONNU
+                E-400-005:
+                  description: Erreur lorsqu'aucun uuid valide n'a été fournis.
+                  value:
+                    -   code: E-400-005
+                        message: Le paramètre uuid est obligatoire
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        '404':
+          description: Aucune resource correspondante aux critères saisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-404-000:
+                  description: Erreur introuvable g&eacute;n&eacute;rique
+                  value:
+                    code: E-404-000
+                    message: Aucune resource correspondante aux critères saisis
+                E-404-001:
+                  description: >-
+                    Erreur business qui apparait lorsque les informations de la préconisation client sont introuvables.
+                  value:
+                    code: E-404-001
+                    message: Données du profil d'investissement introuvables
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /profilings:
+    get:
+      tags:
+        - Profiling
+      summary: Renvoie les données des préconisations rattachées à un client donné
+      description: >-
+        Renvoie les informations des préconisations client enregistrées lors du parcours avant-vente.<br />
+        Un client peut avoir plusieurs préconisations lorsqu'il réalise plusieurs parcours d'adhésion, avec ou sans signature.<br>
+        Pour une préconisation d'un acte d'adhésion uniquement sont aussi renvoyés l'offre, le produit, l'éventuelle formule et le portefeuille d'investissement à préconiser.<br /><br />
+        Les filtres disponibles sont :<br>
+        - Le booléen "last_only" qui permet de ne récupérer que la dernière préconisation que le client a créée.<br>
+        - Le booléen "is_valid" qui permet de ne récupérer que les préconisations non expirées.<br><br>
+        Temps de réponse maximum: 250 ms
+      operationId: getInvestProfilings
+      parameters:
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+            example: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+            example: Bearer JWT Token
+        -   name: "customer_id"
+            in: query
+            description: "L’identifiant du client chez le distributeur"
+            required: true
+            schema:
+              type: string
+              example: "00005035455"
+        -   name: "uom_code"
+            in: query
+            description: "Code Caisse régionale"
+            required: true
+            schema:
+              type: string
+              example: "81000"
+        -   name: act_code
+            in: query
+            description: |
+              Code acte. <br>
+              Valeurs possibles :
+              - CADH = Adhésion
+              - VEEX = Versement Libre
+              - ARBI = Arbitrage
+            schema:
+              maxLength: 4
+              minLength: 0
+              type: string
+              enum: [ "CADH","VEEX", "ARBI" ]
+            example: "CADH"
+        -   name: "last_only"
+            in: query
+            description: "Renseigné vrai lorsqu'on souhaite récupérer uniquement la préconisation qui a été créée en dernier"
+            schema:
+              type: boolean
+              example: true
+        -   name: "is_valid"
+            in: query
+            description: |-
+              Renseigné vrai lorsqu'on souhaite récupérer uniquement les préconisations
+              - dont la date d'expiration n'est pas passée
+              - dont le portefeuille est encore en vigueur dans le référentiel
+            schema:
+              type: boolean
+              example: true
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvestProfilingOutput'
+        '400':
+          description: "Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur fonctionnelle est survenue."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                E-400-005:
+                  description: Erreur lorsqu'aucun uuid valide n'a été fournis.
+                  value:
+                    -   code: E-400-005
+                        message: Le paramètre uuid est obligatoire
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        "403":
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              example:
+                code: "E-403-000"
+                message: "Accès interdit"
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /surveys:
+    get:
+      tags:
+        - Survey
+      summary: Renvoie le questionnaire à présenter au client en fonction du code acte et du distributeur.
+      description: >-
+        Renvoie le questionnaire à poser au client, composé de la liste des questions avec pour chacune la liste des réponses associées possibles. Ce questionnaire peut varier en fonction du distributeur (CA/LCL) et de l'acte.
+          <br> Questionnaire paramétré dans DECISEO.
+        <br /><br />
+        Temps de r&eacute;ponse maximum: 100 ms
+      operationId: getSurvey
+      parameters:
+        -   name: customer_uom_code
+            in: query
+            description: Code caisse client
+            required: true
+            schema:
+              maxLength: 5
+              minLength: 5
+              type: string
+            example: "80200"
+        -   name: act_code
+            in: query
+            description: Code acte
+            required: true
+            schema:
+              maxLength: 4
+              minLength: 4
+              type: string
+            example: CADH
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+            example: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+            example: Bearer JWT Token
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyResponse'
+
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        '404':
+          description: Aucune resource correspondante aux critères saisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-404-000:
+                  description: Erreur introuvable g&eacute;n&eacute;rique
+                  value:
+                    code: E-404-000
+                    message: Aucune resource correspondante aux critères saisis
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /entities/{customer_uom_code}/customers/{customer_id}/contracts/{contract_id}/acts/{act_code}/survey:
+    get:
+      tags:
+        - Survey
+      summary: Renvoie le questionnaire à présenter au client en fonction du code acte et du contrat déjà détenu par le client.
+      description: >-
+        Renvoie la liste des questions à poser au client avec pour chacune la liste des réponses associées possibles.
+          <br> Questionnaire paramétré dans INFOFI.
+        <br /><br />
+        Temps de r&eacute;ponse maximum: 250 ms
+      deprecated: true
+      operationId: getInvestSurvey
+      parameters:
+        -   name: customer_uom_code
+            in: path
+            description: Code caisse client
+            required: true
+            schema:
+              maxLength: 5
+              minLength: 5
+              type: string
+            example: "80200"
+        -   name: customer_id
+            in: path
+            description: Numéro du client
+            required: true
+            schema:
+              type: string
+            example: '00000828653'
+        -   name: contract_id
+            in: path
+            description: Numéro du contrat
+            required: true
+            schema:
+              type: string
+            example: "98721080277"
+        -   name: act_code
+            in: path
+            description: Code acte
+            required: true
+            schema:
+              maxLength: 4
+              minLength: 4
+              type: string
+            example: VEEX
+        -   name: product_code
+            in: query
+            description: Code produit
+            required: true
+            schema:
+              type: string
+            example: UCIX 3
+        -   name: product_option_code
+            in: query
+            description: Code option produit
+            required: false
+            schema:
+              type: string
+            example: OPT003
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+            example: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+            example: Bearer JWT Token
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionSurveyDtoV1'
+
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                IFC2110:
+                  description: >-
+                    Erreur lors d'un appel à Zconnect, le message d'erreur peut
+                    varier. Exemples : PERSONNE NON TROUVEE; NUMERO DE CONTRAT
+                    INCONNU.
+                  value:
+                    -   code: E-400-001
+                        message: IFC2110 FUNCTIONAL ERROR
+                E-400-003:
+                  description: >-
+                    Erreur lorsque le client n'est pas éligible au parcours
+                    DECISEO.
+                  value:
+                    -   code: E-400-003
+                        message: Le client n'est pas eligible au parcours DECISEO
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        '404':
+          description: Aucune resource correspondante aux critères saisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-404-000:
+                  description: Erreur introuvable g&eacute;n&eacute;rique
+                  value:
+                    code: E-404-000
+                    message: Aucune resource correspondante aux critères saisis
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /entities/{customer_uom_code}/customers/{customer_id}/contracts/{contract_id}/acts/{act_code}/eligibility:
+    get:
+      tags:
+        - Survey
+      summary: Determine si un client est eligible pour DECISEO.
+      description: >-
+        Renvoie si le client est eligible ou pas au parcours DECISEO. <br /><br
+        /> Temps de r&eacute;ponse maximum: 250 ms
+      operationId: getInvestEligibility
+      parameters:
+        -   name: customer_uom_code
+            in: path
+            description: Code caisse client
+            required: true
+            schema:
+              maxLength: 5
+              minLength: 5
+              type: string
+            example: "80200"
+        -   name: customer_id
+            in: path
+            description: Numéro du client
+            required: true
+            schema:
+              type: string
+            example: '00000828653'
+        -   name: contract_id
+            in: path
+            description: Numéro du contrat
+            required: true
+            schema:
+              type: string
+            example: "98721080277"
+        -   name: act_code
+            in: path
+            description: Code acte
+            required: true
+            schema:
+              maxLength: 4
+              minLength: 4
+              type: string
+            example: VEEX
+        -   name: product_code
+            in: query
+            description: Code produit
+            required: true
+            schema:
+              type: string
+            example: UCIX 3
+        -   name: product_option_code
+            in: query
+            description: Code option produit
+            required: false
+            schema:
+              type: string
+            example: OPT003
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: L'ID de correlation de la requête
+            required: false
+            schema:
+              type: string
+            example: fc9022ac-6585-12e8-a547-b776567e0eca
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+            example: Bearer JWT Token
+      responses:
+        '200':
+          description: Response OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestEligibilityDtoV1'
+
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                IFC2110:
+                  description: >-
+                    Erreur lors d'un appel à Zconnect, le message d'erreur peut
+                    varier. Exemples : PERSONNE NON TROUVEE; NUMERO DE CONTRAT
+                    INCONNU.
+                  value:
+                    -   code: E-400-001
+                        message: IFC2110 FUNCTIONAL ERROR
+        '401':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-401-000:
+                  description: Erreur quand accès refusé.
+                  value:
+                    code: E-401-000
+                    message: Accès refusé
+        '404':
+          description: Aucune resource correspondante aux critères saisis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-404-000:
+                  description: Erreur introuvable g&eacute;n&eacute;rique
+                  value:
+                    code: E-404-000
+                    message: Aucune resource correspondante aux critères saisis
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+  /products/minimum_payment_amounts:
+    get:
+      tags:
+        - Versements
+      summary: "Renvoie le plus petit montant de versement initial et versement régulier requis pour un acte d'adhésion."
+      description: "Renvoie le plus petit montant de versement initial et de versement régulier requis pour continuer le parcours conseil d'adhésion selfcare.<br>Pour un acte d'adhésion LCL uniquement, deux montants possibles peuvent être proposés pour le versement initial, selon que l'utilisateur saisisse ou non un versement régulier.<br>Temps de réponse maximum : 100 ms"
+      operationId: getMinimumPaymentAmounts
+      parameters:
+        -   name: customer_uom_code
+            in: query
+            description: Code caisse client
+            required: true
+            schema:
+              maxLength: 5
+              minLength: 0
+              type: string
+            example: "80200"
+        -   name: commercial_relationship_code
+            in: query
+            description: 'Code type de relation commerciale. Obligatoire pour le LCL. <br> Les valeurs possibles sont  :<br> - 01 : Banque Assurance de Proximité (BAP)<br> - 02  : Banque Privé (BP)'
+            required: false
+            schema:
+              type: string
+              enum:
+                - "01"
+                - "02"
+        -   name: Authorization
+            in: header
+            description: Le token pour authentifier le service appelant
+            required: true
+            schema:
+              type: string
+              example: Bearer JWT Token
+        -   name: X-Passport
+            in: header
+            description: Le token utilisé pour propager l'identité de l'utilisateur
+            required: true
+            schema:
+              type: string
+            example: <JWT Token>
+        -   name: Correlationid
+            in: header
+            description: >-
+              L’identifiant de corrélation permet d’assurer la traçabilité des
+              actions initiées par l’application consommatrice.
+            required: false
+            schema:
+              type: string
+              example: f77270a9-b280-43e2-96e1-66c290d702b1
+      responses:
+        '200':
+          description: "le plus petit montant des versement initial et versement régulier "
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MinimumPaymentAmountResponse"
+
+        '400':
+          description: >-
+            Un ou plusieurs paramètres d'entrée sont incorrects ou une erreur
+            fonctionnelle est survenue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-400-000:
+                  description: Erreur business g&eacute;n&eacute;rique.
+                  value:
+                    -   code: E-400-000
+                        message: >-
+                          Un ou plusieurs paramètres d'entrée sont incorrects ou
+                          une erreur fonctionnelle est survenue.
+                E-400-001:
+                  description: customer_uom_code manquant
+                  value:
+                    -   code: E-400-001
+                        message: >-
+                          Le champ customer_uom_code est obligatoire.
+                E-400-002:
+                  description: Segment manquant pour LCL
+
+                  value:
+                    -   code: E-400-002
+                        message: Le champ commercial_relationship_code est obligatoire pour un client LCL
+
+                E-400-003:
+                  description: Valeur de segment invalid
+                  value:
+                    -   code: E-400-003
+                        message: La valeur du champ commercial_relationship_code est invalide. Les valeurs autorisées sont 01 ou 02.
+
+                E-400-004:
+                  description: >-
+                    Erreur si un segment client est renseigné pour un client CA
+                  value:
+                    -   code: E-400-004
+                        message: Le champ commercial_relationship_code n'est pas nécessaire pour un client CA.
+
+        '401':
+          description: "Accès refusé"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              example:
+                code: "E-401-000"
+                message: "Accès refusé"
+        "403":
+          description: "Accès interdit"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaaErrorMessage"
+              example:
+                code: E-403-000
+                message: "Accès interdit"
+        '500':
+          description: Erreur serveur interne
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaaErrorMessage'
+              examples:
+                E-500:
+                  description: E-500
+                  value:
+                    code: E-500
+                    message: Erreur serveur interne
+      security:
+        -   bearerAuth: [ ]
+
+components:
+  schemas:
+    AnswerDtoV1:
+      type: object
+      description: Réponse
+      required:
+        - number
+      properties:
+        number:
+          type: integer
+          description: Numéro de réponse
+          format: int32
+          example: 1
+        label:
+          type: string
+          description: Libellé de la réponse
+          example: Transmettre un capital
+
+    InvestProfilingOutput:
+      title: InvestProfilingOutput
+      oneOf:
+        -   $ref: '#/components/schemas/WithContractInvestProfilingResponse'
+        -   $ref: '#/components/schemas/WithoutContractInvestProfilingResponse'
+
+    BaseInvestProfilingOutput:
+      type: object
+      required:
+        - id
+        - act_code
+        - customer_id
+        - customer_uom_code
+        - product_code
+        - delivery_channel
+        - profile_code
+        - profile_label
+        - survey_questions
+      properties:
+        id:
+          type: string
+          description: Identifiant de la préconisation
+          example: 4875c710-1173-4843-a20f-bbddecb28c53
+        act_code:
+          type: string
+          description: Code acte
+          example: VEEX
+        customer_id:
+          type: string
+          description: Numéro du client
+          example: '00005035455'
+        customer_uom_code:
+          type: string
+          description: Code caisse client
+          example: '80200'
+        product_code:
+          type: string
+          description: Code produit
+          example: UCIX 3
+        product_option_code:
+          type: string
+          description: option code produit
+          example: OPT003
+        delivery_channel:
+          type: string
+          description: Canal de distribution
+          example: IT
+        profile_code:
+          type: integer
+          description: Code du profil d'investissement
+          format: int32
+          example: 3
+        profile_label:
+          type: string
+          description: Libelle du profil d'investissement
+          example: Dynamique
+        survey_questions:
+          type: array
+          description: Liste des questions posées au client avec la response associée choisie par le client
+          items:
+            $ref: '#/components/schemas/QuestionProfilingDtoV1'
+        recommended_allocation:
+          $ref: "#/components/schemas/RecommendedAllocation"
+
+    WithoutContractInvestProfilingResponse:
+      title: WithoutContractResponse
+      required:
+        - offer_code
+        - initial_payment_amount
+        - agency_code
+        - recommended_allocation
+      allOf:
+        -   $ref: '#/components/schemas/BaseInvestProfilingOutput'
+        -   type: object
+            properties:
+              offer_code:
+                type: string
+                description: Code de l'offre
+                example: "00574"
+              agency_code:
+                type: string
+                description: Code agence de connexion sur 5 chiffres
+                example: "07612"
+              initial_payment_amount:
+                type: number
+                format: decimal
+                description: Montant du versement initial défini par le client. Uniquement pour une préconisation liée à un acte d'adhésion.
+                example: 1000
+              regular_payment_amount:
+                type: number
+                format: decimal
+                description: Montant du versement regulier défini par le client. Uniquement pour une préconisation liée à un acte d'adhésion.
+                example: 150
+              creation_date:
+                type: string
+                description: Date de la préconisation
+                format: date-time
+                example: "2025-03-08T10:39:24"
+              validity_end_date:
+                type: string
+                description: Date d'expiration de la préconisation
+                format: date-time
+                example: "2025-03-29T10:39:24"
+    RecommendedAllocation:
+      type: object
+      description: Une répartition préconisée pour le client, obligatoire dans le cadre d'adhesion selfcare et facultatif pour les autres actes (VL,ARBI)
+      required:
+        - is_active
+        - financial_operations
+      properties:
+        is_active:
+          type: boolean
+          description: |-
+            Vaut vrai lorsque le portefeuille est en vigueur actuellement dans le référentiel.<br>
+            Un portefeuille est préconisé en fonction de la formule, du profil client, et de l'intensité de risque qu'il a choisie.<br>
+            Pour un même paramétrage de préconisation, il ne peut y avoir qu'un portefeuille en vigueur en même temps.<br>
+          example: true
+        financial_operations:
+          type: array
+          items:
+            title: FinancialOperation
+            type: object
+            description: "Données relatives à une opération financière"
+            required:
+              - code
+              - invested_supports
+            properties:
+              code:
+                type: string
+                enum: [ "VI","VR","VL" ]
+                description: |
+                  Code de l'opération financière. <br>
+                  Valeurs possibles :
+                  - VI : Versement initial
+                  - VR : Versement régulier
+                  - VL : Versement libre
+                example: "VI"
+              invested_supports:
+                type: array
+                description: "Liste des supports proposés pour les investissements du client"
+                items:
+                  type: object
+                  description: "Support d'investissement : fonds euro ou unité de compte"
+                  required:
+                    - rate
+                    - is_euro
+                  properties:
+                    isin_code:
+                      type: string
+                      description: "Code ISIN du support : identifiant unique et public"
+                      example: "FR001400BL08"
+                    rate:
+                      type: number
+                      description: "Taux d'investissement proposé sur le support en format décimal"
+                      format: decimal
+                      example: 25.12
+                    is_euro:
+                      type: boolean
+                      description: "Booléen indiquant si c'est un support monétaire en Euro"
+                      example: false
+
+    WithContractInvestProfilingResponse:
+      title: WithContractResponse
+      type: object
+      required:
+        - contract_id
+      allOf:
+        -   $ref: '#/components/schemas/BaseInvestProfilingOutput'
+        -   type: object
+            properties:
+              contract_id:
+                type: string
+                description: Numéro du contrat
+                example: '98740978926'
+              creation_date:
+                type: string
+                description: Date de création
+                format: date-time
+                example: "2025-03-08T10:39:24"
+
+    WithContractInvestProfilingInput:
+      title: WithContract
+      required:
+        - contract_id
+        - product_code
+      allOf:
+        -   $ref: '#/components/schemas/BaseInvestSurveyAnswersInputDtoV1'
+        -   type: object
+            properties:
+              contract_id:
+                type: string
+                description: Numéro du contrat. Obligatoire sauf pour un acte d'adhésion
+                example: '98740978926'
+              product_code:
+                type: string
+                description: Code produit. Obligatoire sauf pour un acte d'adhésion
+                example: UCIX 3
+              product_option_code:
+                type: string
+                description: option code produit
+                example: OPT025
+            example:
+              WithContractExample:
+                summary: Exemple pour un acte post-adhésion
+                value:
+                  act_code: VEEX
+                  customer_id: '00005035455'
+                  customer_uom_code: '80200'
+                  contract_id: '98740978926'
+                  product_code: UCIX 3
+                  survey_questions_answers:
+                    '1': 1
+                    '2': 2
+                    '3': 1
+                    '4': 1
+                    '5': 1
+
+    WithoutContractInvestProfilingInput:
+      title: WithoutContract
+      required:
+        - customer_id
+        - customer_uom_code
+        - initial_payment_amount
+      allOf:
+        -   $ref: '#/components/schemas/BaseInvestSurveyAnswersInputDtoV1'
+        -   type: object
+            properties:
+              customer_id:
+                type: string
+                minLength: 1
+                maxLength: 14
+                description: Numéro du client
+                example: '00005035455'
+              customer_uom_code:
+                type: string
+                minLength: 5
+                maxLength: 5
+                description: Code caisse client
+                example: '80200'
+              initial_payment_amount:
+                type: number
+                format: decimal
+                description: Montant du versement initial défini par le client. Obligatoire pour un acte d'adhésion uniquement
+                example: 1000
+
+              regular_payment_amount:
+                type: number
+                format: decimal
+                description: Montant du versement regulier défini par le client. Uniquement pour une préconisation liée à un acte d'adhésion.
+                example: 150
+            example:
+              WithoutContractExample:
+                summary: Exemple pour un acte d'adhésion
+                value:
+                  act_code: CADH
+                  customer_id: '00005035455'
+                  customer_uom_code: '80200'
+                  initial_payment_amount: 1000
+                  survey_questions_answers:
+                    '1': 1
+                    '2': 2
+                    '3': 1
+                    '4': 1
+                    '5': 1
+    BaseInvestSurveyAnswersInputDtoV1:
+      title: BaseInvestSurveyAnswersInputDtoV1
+      required:
+        - act_code
+        - customer_id
+        - customer_uom_code
+        - survey_questions_answers
+      type: object
+      properties:
+        act_code:
+          type: string
+          description: Code acte
+          example: VEEX
+        customer_id:
+          type: string
+          description: Numéro du client
+          example: '00005035455'
+        customer_uom_code:
+          type: string
+          description: Code caisse client
+          example: '80200'
+        survey_questions_answers:
+          type: object
+          additionalProperties:
+            type: integer
+            description: Liste des questions DECISEO avec la réponse choisie par le client
+            format: int32
+          description: Liste des questions DECISEO avec la réponse choisie par le client
+          example:
+            '1': 1
+            '2': 2
+            '3': 1
+            '4': 1
+            '5': 1
+    QuestionProfilingDtoV1:
+      type: object
+      required:
+        - number
+      properties:
+        number:
+          type: integer
+          description: Numéro de la question
+          format: int32
+          example: 1
+        label:
+          type: string
+          description: Libellé de la question
+          example: L'objectif de votre projet?
+        type:
+          type: string
+          description: 'Type de la question <br> Valeurs possibles: <br> - OBJECTIF <br> - HORIZON <br> - PATRIMOINE <br> - AGE <br> - SENSIBILITE_RISQUE <br> - INTENSITE_RISQUE'
+          example: OBJECTIF
+        answer:
+          $ref: '#/components/schemas/AnswerDtoV1'
+      description: Question posée au client avec la response choisie associée
+    CaaErrorMessage:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code de l'erreur
+          example: E-40X-XXX | E-500
+        message:
+          type: string
+          description: Message d'erreur fonctionnel ou technique
+          example: <Erreur fonctionnelle> | Erreur serveur interne
+    InvestSurveyAnswersInputDtoV1:
+      oneOf:
+        -   $ref: '#/components/schemas/WithContractInvestProfilingInput'
+        -   $ref: '#/components/schemas/WithoutContractInvestProfilingInput'
+      discriminator:
+        propertyName: act_code
+        mapping:
+          VEEX: '#/components/schemas/WithContractInvestProfilingInput'
+          ARBI: '#/components/schemas/WithContractInvestProfilingInput'
+          CADH: '#/components/schemas/WithoutContractInvestProfilingInput'
+
+    SupportDtoV1:
+      title: SupportDtoV1
+      description: Un support doit avoir au moins un des deux champs remplis ":" soit proposed_investment_rate* pour un support investissable ou proposed_divestment_amount* pour un support désinvestissable. Si le support permet à la fois d’investir et de se désinvestir, les deux champs doivent être remplis
+      required:
+        - support_isin_code
+      type: object
+      properties:
+        support_isin_code:
+          type: string
+          description: Le code isin du support
+          example: FR0000991424
+
+        support_percent_rate_decimal:
+          type: number
+          description: Taux d'investissement proposé sur le support en format décimal.deprecated pour harmonisation, utilisez proposed_investment_rate pour le taux d'investissement proposé
+          format: decimal
+          example: 18.15
+          deprecated: true
+        proposed_investment_rate:
+          type: number
+          description: Taux d'investissement proposé sur le support en format décimal. <br>Présent uniquement sur un support sur lequel un investissement est proposé.
+          format: decimal
+          example: 18.15
+        proposed_divestment_amount:
+          type: number
+          description: Montant de désinvestissement proposé sur le support.<br>Présent uniquement pour un support déjà présent au contrat sur lequel un désinvestissement est proposé.
+          format: decimal
+          example: 3000.00
+        surrender_value_amount:
+          type: number
+          description: Montant valeur de rachat du support, équivaut au montant désinvestissable sur le support avant proposition (à dissocier de l'encours sur le support, qui peut être égal au montant désinvestissable si aucune partie du capital n'est bloquée ou supérieure au montant désinvestissable si une partie du capital est bloquée). <br> présent uniquement pour un support déjà présent au contrat sur lequel un désinvestissement est proposé
+          format: decimal
+          example: 5000.00
+
+    QuestionSurveyDtoV1:
+      type: object
+      description: Question
+      required:
+        - number
+        - label
+        - answers
+      properties:
+        number:
+          type: integer
+          description: Numéro de la question
+          format: int32
+          example: 1
+        label:
+          type: string
+          description: Libellé de la question
+          example: L'objectif de votre projet?
+        answers:
+          type: array
+          description: Liste des réponses possibles
+          items:
+            $ref: '#/components/schemas/AnswerDtoV1'
+        mandatory_answer:
+          type: integer
+          description: >-
+            Flag qui fourni la réponse obligatoire. Null si pas de réponse
+            obligatoire
+          format: int32
+          example: 2
+
+    SurveyResponse:
+      type: object
+      description: Questionnaire
+      required:
+        - id
+        - questions
+      properties:
+        id:
+          type: string
+          description: id du questionnaire
+          example: 4875c710-1173-4843-a20f-bbddecb28c52
+        questions:
+          type: array
+          description: Liste des questions
+          items:
+            $ref: '#/components/schemas/QuestionSurveyResponse'
+
+    QuestionSurveyResponse:
+      type: object
+      description: Question
+      required:
+        - number
+        - label
+        - type
+        - answers
+      properties:
+        number:
+          type: integer
+          description: Numéro de la question
+          format: int32
+          example: 1
+        label:
+          type: string
+          description: Libellé de la question
+          example: L'objectif de votre projet?
+        type:
+          type: string
+          description: 'Type de la question <br> Valeurs possibles: <br> - OBJECTIF <br> - HORIZON <br> - PATRIMOINE <br> - AGE <br> - SENSIBILITE_RISQUE <br> - INTENSITE_RISQUE'
+          example: OBJECTIF
+        answers:
+          type: array
+          description: Liste des réponses possibles
+          items:
+            $ref: '#/components/schemas/AnswerSurveyResponse'
+
+    AnswerSurveyResponse:
+      type: object
+      description: Réponse
+      required:
+        - number
+        - label
+      properties:
+        number:
+          type: integer
+          description: Numéro de réponse
+          format: int32
+          example: 1
+        label:
+          type: string
+          description: Libellé de la réponse
+          example: Transmettre un capital
+
+    InvestEligibilityDtoV1:
+      type: object
+      properties:
+        is_eligible:
+          type: boolean
+          description: >-
+            Flag qui permet de savoir si le client est eligible ou pas au
+            DECISEO
+          example: true
+    MinimumPaymentAmountResponse:
+      type: object
+      required:
+        - minimum_initial_payment_amount
+        - minimum_regular_payment_amount
+      properties:
+        minimum_initial_payment_amount:
+          type: number
+          description: le montant minimum du versment initial requis pour continuer le parcours conseil d'adhésion selfcare
+          format: decimal
+          example: 300.0
+        minimum_regular_payment_amount:
+          type: number
+          description: le montant minimum du versment regulier
+          format: decimal
+          example: 50.0
+        minimum_initial_payment_if_regular_provided:
+          type: number
+          description: Montant minimum du versement initial si un versement régulier est saisi
+          format: decimal
+          example: 15.0
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

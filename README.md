@@ -22,14 +22,14 @@ Le premier argument ne doit **pas** être `server` — les arguments sont transm
 | Option | Obligatoire | Description |
 |---|---|---|
 | `-sf`, `--swaggerFilePath` | Oui | Chemin du fichier Swagger source |
-| `-toRm`, `--endPointToRemove` | Non | Endpoints à supprimer, format `method:path`, séparés par `,`. Peut être combiné avec `-toKeep` (appliqué après) |
-| `-toKeep`, `--endPointToKeep` | Non | Endpoints à conserver (tous les autres sont supprimés). Peut être combiné avec `-toRm` |
+| `-toRm`, `--endPointToRemove` | Non | Endpoints à supprimer, format `method:path`, séparés par `,`. Ignoré si `-toKeep` est aussi renseigné |
+| `-toKeep`, `--endPointToKeep` | Non | Endpoints à conserver (tous les autres sont supprimés). Prioritaire sur `-toRm` si les deux sont fournis |
 | `-m`, `--mergeSwagger` | Non | Fusionne un swagger décomposé (multi-fichiers `$ref`) en un seul fichier — contraire de `-d` |
 | `-d`, `--decomposeSwagger` | Non | Décompose le swagger en plusieurs fichiers — contraire de `-m` |
 | `-pf`, `--persistFile` | Non | Persiste le résultat dans des fichiers |
 
 > `-toRm` et `-toKeep` sont tous les deux optionnels. Si aucun n'est fourni, le swagger est utilisé tel quel.  
-> Si les deux sont fournis, le `keep` est appliqué en premier, puis le `remove` sur le résultat.
+> Si les deux sont fournis, `-toKeep` est prioritaire et `-toRm` est ignoré.
 
 ### Ordre d'exécution
 
@@ -60,11 +60,6 @@ java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
 java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
   -sf src/main/resources/swagger-cobaye.yml -toKeep post:/profiling,get:/profilings -d -pf
 
-# Combiner keep et remove (keep appliqué en premier)
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/swagger-cobaye.yml \
-  -toKeep post:/profiling,get:/profilings,put:/profiling \
-  -toRm put:/profiling -pf
 
 # Fusionner puis filtrer
 java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \

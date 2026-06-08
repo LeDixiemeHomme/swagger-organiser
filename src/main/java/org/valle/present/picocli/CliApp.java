@@ -24,14 +24,15 @@ import org.valle.provide.fromnode.GetSwaggerNodeFromNodeImpl;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.Spec;
 import org.valle.process.MergeSwagger;
 import org.valle.process.MergeSwaggerImpl;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import java.util.function.BiFunction;
 @Slf4j
 @Command(name = "swagger-organiser",
         mixinStandardHelpOptions = true,
@@ -49,7 +50,6 @@ public class CliApp implements Runnable {
             description = "Liste des endpoints a supprimer, format: method:path, ex: -toRm get:toto/id,post:tata. "
                     + "Ignoré si --endPointToKeep est aussi renseigné.")
     private Set<EndPoint> endPointToRemove;
-
     @Option(names = {"-toKeep", "--endPointToKeep"}, required = false, split = ",",
             description = "Liste des endpoints a conserver (tous les autres seront supprimes), "
                     + "format: method:path, ex: -toKeep get:toto/id,post:tata. "
@@ -67,6 +67,9 @@ public class CliApp implements Runnable {
     @Option(names = {"-m", "--mergeSwagger"},
             description = "Fusionne un swagger décomposé (multi-fichiers $ref) en un seul fichier, contraire de --decomposeSwagger. Defaut: false")
     private boolean shouldMergeSwagger;
+
+    @Spec
+    CommandLine.Model.CommandSpec spec;
 
     Function<File, GetSwaggerNode> swaggerNodeFactory = GetSwaggerNodeJacksonFromFileImpl::new;
     Function<GetSwaggerNode, GetAndShowEndpoints> showFactory = gsn -> new ShowEndpointsImpl(gsn, new ShowEndpointsLoggerImpl());
@@ -88,6 +91,16 @@ public class CliApp implements Runnable {
 
     @Override
     public void run() {
+        boolean hasEndpointsToKeep = endPointToKeep != null && !endPointToKeep.isEmpty();
+        boolean hasEndpointsToRemove = endPointToRemove != null && !endPointToRemove.isEmpty();
+        boolean hasAnyAction = hasEndpointsToKeep || hasEndpointsToRemove || shouldDecomposeSwagger || shouldMergeSwagger;
+
+        if (!hasAnyAction) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "Au moins une option parmi --endPointToRemove (-toRm), --endPointToKeep (-toKeep), "
+                            + "--decomposeSwagger (-d) ou --mergeSwagger (-m) doit être renseignée.");
+        }
+
         File swaggerFile = new File(swaggerFilePath);
         GetSwaggerNode provider = swaggerNodeFactory.apply(swaggerFile);
 
@@ -100,27 +113,21 @@ public class CliApp implements Runnable {
 
         showFactory.apply(provider).execute();
 
-        boolean hasEndpointsToKeep = endPointToKeep != null && !endPointToKeep.isEmpty();
-        boolean hasEndpointsToRemove = endPointToRemove != null && !endPointToRemove.isEmpty();
-        boolean noFilterRequested = !hasEndpointsToKeep && !hasEndpointsToRemove;
-
         final GetSwaggerNode resultProvider;
-        if (noFilterRequested) {
-            log.info("Aucun filtre d'endpoint spécifié, le swagger est utilisé tel quel.");
+        if (!hasEndpointsToKeep && !hasEndpointsToRemove) {
             resultProvider = provider;
-        } else {
-            GetSwaggerNode currentProvider = provider;
-            if (hasEndpointsToKeep) {
-                SwaggerNode kept = keepFactory.apply(currentProvider).execute(endPointToKeep);
-                log.info("Kept {} endpoint(s): {}", endPointToKeep.size(), endPointToKeep);
-                currentProvider = nodeProviderFactory.apply(kept);
-            }
+        } else if (hasEndpointsToKeep) {
             if (hasEndpointsToRemove) {
-                SwaggerNode cleared = clearFactory.apply(currentProvider).execute(endPointToRemove);
-                log.info("Removed {} endpoint(s): {}", endPointToRemove.size(), endPointToRemove);
-                currentProvider = nodeProviderFactory.apply(cleared);
+                log.warn("--endPointToRemove et --endPointToKeep sont tous les deux renseignés : "
+                        + "--endPointToRemove sera ignoré.");
             }
-            resultProvider = currentProvider;
+            SwaggerNode kept = keepFactory.apply(provider).execute(endPointToKeep);
+            log.info("Kept {} endpoint(s): {}", endPointToKeep.size(), endPointToKeep);
+            resultProvider = nodeProviderFactory.apply(kept);
+        } else {
+            SwaggerNode cleared = clearFactory.apply(provider).execute(endPointToRemove);
+            log.info("Removed {} endpoint(s): {}", endPointToRemove.size(), endPointToRemove);
+            resultProvider = nodeProviderFactory.apply(cleared);
         }
 
         Optional<DecomposedSwagger> decomposed = Optional.empty();

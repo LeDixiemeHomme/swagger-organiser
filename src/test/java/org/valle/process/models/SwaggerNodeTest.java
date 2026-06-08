@@ -251,4 +251,45 @@ class SwaggerNodeTest {
         // Assert
         assertThat(swaggerNode.node().get("paths").get("/users")).isNull();
     }
+
+    @Test
+    void test_addComponentFileReferences_should_rewrite_discriminator_mapping_values() {
+        // Arrange — swagger avec un discriminator.mapping contenant des références internes (#/components/schemas/...)
+        File file = new File(INPUT_SWAGGER_BASE_PATH + "/cleared/in_discriminator_oneOf.yml");
+        SwaggerNode swaggerNode = getSwaggerNode(file);
+
+        // Act
+        swaggerNode.addComponentFileReferences();
+
+        // Assert — les valeurs du mapping doivent pointer vers les fichiers décomposés
+        JsonNode mapping = swaggerNode.node()
+                .get("components")
+                .get("schemas")
+                .get("Vehicle")
+                .get("discriminator")
+                .get("mapping");
+
+        assertThat(mapping.get("car").asText()).isEqualTo("../components/Car.yml");
+        assertThat(mapping.get("truck").asText()).isEqualTo("../components/Truck.yml");
+    }
+
+    @Test
+    void test_addComponentFileReferences_should_still_rewrite_dollar_ref_fields() {
+        // Arrange
+        File file = new File(INPUT_SWAGGER_BASE_PATH + "/cleared/in_discriminator_oneOf.yml");
+        SwaggerNode swaggerNode = getSwaggerNode(file);
+
+        // Act
+        swaggerNode.addComponentFileReferences();
+
+        // Assert — les $ref dans oneOf doivent également être réécrits
+        JsonNode oneOf = swaggerNode.node()
+                .get("components")
+                .get("schemas")
+                .get("Vehicle")
+                .get("oneOf");
+
+        assertThat(oneOf.get(0).get("$ref").asText()).isEqualTo("../components/Car.yml");
+        assertThat(oneOf.get(1).get("$ref").asText()).isEqualTo("../components/Truck.yml");
+    }
 }
