@@ -22,26 +22,54 @@ Le premier argument ne doit **pas** être `server` — les arguments sont transm
 | Option | Obligatoire | Description |
 |---|---|---|
 | `-sf`, `--swaggerFilePath` | Oui | Chemin du fichier Swagger source |
-| `-toRm`, `--endPointToRemove` | Non* | Endpoints à supprimer, format `method:path`, séparés par `,` |
-| `-toKeep`, `--endPointToKeep` | Non* | Endpoints à conserver (tous les autres sont supprimés), prioritaire sur `-toRm` |
-| `-d`, `--decomposeSwagger` | Non | Décompose le swagger en plusieurs fichiers |
+| `-toRm`, `--endPointToRemove` | Non | Endpoints à supprimer, format `method:path`, séparés par `,`. Peut être combiné avec `-toKeep` (appliqué après) |
+| `-toKeep`, `--endPointToKeep` | Non | Endpoints à conserver (tous les autres sont supprimés). Peut être combiné avec `-toRm` |
+| `-m`, `--mergeSwagger` | Non | Fusionne un swagger décomposé (multi-fichiers `$ref`) en un seul fichier — contraire de `-d` |
+| `-d`, `--decomposeSwagger` | Non | Décompose le swagger en plusieurs fichiers — contraire de `-m` |
 | `-pf`, `--persistFile` | Non | Persiste le résultat dans des fichiers |
 
-*Au moins `-toRm` ou `-toKeep` est requis.
+> `-toRm` et `-toKeep` sont tous les deux optionnels. Si aucun n'est fourni, le swagger est utilisé tel quel.  
+> Si les deux sont fournis, le `keep` est appliqué en premier, puis le `remove` sur le résultat.
+
+### Ordre d'exécution
+
+```
+merge → affichage des endpoints → keep → remove → decompose → persist
+```
 
 ### Exemples
 
 ```bash
-# Supprimer un endpoint
+# Afficher les endpoints uniquement (sans filtre ni persistance)
 java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/swagger-cobaye.yml \
-  -toRm post:/profiling,get:/profilings
+  -sf src/main/resources/swagger-cobaye.yml
+
+# Rassembler le swagger en un seul fichier (sans filtre)
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
+  -sf src/main/resources/swagger-cobaye.yml -pf
+
+# Fusionner un swagger décomposé (multi-fichiers $ref) en un seul fichier
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
+  -sf src/main/resources/q1-api-v2/q1-api.yml -m -pf
+
+# Supprimer des endpoints et persister le résultat
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
+  -sf src/main/resources/swagger-cobaye.yml -toRm post:/profiling,get:/profilings -pf
 
 # Conserver uniquement certains endpoints et décomposer le résultat
 java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
+  -sf src/main/resources/swagger-cobaye.yml -toKeep post:/profiling,get:/profilings -d -pf
+
+# Combiner keep et remove (keep appliqué en premier)
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
   -sf src/main/resources/swagger-cobaye.yml \
-  -toKeep post:/profiling,get:/profilings \
-  -d -pf
+  -toKeep post:/profiling,get:/profilings,put:/profiling \
+  -toRm put:/profiling -pf
+
+# Fusionner puis filtrer
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
+  -sf src/main/resources/q1-api-v2/q1-api.yml \
+  -m -toRm delete:/profiling -pf
 
 # Aide
 java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar --help
@@ -78,6 +106,7 @@ Via Gradle :
 | `POST` | `/clear-endpoints` | Supprime des endpoints du swagger fourni |
 | `POST` | `/keep-endpoints` | Conserve uniquement les endpoints fournis |
 | `POST` | `/decompose` | Décompose le swagger en une archive ZIP |
+| `POST` | `/merge` | Fusionne un swagger décomposé (ZIP) en un seul fichier — contraire de `/decompose` |
 | `GET` | `/swagger-ui` | Interface graphique Swagger UI |
 
 #### Paramètres communs (query string)
@@ -108,6 +137,11 @@ curl -X POST \
 curl -X POST \
   "http://localhost:8080/decompose?extension=yml" \
   -F "file=@swagger.yml" --output swagger-decomposed.zip
+
+# Fusionner (opération inverse de decompose)
+curl -X POST \
+  "http://localhost:8080/merge?extension=yml" \
+  -F "file=@swagger-decomposed.zip" --output swagger-merged.zip
 ```
 
 ---
