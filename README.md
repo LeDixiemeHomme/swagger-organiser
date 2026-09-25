@@ -45,26 +45,20 @@ java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
   -sf src/main/resources/swagger-cobaye.yml
 
 # Rassembler le swagger en un seul fichier (sans filtre)
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/swagger-cobaye.yml -pf
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -pf
 
 # Fusionner un swagger décomposé (multi-fichiers $ref) en un seul fichier
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/q1-api-v2/q1-api.yml -m -pf
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/q1-api-v2/q1-api.yml -m -pf
 
 # Supprimer des endpoints et persister le résultat
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/swagger-cobaye.yml -toRm post:/profiling,get:/profilings -pf
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -toRm post:/profiling,get:/profilings -pf
 
 # Conserver uniquement certains endpoints et décomposer le résultat
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/swagger-cobaye.yml -toKeep post:/profiling,get:/profilings -d -pf
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -toKeep post:/profiling,get:/profilings -d -pf
 
 
 # Fusionner puis filtrer
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
-  -sf src/main/resources/q1-api-v2/q1-api.yml \
-  -m -toRm delete:/profiling -pf
+java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/q1-api-v2/q1-api.yml -m -toRm delete:/profiling -pf
 
 # Aide
 java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar --help
