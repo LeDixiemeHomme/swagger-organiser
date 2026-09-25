@@ -65,6 +65,7 @@ class CliAppTest {
         lenient().when(mockKeep.execute(any())).thenReturn(mockClearedNode);
         lenient().when(mockDecompose.execute()).thenReturn(mockDecomposedSwagger);
         lenient().when(mockClearedNode.node()).thenReturn(mockObjectNode);
+        lenient().when(mockClearedProvider.provide()).thenReturn(mockClearedNode);
     }
 
     private CommandLine cli() {
@@ -304,14 +305,75 @@ class CliAppTest {
     }
 
     // =========================================================================
-    // Tests d'erreur : aucune option de filtrage fournie
+    // Tests du mode décomposition uniquement (sans filtre d'endpoint)
+    // =========================================================================
+
+    @Nested
+    class DecomposeOnly {
+
+        @Test
+        void should_decompose_original_swagger_when_only_d_flag_is_provided() {
+            cli().execute("-sf", "any.yml", "-d");
+
+            verify(mockDecompose).execute();
+        }
+
+        @Test
+        void should_not_call_clear_nor_keep_in_decompose_only_mode() {
+            cli().execute("-sf", "any.yml", "-d");
+
+            verify(mockClear, never()).execute(any());
+            verify(mockKeep,  never()).execute(any());
+        }
+
+        @Test
+        void should_call_show_before_decompose_in_decompose_only_mode() {
+            cli().execute("-sf", "any.yml", "-d");
+
+            InOrder order = inOrder(mockShow, mockDecompose);
+            order.verify(mockShow).execute();
+            order.verify(mockDecompose).execute();
+        }
+
+        @Test
+        void should_persist_decomposed_when_d_and_pf_flags_are_set_without_filter() {
+            cli().execute("-sf", "any.yml", "-d", "-pf");
+
+            verify(mockPersistDecomposed).persist(mockDecomposedSwagger);
+            verify(mockPersistResult, never()).persist(any());
+        }
+
+        @Test
+        void should_not_persist_anything_when_only_d_flag_is_set() {
+            cli().execute("-sf", "any.yml", "-d");
+
+            verify(mockPersistDecomposed, never()).persist(any());
+            verify(mockPersistResult,     never()).persist(any());
+        }
+
+        @Test
+        void should_use_original_provider_for_decompose_when_no_filter() {
+            AtomicReference<GetSwaggerNode> capturedProvider = new AtomicReference<>();
+            cliApp.decomposeFactory = gsn -> {
+                capturedProvider.set(gsn);
+                return mockDecompose;
+            };
+
+            cli().execute("-sf", "any.yml", "-d");
+
+            assertThat(capturedProvider.get()).isEqualTo(mockProvider);
+        }
+    }
+
+    // =========================================================================
+    // Tests d'erreur : aucune option de filtrage fournie et -d absent
     // =========================================================================
 
     @Nested
     class ErrorCases {
 
         @Test
-        void should_return_non_zero_exit_code_when_neither_toRm_nor_toKeep_is_provided() {
+        void should_return_non_zero_exit_code_when_neither_toRm_nor_toKeep_nor_d_is_provided() {
             int exitCode = cli().execute("-sf", "any.yml");
 
             assertThat(exitCode).isNotEqualTo(0);

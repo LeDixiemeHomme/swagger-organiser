@@ -80,7 +80,9 @@ public class JacksonUtils {
         return switch (extension) {
             case YML, YAML -> new YAMLFactory()
                     // generation sans les --- au début du fichier
-                    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
+                    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                    // Désactive l'insertion d'antislashs '\' et le split de lignes longues
+                    .disable(YAMLGenerator.Feature.SPLIT_LINES);
             case JSON -> new JsonFactory();
         };
     }

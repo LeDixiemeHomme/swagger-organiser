@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ClearEndpointOnDemandImplTest {
     ClearEndpointOnDemandImpl clearEndpointOnDemand = new ClearEndpointOnDemandImpl(
-            new GetSwaggerNodeJacksonFromFileImpl(new File("src/main/resources/swagger-cobaye.yml"))
+            new GetSwaggerNodeJacksonFromFileImpl(new File("src/test/resources/swagger-cobaye-test.yml"))
     );
 
     @Test
@@ -21,13 +21,13 @@ class ClearEndpointOnDemandImplTest {
         Set<EndPoint> endpointsToClean = Set.of(
                 EndPoint.builder()
                         .method("post")
-                        .path("/cadh/v1/operations")
+                        .path("/profiling")
                         .build()
         );
         // Act
         SwaggerNode actual = clearEndpointOnDemand.execute(endpointsToClean);
         // Arrange
-        assertThat(actual.node().get("components").get("schemas").size()).isEqualTo(6);
-        assertThat(actual.node().get("paths").size()).isEqualTo(4);
+        assertThat(actual.node().get("components").get("schemas").size()).isEqualTo(15);
+        assertThat(actual.node().get("paths").size()).isEqualTo(7);
     }
 }

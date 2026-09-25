@@ -24,10 +24,13 @@ import org.valle.provide.fromnode.GetSwaggerNodeFromNodeImpl;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-
+import picocli.CommandLine.Spec;
+import org.valle.process.MergeSwagger;
+import org.valle.process.MergeSwaggerImpl;
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Slf4j
@@ -47,7 +50,6 @@ public class CliApp implements Runnable {
             description = "Liste des endpoints a supprimer, format: method:path, ex: -toRm get:toto/id,post:tata. "
                     + "Ignoré si --endPointToKeep est aussi renseigné.")
     private Set<EndPoint> endPointToRemove;
-
     @Option(names = {"-toKeep", "--endPointToKeep"}, required = false, split = ",",
             description = "Liste des endpoints a conserver (tous les autres seront supprimes), "
                     + "format: method:path, ex: -toKeep get:toto/id,post:tata. "
@@ -62,6 +64,13 @@ public class CliApp implements Runnable {
             description = "A renseigner si le programme doit creer des fichiers contenant le resultat de l'execution, defaut: false")
     private boolean shouldPersistFile;
 
+    @Option(names = {"-m", "--mergeSwagger"},
+            description = "Fusionne un swagger décomposé (multi-fichiers $ref) en un seul fichier, contraire de --decomposeSwagger. Defaut: false")
+    private boolean shouldMergeSwagger;
+
+    @Spec
+    CommandLine.Model.CommandSpec spec;
+
     Function<File, GetSwaggerNode> swaggerNodeFactory = GetSwaggerNodeJacksonFromFileImpl::new;
     Function<GetSwaggerNode, GetAndShowEndpoints> showFactory = gsn -> new ShowEndpointsImpl(gsn, new ShowEndpointsLoggerImpl());
     Function<GetSwaggerNode, ClearEndpointOnDemand> clearFactory = ClearEndpointOnDemandImpl::new;
@@ -70,6 +79,7 @@ public class CliApp implements Runnable {
     Function<GetSwaggerNode, DecomposeSwagger> decomposeFactory = DecomposeSwaggerImpl::new;
     Function<String, PersistDecomposedSwagger> persistDecomposedFactory = PersistDecomposedSwaggerImpl::new;
     Function<File, PersistResult<ObjectNode>> persistResultFactory = PersistResultNodeImpl::new;
+    BiFunction<GetSwaggerNode, File, MergeSwagger> mergeFactory = MergeSwaggerImpl::new;
 
     public static void main(String[] args) {
         CommandLine commandLine = new CommandLine(new CliApp());
@@ -81,31 +91,44 @@ public class CliApp implements Runnable {
 
     @Override
     public void run() {
-        if ((endPointToKeep == null || endPointToKeep.isEmpty())
-                && (endPointToRemove == null || endPointToRemove.isEmpty())) {
-            throw new CommandLine.ParameterException(
-                    new CommandLine(this),
-                    "Au moins une des options --endPointToRemove (-toRm) ou --endPointToKeep (-toKeep) doit être renseignée.");
+        boolean hasEndpointsToKeep = endPointToKeep != null && !endPointToKeep.isEmpty();
+        boolean hasEndpointsToRemove = endPointToRemove != null && !endPointToRemove.isEmpty();
+        boolean hasAnyAction = hasEndpointsToKeep || hasEndpointsToRemove || shouldDecomposeSwagger || shouldMergeSwagger;
+
+        if (!hasAnyAction) {
+            throw new CommandLine.ParameterException(spec.commandLine(),
+                    "Au moins une option parmi --endPointToRemove (-toRm), --endPointToKeep (-toKeep), "
+                            + "--decomposeSwagger (-d) ou --mergeSwagger (-m) doit être renseignée.");
         }
 
-        GetSwaggerNode provider = swaggerNodeFactory.apply(new File(swaggerFilePath));
+        File swaggerFile = new File(swaggerFilePath);
+        GetSwaggerNode provider = swaggerNodeFactory.apply(swaggerFile);
+
+        // Si merge demandé, on fusionne d'abord avant toute autre opération
+        if (shouldMergeSwagger) {
+            SwaggerNode merged = mergeFactory.apply(provider, swaggerFile.getParentFile()).execute();
+            log.info("Swagger fusionné avec succès.");
+            provider = nodeProviderFactory.apply(merged);
+        }
 
         showFactory.apply(provider).execute();
 
-        final SwaggerNode resultNode;
-        if (endPointToKeep != null && !endPointToKeep.isEmpty()) {
-            if (endPointToRemove != null && !endPointToRemove.isEmpty()) {
+        final GetSwaggerNode resultProvider;
+        if (!hasEndpointsToKeep && !hasEndpointsToRemove) {
+            resultProvider = provider;
+        } else if (hasEndpointsToKeep) {
+            if (hasEndpointsToRemove) {
                 log.warn("--endPointToRemove et --endPointToKeep sont tous les deux renseignés : "
                         + "--endPointToRemove sera ignoré.");
             }
-            resultNode = keepFactory.apply(provider).execute(endPointToKeep);
+            SwaggerNode kept = keepFactory.apply(provider).execute(endPointToKeep);
             log.info("Kept {} endpoint(s): {}", endPointToKeep.size(), endPointToKeep);
+            resultProvider = nodeProviderFactory.apply(kept);
         } else {
-            resultNode = clearFactory.apply(provider).execute(endPointToRemove);
+            SwaggerNode cleared = clearFactory.apply(provider).execute(endPointToRemove);
             log.info("Removed {} endpoint(s): {}", endPointToRemove.size(), endPointToRemove);
+            resultProvider = nodeProviderFactory.apply(cleared);
         }
-
-        GetSwaggerNode resultProvider = nodeProviderFactory.apply(resultNode);
 
         Optional<DecomposedSwagger> decomposed = Optional.empty();
         if (shouldDecomposeSwagger) {
@@ -118,7 +141,7 @@ public class CliApp implements Runnable {
             if (decomposed.isPresent()) {
                 persistDecomposedFactory.apply(DECOMPOSED_PATH).persist(decomposed.get());
             } else {
-                persistResultFactory.apply(new File(RESULT_PATH)).persist((ObjectNode) resultNode.node());
+                persistResultFactory.apply(new File(RESULT_PATH)).persist((ObjectNode) resultProvider.provide().node());
             }
         }
     }
