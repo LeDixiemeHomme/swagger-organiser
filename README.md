@@ -5,6 +5,10 @@ Le même JAR supporte deux modes d'utilisation : **CLI** et **serveur REST**.
 
 ## Build
 
+Le projet cible **Java 21**. Gradle force cette version pour la compilation afin
+d'éviter de produire des classes incompatibles avec un runtime Java 21 lorsque
+Gradle est lancé depuis un JDK plus récent.
+
 ```bash
 ./gradlew shadowJar
 ```
