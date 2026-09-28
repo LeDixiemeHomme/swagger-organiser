@@ -363,4 +363,15 @@ class SwaggerNodeTest {
 
         assertThat(swaggerNode.addPathFileReferences()).isSameAs(swaggerNode);
     }
+
+    @Test
+    void should_keep_transformations_safe_when_paths_are_absent() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"openapi\":\"3.0.0\"}"))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThat(swaggerNode.changePathReferences()).isSameAs(swaggerNode);
+        assertThat(swaggerNode.decomposePaths().node()).isEmpty();
+    }
 }
