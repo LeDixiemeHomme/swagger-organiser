@@ -374,4 +374,40 @@ class SwaggerNodeTest {
         assertThat(swaggerNode.changePathReferences()).isSameAs(swaggerNode);
         assertThat(swaggerNode.decomposePaths().node()).isEmpty();
     }
+
+    @Test
+    void should_return_no_endpoints_when_paths_are_absent() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"openapi\":\"3.0.0\"}"))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThat(swaggerNode.getAllEndpoints()).isEmpty();
+    }
+
+    @Test
+    void should_reject_non_object_paths() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"paths\":[]}"))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThatThrownBy(swaggerNode::getAllEndpoints)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Swagger invalide : paths doit être un objet.");
+    }
+
+    @Test
+    void should_remove_elements_without_components() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("""
+                        {"paths": {"/users": {"get": {}}}}
+                        """))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThat(swaggerNode.removeElementsByName(
+                Set.of(EndPoint.builder().method("get").path("/users").build()),
+                Set.of("Unused")).node().at("/paths").isEmpty()).isTrue();
+    }
 }

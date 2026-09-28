@@ -89,7 +89,9 @@ public record SwaggerNode(
     }
 
     public SwaggerNode removeComponents() {
-        ((ObjectNode) this.node()).remove("components");
+        if (this.node() instanceof ObjectNode objectNode) {
+            objectNode.remove("components");
+        }
         return this;
     }
 
@@ -200,8 +202,19 @@ public record SwaggerNode(
         // Refuse ambiguous names instead of silently overwriting one category with another.
         ObjectNode components = MAPPER.createObjectNode();
         Map<String, String> sourceCategories = new java.util.HashMap<>();
-        if (node().has("components")) {
-            node().get("components").fields().forEachRemaining(entry -> {
+        JsonNode sourceComponents = node().get("components");
+        if (sourceComponents == null || sourceComponents.isNull()) {
+            return this.toBuilder().node(components).build();
+        }
+        if (!sourceComponents.isObject()) {
+            throw new IllegalArgumentException("Swagger invalide : components doit être un objet.");
+        }
+        sourceComponents.fields().forEachRemaining(entry -> {
+                if (!entry.getValue().isObject()) {
+                    throw new IllegalArgumentException(
+                            "Swagger invalide : la catégorie de composant '%s' doit être un objet."
+                                    .formatted(entry.getKey()));
+                }
                 entry.getValue().fields().forEachRemaining(field -> {
                     String previousCategory = sourceCategories.putIfAbsent(field.getKey(), entry.getKey());
                     if (previousCategory != null && !previousCategory.equals(entry.getKey())) {
@@ -211,8 +224,7 @@ public record SwaggerNode(
                     }
                     components.putIfAbsent(field.getKey(), field.getValue());
                 });
-            });
-        }
+        });
         return this.toBuilder().node(components).build();
     }
 
@@ -280,9 +292,13 @@ public record SwaggerNode(
 
         schemasToRemove.forEach(schemaToRm -> {
             JsonNode components = this.node().get("components");
-            components.fields().forEachRemaining(entry -> {
-                ((ObjectNode) entry.getValue()).remove(schemaToRm);
-            });
+            if (components != null && components.isObject()) {
+                components.fields().forEachRemaining(entry -> {
+                    if (entry.getValue() instanceof ObjectNode componentCategory) {
+                        componentCategory.remove(schemaToRm);
+                    }
+                });
+            }
         });
 
         return this;
@@ -291,6 +307,12 @@ public record SwaggerNode(
     public Set<EndPoint> getAllEndpoints() {
         // Lecture des endpoints du swagger
         JsonNode paths = this.node().get("paths");
+        if (paths == null || paths.isNull()) {
+            return new HashSet<>();
+        }
+        if (!paths.isObject()) {
+            throw new IllegalArgumentException("Swagger invalide : paths doit être un objet.");
+        }
 
         Iterator<Map.Entry<String, JsonNode>> pathsFields = paths.fields();
         Set<EndPoint> endpoints = new HashSet<>();
@@ -299,6 +321,11 @@ public record SwaggerNode(
             Map.Entry<String, JsonNode> pField = pathsFields.next();
             String path = pField.getKey();
             JsonNode methods = pField.getValue();
+            if (!methods.isObject()) {
+                throw new IllegalArgumentException(
+                        "Swagger invalide : la définition du path '%s' doit être un objet."
+                                .formatted(path));
+            }
             Iterator<Map.Entry<String, JsonNode>> methodsFields = methods.fields();
             while (methodsFields.hasNext()) {
                 Map.Entry<String, JsonNode> mField = methodsFields.next();
