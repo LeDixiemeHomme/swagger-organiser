@@ -118,6 +118,14 @@ application {
     applicationDefaultJvmArgs = listOf("-Dfile.encoding=UTF-8")
 }
 
+val java25Launcher = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(25))
+}
+
+tasks.withType<JavaExec>().configureEach {
+    javaLauncher.set(java25Launcher)
+}
+
 // Lance le serveur REST : ./gradlew runRest [--args="8080"]
 tasks.register<JavaExec>("runRest") {
     group = "application"
