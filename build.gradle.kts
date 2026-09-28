@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("jacoco")
     application
     alias(libs.plugins.shadow)
     alias(libs.plugins.openapi.generator)
@@ -9,7 +10,10 @@ group = "org.valle"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenCentral()
+    maven {
+        name = "nexusPicV3"
+        url = uri("https://nexus-picv3-r.assurances.group.gca/repository/maven-public/")
+    }
 }
 
 dependencies {
@@ -36,12 +40,42 @@ dependencies {
     testImplementation(libs.assertj.core)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.junit.jupiter)
 }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        csv.required.set(false)
+    }
+    finalizedBy(tasks.jacocoTestCoverageVerification)
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.75".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+    }
 }
 
 // ── OpenAPI Generator ────────────────────────────────────────────────────────
