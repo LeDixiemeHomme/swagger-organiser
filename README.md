@@ -94,6 +94,22 @@ Via Gradle :
 ./gradlew runRest
 ```
 
+Les entrées REST sont protégées par des limites configurables pour éviter les consommations
+mémoire ou disque non bornées :
+
+| Propriété JVM | Valeur par défaut |
+|---|---:|
+| `swagger.organiser.rest.max-request-bytes` | 10 MiB |
+| `swagger.organiser.rest.max-zip-entries` | 1 000 |
+| `swagger.organiser.rest.max-zip-entry-bytes` | 10 MiB |
+| `swagger.organiser.rest.max-zip-total-bytes` | 100 MiB |
+
+Exemple :
+```bash
+java -Dswagger.organiser.rest.max-request-bytes=5242880 \
+  -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar server
+```
+
 ### Endpoints disponibles
 
 | Méthode | Chemin | Description |
