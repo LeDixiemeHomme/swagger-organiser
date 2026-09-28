@@ -32,6 +32,11 @@ import java.util.zip.ZipInputStream;
 @Slf4j
 class RestUtils {
 
+    private static final int DEFAULT_MAX_REQUEST_BYTES = 10 * 1024 * 1024;
+    private static final int DEFAULT_MAX_ZIP_ENTRIES = 1_000;
+    private static final int DEFAULT_MAX_ZIP_ENTRY_BYTES = 10 * 1024 * 1024;
+    private static final long DEFAULT_MAX_ZIP_TOTAL_BYTES = 100L * 1024 * 1024;
+
     private RestUtils() {}
 
     // ── Lecture du fichier (raw ou multipart) ─────────────────────────────────
@@ -54,10 +59,14 @@ class RestUtils {
     }
 
     static byte[] readFileBytes(HttpExchange exchange) throws IOException {
+        return readFileBytes(exchange, limits());
+    }
+
+    static byte[] readFileBytes(HttpExchange exchange, RestLimits limits) throws IOException {
         String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
         byte[] body;
         try (InputStream requestBody = exchange.getRequestBody()) {
-            body = requestBody.readAllBytes();
+            body = readLimited(requestBody, limits.maxRequestBytes(), "Corps de requête trop volumineux.");
         }
 
         log.debug("readFileBytes — Content-Type: {}, taille body: {} octets", contentType, body.length);
@@ -74,6 +83,15 @@ class RestUtils {
             return fileBytes;
         }
         return body;
+    }
+
+    private static byte[] readLimited(InputStream input, int limit, String message) throws IOException {
+        int readLimit = limit == Integer.MAX_VALUE ? limit : limit + 1;
+        byte[] bytes = input.readNBytes(readLimit);
+        if (bytes.length > limit) {
+            throw new IllegalArgumentException(message);
+        }
+        return bytes;
     }
 
     private static String extractBoundary(String contentType) {
@@ -249,10 +267,19 @@ class RestUtils {
     }
 
     static void extractZip(byte[] zipBytes, Path targetDir) throws IOException {
+        extractZip(zipBytes, targetDir, limits());
+    }
+
+    static void extractZip(byte[] zipBytes, Path targetDir, RestLimits limits) throws IOException {
         try (ZipInputStream zis = new ZipInputStream(
                 new java.io.ByteArrayInputStream(zipBytes))) {
             ZipEntry entry;
+            int entryCount = 0;
+            long totalBytes = 0;
             while ((entry = zis.getNextEntry()) != null) {
+                if (++entryCount > limits.maxZipEntries()) {
+                    throw new IllegalArgumentException("Archive ZIP trop volumineuse : trop d'entrées.");
+                }
                 Path entryPath = targetDir.resolve(entry.getName()).normalize();
                 if (!entryPath.startsWith(targetDir)) {
                     throw new IllegalArgumentException(
@@ -267,13 +294,58 @@ class RestUtils {
                                 "Entrée ZIP invalide : " + entry.getName());
                     }
                     Files.createDirectories(parent);
-                    Files.write(entryPath, zis.readAllBytes());
+                    byte[] entryBytes = readLimited(zis, limits.maxZipEntryBytes(),
+                            "Entrée ZIP trop volumineuse : " + entry.getName());
+                    totalBytes += entryBytes.length;
+                    if (totalBytes > limits.maxZipTotalBytes()) {
+                        throw new IllegalArgumentException("Archive ZIP trop volumineuse après décompression.");
+                    }
+                    Files.write(entryPath, entryBytes);
                 }
                 zis.closeEntry();
             }
         } catch (ZipException e) {
             throw new IllegalArgumentException("Le corps de la requête n'est pas une archive ZIP valide.", e);
         }
+    }
+
+    private static RestLimits limits() {
+        return new RestLimits(
+                configuredInt("swagger.organiser.rest.max-request-bytes", DEFAULT_MAX_REQUEST_BYTES),
+                configuredInt("swagger.organiser.rest.max-zip-entries", DEFAULT_MAX_ZIP_ENTRIES),
+                configuredInt("swagger.organiser.rest.max-zip-entry-bytes", DEFAULT_MAX_ZIP_ENTRY_BYTES),
+                configuredLong("swagger.organiser.rest.max-zip-total-bytes", DEFAULT_MAX_ZIP_TOTAL_BYTES));
+    }
+
+    private static int configuredInt(String property, int defaultValue) {
+        long value = configuredLong(property, defaultValue);
+        if (value < 1 || value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Configuration invalide : " + property);
+        }
+        return (int) value;
+    }
+
+    private static long configuredLong(String property, long defaultValue) {
+        String configured = System.getProperty(property);
+        if (configured == null || configured.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            long value = Long.parseLong(configured);
+            if (value < 1) {
+                throw new NumberFormatException();
+            }
+            return value;
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Configuration invalide : " + property, exception);
+        }
+    }
+
+    record RestLimits(
+            int maxRequestBytes,
+            int maxZipEntries,
+            int maxZipEntryBytes,
+            long maxZipTotalBytes) {
     }
 
     static File findMainFile(Path dir) {

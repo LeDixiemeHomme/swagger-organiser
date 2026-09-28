@@ -253,4 +253,35 @@ class RestUtilsTest {
             RestUtils.deleteRecursively(target);
         }
     }
+
+    @Test
+    void should_reject_request_body_over_configured_limit() throws IOException {
+        Headers headers = new Headers();
+        when(exchange.getRequestHeaders()).thenReturn(headers);
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream("12345".getBytes(StandardCharsets.UTF_8)));
+
+        assertThatThrownBy(() -> RestUtils.readFileBytes(exchange,
+                new RestUtils.RestLimits(4, 10, 100, 1_000)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Corps de requête trop volumineux.");
+    }
+
+    @Test
+    void should_reject_zip_entry_over_configured_limit() throws Exception {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(output)) {
+            zip.putNextEntry(new ZipEntry("main.yml"));
+            zip.write("12345".getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+        }
+        Path target = Files.createTempDirectory("rest-utils-limit-");
+        try {
+            assertThatThrownBy(() -> RestUtils.extractZip(output.toByteArray(), target,
+                    new RestUtils.RestLimits(1_000, 10, 4, 1_000)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Entrée ZIP trop volumineuse");
+        } finally {
+            RestUtils.deleteRecursively(target);
+        }
+    }
 }
