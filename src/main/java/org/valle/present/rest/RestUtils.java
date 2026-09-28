@@ -1,6 +1,7 @@
 package org.valle.present.rest;
 
 import com.sun.net.httpserver.HttpExchange;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.Extension;
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URLDecoder;
 
 /**
  * Utilitaires partagés entre les handlers REST.
@@ -116,7 +118,11 @@ class RestUtils {
         if (query == null || query.isBlank()) return params;
         for (String pair : query.split("&")) {
             int idx = pair.indexOf('=');
-            if (idx > 0) params.put(pair.substring(0, idx), pair.substring(idx + 1));
+            if (idx > 0) {
+                String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+                String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
+                params.put(key, value);
+            }
         }
         return params;
     }
@@ -129,12 +135,26 @@ class RestUtils {
     }
 
     static void sendError(HttpExchange exchange, int code, String message) throws IOException {
-        byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] body = mapper.createObjectNode()
+                .put("code", errorCode(code))
+                .put("message", message)
+                .toString()
+                .getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(code, body.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);
         }
+    }
+
+    private static String errorCode(int status) {
+        return switch (status) {
+            case 400 -> "INVALID_REQUEST";
+            case 404 -> "NOT_FOUND";
+            case 405 -> "METHOD_NOT_ALLOWED";
+            default -> status >= 500 ? "INTERNAL_ERROR" : "HTTP_ERROR";
+        };
     }
 
     static void sendBytes(HttpExchange exchange, int code, String contentType, byte[] body) throws IOException {
@@ -145,4 +165,3 @@ class RestUtils {
         }
     }
 }
-
