@@ -130,6 +130,14 @@ class RestUtils {
         return params;
     }
 
+    static String requireQueryParameter(Map<String, String> params, String name, String message) {
+        String value = params.get(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
+    }
+
     static Set<EndPoint> parseEndpoints(String endpoints) {
         return Arrays.stream(endpoints.split(","))
                 .map(String::trim)

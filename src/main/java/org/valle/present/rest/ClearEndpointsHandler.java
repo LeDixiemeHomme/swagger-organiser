@@ -102,18 +102,10 @@ public class ClearEndpointsHandler implements HttpHandler {
         try {
             Map<String, String> params = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
 
-            String extensionParam = params.get("extension");
-            String endpointsParam = params.get("endpoints");
-
-            if (extensionParam == null || extensionParam.isBlank()) {
-                RestUtils.sendError(exchange, 400, "Paramètre 'extension' manquant (json, yml, yaml).");
-                return;
-            }
-            if (endpointsParam == null || endpointsParam.isBlank()) {
-                RestUtils.sendError(exchange, 400,
-                        "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
-                return;
-            }
+            String extensionParam = RestUtils.requireQueryParameter(params, "extension",
+                    "Paramètre 'extension' manquant (json, yml, yaml).");
+            String endpointsParam = RestUtils.requireQueryParameter(params, "endpoints",
+                    "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
 
             byte[] fileBytes = RestUtils.readFileBytes(exchange);
             if (fileBytes.length == 0) {

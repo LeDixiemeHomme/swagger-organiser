@@ -52,6 +52,15 @@ class RestUtilsTest {
     }
 
     @Test
+    void should_require_non_blank_query_parameters() {
+        assertThat(RestUtils.requireQueryParameter(Map.of("extension", "json"),
+                "extension", "missing")).isEqualTo("json");
+        assertThatThrownBy(() -> RestUtils.requireQueryParameter(Map.of(), "extension", "missing"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("missing");
+    }
+
+    @Test
     void should_parse_endpoint_lists_with_whitespace() {
         assertThat(RestUtils.parseEndpoints(" get:/users, post:/orders "))
                 .containsExactlyInAnyOrder(

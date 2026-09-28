@@ -104,11 +104,8 @@ public class DecomposeHandler implements HttpHandler {
         try {
             Map<String, String> params = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
 
-            String extensionParam = params.get("extension");
-            if (extensionParam == null || extensionParam.isBlank()) {
-                RestUtils.sendError(exchange, 400, "Paramètre 'extension' manquant (json, yml, yaml).");
-                return;
-            }
+            String extensionParam = RestUtils.requireQueryParameter(params, "extension",
+                    "Paramètre 'extension' manquant (json, yml, yaml).");
 
             byte[] fileBytes = RestUtils.readFileBytes(exchange);
             if (fileBytes.length == 0) {
