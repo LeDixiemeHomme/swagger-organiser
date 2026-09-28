@@ -98,8 +98,6 @@ public class KeepEndpointsHandler extends AbstractRestHandler {
     @Override
     protected void handleRequest(HttpExchange exchange) throws Exception {
         Map<String, String> parameters = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
-        RestUtils.requireQueryParameter(parameters, "extension",
-                "Paramètre 'extension' manquant (json, yml, yaml).");
         String endpointsParam = RestUtils.requireQueryParameter(parameters, "endpoints",
                 "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
         Set<EndPoint> endpointsToKeep = RestUtils.parseEndpoints(endpointsParam);
