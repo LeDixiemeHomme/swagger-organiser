@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.valle.utils.JacksonUtils.readValue;
+import static org.valle.utils.SafePathResolver.resolveWithin;
 
 /**
  * Implémentation de {@link MergeSwagger}.
@@ -85,14 +86,16 @@ public class MergeSwaggerImpl implements MergeSwagger {
             Set<String> toLoad = new LinkedHashSet<>(componentFileNames);
             toLoad.removeAll(loaded);
             for (String fileName : toLoad) {
-                File componentFile = new File(baseDir, COMPONENT_PREFIX_FROM_MAIN + fileName);
+                File componentFile = resolveWithin(baseDir.toPath(),
+                        COMPONENT_PREFIX_FROM_MAIN + fileName, "Référence de composant").toFile();
                 String schemaKey = stripYmlExtension(fileName);
                 if (componentFile.exists()) {
                     log.debug("Chargement du composant: {} → schemas/{}", fileName, schemaKey);
                     JsonNode converted = convertComponentRefs(readValue(componentFile), componentFileNames);
                     schemasNode.set(schemaKey, converted);
                 } else {
-                    log.warn("Fichier composant non trouvé: {}", componentFile.getAbsolutePath());
+                    throw new IllegalArgumentException(
+                            "Fichier composant référencé introuvable : " + fileName);
                 }
                 loaded.add(fileName);
             }
@@ -133,13 +136,14 @@ public class MergeSwaggerImpl implements MergeSwagger {
             if (value.isObject() && value.has("$ref")) {
                 String ref = value.get("$ref").asText();
                 if (!ref.startsWith("#")) {
-                    File pathFile = new File(baseDir, ref);
+                    File pathFile = resolveWithin(baseDir.toPath(), ref, "Référence de path").toFile();
                     if (pathFile.exists()) {
                         log.debug("Inlining path file: {}", ref);
                         result.set(pathKey, convertComponentRefs(readValue(pathFile), componentFileNames));
                         return;
                     }
-                    log.warn("Fichier path non trouvé: {}", pathFile.getAbsolutePath());
+                    throw new IllegalArgumentException(
+                            "Fichier path référencé introuvable : " + ref);
                 }
             }
             result.set(pathKey, convertComponentRefs(value, componentFileNames));
@@ -166,10 +170,14 @@ public class MergeSwaggerImpl implements MergeSwagger {
             if (obj.has("$ref")) {
                 String ref = obj.get("$ref").asText();
                 if (!ref.startsWith("#")) {
-                    File refFile = new File(baseDir, ref);
+                    File refFile = resolveWithin(baseDir.toPath(),
+                            ref, "Référence de composant").toFile();
                     if (refFile.exists()) {
                         log.debug("Inlining component ref: {}", ref);
                         node.set(field, readValue(refFile));
+                    } else {
+                        throw new IllegalArgumentException(
+                                "Fichier composant référencé introuvable : " + ref);
                     }
                 }
             } else {
@@ -254,4 +262,3 @@ public class MergeSwaggerImpl implements MergeSwagger {
         return result;
     }
 }
-

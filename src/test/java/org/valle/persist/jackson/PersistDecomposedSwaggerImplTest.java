@@ -11,8 +11,10 @@ import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.valle.utils.JacksonUtils.readValue;
 
 class PersistDecomposedSwaggerImplTest {
@@ -48,5 +50,27 @@ class PersistDecomposedSwaggerImplTest {
             JsonNode expected = readValue(file2);
             assertThat(expected).isEqualTo(field.getValue());
         });
+    }
+
+    @org.junit.jupiter.api.Test
+    void should_reject_component_names_escaping_output_directory() {
+        DecomposedSwagger decomposed = DecomposedSwagger.builder()
+                .main(org.valle.process.models.SwaggerNode.builder()
+                        .node(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode())
+                        .extension(org.valle.process.models.Extension.JSON)
+                        .build())
+                .components(org.valle.process.models.SwaggerNode.builder()
+                        .node(new com.fasterxml.jackson.databind.ObjectMapper()
+                                .createObjectNode()
+                                .set("..\\outside", new com.fasterxml.jackson.databind.ObjectMapper()
+                                        .createObjectNode()))
+                        .extension(org.valle.process.models.Extension.JSON)
+                        .build())
+                .build();
+
+        assertThatThrownBy(() -> new PersistDecomposedSwaggerImpl(outputDirectory.toString())
+                .persist(decomposed))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("sort du répertoire autorisé");
     }
 }

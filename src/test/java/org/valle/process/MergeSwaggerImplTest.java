@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MergeSwaggerImplTest {
 
@@ -83,7 +84,7 @@ class MergeSwaggerImplTest {
     }
 
     @Test
-    void should_keep_missing_path_file_as_reference() throws IOException {
+    void should_reject_missing_path_file() throws IOException {
         write("main.yml", """
                 openapi: 3.0.0
                 info:
@@ -94,9 +95,26 @@ class MergeSwaggerImplTest {
                     $ref: paths/missing.yml
                 """);
 
-        JsonNode root = merge().execute().node();
+        assertThatThrownBy(() -> merge().execute())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Fichier path référencé introuvable");
+    }
 
-        assertThat(root.at("/paths/~1missing/$ref").asText()).isEqualTo("paths/missing.yml");
+    @Test
+    void should_reject_path_reference_outside_base_directory() throws IOException {
+        write("main.yml", """
+                openapi: 3.0.0
+                info:
+                  title: Test
+                  version: 1.0.0
+                paths:
+                  /escape:
+                    $ref: ../outside.yml
+                """);
+
+        assertThatThrownBy(() -> merge().execute())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("sort du répertoire autorisé");
     }
 
     private MergeSwagger merge() {
