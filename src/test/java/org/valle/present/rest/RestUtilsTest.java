@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.valle.process.models.EndPoint;
 import org.valle.process.models.Extension;
 
 import java.io.ByteArrayInputStream;
@@ -48,6 +49,14 @@ class RestUtilsTest {
     void should_return_empty_parameters_for_blank_query() {
         assertThat(RestUtils.parseQuery(null)).isEmpty();
         assertThat(RestUtils.parseQuery("")).isEmpty();
+    }
+
+    @Test
+    void should_parse_endpoint_lists_with_whitespace() {
+        assertThat(RestUtils.parseEndpoints(" get:/users, post:/orders "))
+                .containsExactlyInAnyOrder(
+                        EndPoint.builder().method("get").path("/users").build(),
+                        EndPoint.builder().method("post").path("/orders").build());
     }
 
     @Test

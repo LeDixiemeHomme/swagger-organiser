@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.DecomposedSwagger;
+import org.valle.process.models.EndPoint;
 import org.valle.process.models.Extension;
 import org.valle.utils.ZipUtils;
 
@@ -14,6 +15,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URLDecoder;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utilitaires partagés entre les handlers REST.
@@ -125,6 +128,14 @@ class RestUtils {
             }
         }
         return params;
+    }
+
+    static Set<EndPoint> parseEndpoints(String endpoints) {
+        return Arrays.stream(endpoints.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .map(EndPoint::fromString)
+                .collect(Collectors.toSet());
     }
 
     static String resolveContentType(Extension extension) {

@@ -13,10 +13,8 @@ import org.valle.utils.ZipUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Handler REST — {@code POST /keep-endpoints}
@@ -124,10 +122,7 @@ public class KeepEndpointsHandler implements HttpHandler {
                 return;
             }
 
-            Set<EndPoint> endpointsToKeep = Arrays.stream(endpointsParam.split(","))
-                    .map(String::trim).filter(s -> !s.isEmpty())
-                    .map(EndPoint::fromString)
-                    .collect(Collectors.toSet());
+            Set<EndPoint> endpointsToKeep = RestUtils.parseEndpoints(endpointsParam);
 
             Extension extension = Extension.valueOf(extensionParam.toUpperCase());
 
@@ -159,4 +154,3 @@ public class KeepEndpointsHandler implements HttpHandler {
         }
     }
 }
-

@@ -13,10 +13,8 @@ import org.valle.utils.ZipUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Handler REST — {@code POST /swagger/clear-endpoints}
@@ -124,10 +122,7 @@ public class ClearEndpointsHandler implements HttpHandler {
                 return;
             }
 
-            Set<EndPoint> endpointsToRemove = Arrays.stream(endpointsParam.split(","))
-                    .map(String::trim).filter(s -> !s.isEmpty())
-                    .map(EndPoint::fromString)
-                    .collect(Collectors.toSet());
+            Set<EndPoint> endpointsToRemove = RestUtils.parseEndpoints(endpointsParam);
 
             Extension extension = Extension.valueOf(extensionParam.toUpperCase());
 
