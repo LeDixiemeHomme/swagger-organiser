@@ -312,6 +312,14 @@ class CliAppTest {
     class DecomposeOnly {
 
         @Test
+        void should_reject_decompose_and_merge_together() {
+            int exitCode = cli().execute("-sf", "any.yml", "-d", "-m");
+
+            assertThat(exitCode).isNotZero();
+            verifyNoInteractions(mockShow, mockClear, mockKeep, mockDecompose, mockPersistDecomposed);
+        }
+
+        @Test
         void should_decompose_original_swagger_when_only_d_flag_is_provided() {
             cli().execute("-sf", "any.yml", "-d");
 

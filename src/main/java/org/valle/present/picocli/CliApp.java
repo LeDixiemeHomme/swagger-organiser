@@ -86,6 +86,11 @@ public class CliApp implements Runnable {
 
     @Override
     public void run() {
+        if (shouldDecomposeSwagger && shouldMergeSwagger) {
+            throw new CommandLine.ParameterException(
+                    spec.commandLine(),
+                    "Les options --decompose et --merge sont exclusives.");
+        }
         CliWorkflow.execute(
                 new CliWorkflow.Options(swaggerFilePath, endPointToRemove, endPointToKeep,
                         shouldDecomposeSwagger, shouldPersistFile, shouldMergeSwagger),
