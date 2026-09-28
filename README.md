@@ -94,6 +94,51 @@ Via Gradle :
 ./gradlew runRest
 ```
 
+### Interface web
+
+L'interface web est embarquée dans le JAR et ne nécessite aucune installation
+frontend supplémentaire. Pour la lancer depuis les sources :
+
+```bash
+# Construire le JAR exécutable
+./gradlew shadowJar
+
+# Démarrer le serveur REST sur le port par défaut
+java -jar build/libs/swagger-organiser-1.1.0-all.jar server
+```
+
+Une fois le serveur démarré, ouvrir l'adresse suivante dans un navigateur :
+
+**<http://localhost:8080/app>**
+
+Le serveur doit rester actif dans le terminal pendant l'utilisation de
+l'interface. Si un autre port est utilisé, par exemple `9090`, l'adresse devient
+<http://localhost:9090/app> :
+
+```bash
+java -jar build/libs/swagger-organiser-1.1.0-all.jar server --port 9090
+```
+
+L'interface permet de :
+
+- vérifier la disponibilité du serveur avec le bouton **Vérifier le serveur** ;
+- sélectionner un fichier Swagger/OpenAPI (`.json`, `.yaml` ou `.yml`) ou une archive
+  décomposée (`.zip`) ;
+- choisir le format de sortie `JSON`, `YAML (.yaml)` ou `YAML (.yml)` ;
+- supprimer des endpoints avec l'action **Clear endpoints** ;
+- conserver uniquement certains endpoints avec l'action **Keep endpoints** ;
+- décomposer un fichier OpenAPI avec l'action **Decompose** ;
+- fusionner une archive décomposée avec l'action **Merge** ;
+- saisir les endpoints au format `method:/path`, séparés par des virgules, pour
+  les actions **Clear endpoints** et **Keep endpoints** ;
+- télécharger automatiquement le ZIP généré après une transformation ;
+- consulter la documentation interactive via le bouton **Ouvrir Swagger UI Documentation**.
+
+Les actions de filtrage nécessitent au moins un endpoint, par exemple :
+`get:/users,post:/users`. Les actions **Decompose** et **Merge** n'utilisent pas
+ce champ. Les erreurs retournées par l'API sont affichées directement dans la
+page.
+
 Les entrées REST sont protégées par des limites configurables pour éviter les consommations
 mémoire ou disque non bornées :
 
@@ -146,12 +191,6 @@ Les erreurs REST sont retournées en JSON avec une forme commune :
 
 Les codes principaux sont `INVALID_REQUEST` (400), `METHOD_NOT_ALLOWED` (405) et
 `INTERNAL_ERROR` (500). Les codes HTTP des routes existantes restent inchangés.
-
-L'interface web est disponible sur `http://localhost:8080/app`. Elle propose la sonde
-`health`, l'envoi d'un fichier Swagger ou ZIP, le choix de l'extension de sortie et les
-actions `clear`, `keep`, `decompose` et `merge`. Les réponses ZIP sont téléchargées
-automatiquement ; les erreurs JSON sont affichées dans la page. Le lien **Swagger UI**
-permet d'ouvrir la documentation générée.
 
 ### Exemples curl
 

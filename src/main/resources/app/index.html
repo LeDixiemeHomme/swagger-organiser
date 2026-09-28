@@ -12,9 +12,9 @@
       <div>
         <p class="eyebrow">Swagger Organiser</p>
         <h1>Organiser un fichier OpenAPI</h1>
-        <p class="intro">Transformez votre fichier Swagger sans installer de dépendance frontend.</p>
+        <p class="intro">Transformez votre fichier Swagger directement dans votre navigateur.</p>
       </div>
-      <a class="secondary-button" href="/swagger-ui" target="_blank" rel="noopener">Ouvrir Swagger UI</a>
+      <a class="secondary-button swagger-ui-link" href="/swagger-ui" target="_blank" rel="noopener">Ouvrir Swagger UI Documentation</a>
     </header>
 
     <section class="card" aria-labelledby="health-title">
@@ -25,7 +25,80 @@
       <p id="health-status" class="status" role="status">État non vérifié.</p>
     </section>
 
-    <section class="card" aria-labelledby="transform-title">
+    <details class="card documentation">
+      <summary id="documentation-title">Comment utiliser le service</summary>
+      <div class="documentation-content">
+        <h3>À quoi sert Swagger Organiser ?</h3>
+        <p>Swagger Organiser permet d'adapter un document Swagger/OpenAPI à un besoin
+          précis. Vous pouvez réduire la documentation à certains endpoints, retirer
+          des endpoints inutiles, découper un document volumineux en plusieurs fichiers
+          ou reconstruire un document unique à partir d'une archive décomposée.</p>
+        <p>Le service accepte un fichier <code>.json</code>, <code>.yaml</code> ou
+          <code>.yml</code>. Il produit une archive ZIP téléchargeable contenant le
+          résultat de la transformation.</p>
+
+        <h3>1. Keep endpoints — conserver une sélection</h3>
+        <p>Cette action conserve uniquement les endpoints indiqués et supprime tous les
+          autres du document.</p>
+        <p><strong>Cas concret :</strong> votre Swagger décrit trois ressources :
+          <code>/users</code>, <code>/products</code> et <code>/orders</code>, mais
+          votre équipe ne doit publier que la ressource <code>/users</code>. Choisissez
+          <strong>Keep endpoints</strong> et indiquez par exemple
+          <code>get:/users,post:/users</code>. Le fichier généré ne contiendra plus que
+          ces opérations.</p>
+
+        <h3>2. Clear endpoints — supprimer une sélection</h3>
+        <p>Cette action supprime uniquement les endpoints indiqués et conserve le reste
+          du document.</p>
+        <p><strong>Cas concret :</strong> votre Swagger contient les ressources
+          <code>/users</code>, <code>/products</code> et <code>/orders</code>, mais
+          l'ancienne ressource <code>/orders</code> ne doit plus être exposée. Choisissez
+          <strong>Clear endpoints</strong> et indiquez
+          <code>get:/orders,post:/orders</code>. Les ressources <code>/users</code> et
+          <code>/products</code> resteront dans le document.</p>
+
+        <h3>3. Decompose — découper un document</h3>
+        <p>Cette action transforme un document OpenAPI unique en une archive ZIP
+          contenant plusieurs fichiers : document principal, chemins et composants
+          OpenAPI. Les catégories de composants sont conservées afin de permettre une
+          reconstruction fiable.</p>
+        <p><strong>Cas concret :</strong> votre Swagger contient plusieurs dizaines de
+          ressources et devient difficile à maintenir dans un seul fichier. Utilisez
+          <strong>Decompose</strong> pour séparer les chemins et les composants, puis
+          versionner ou modifier ces fichiers indépendamment.</p>
+
+        <h3>4. Merge — reconstruire un document</h3>
+        <p>Cette action reconstitue un document OpenAPI unique à partir d'une archive ZIP
+          produite par <strong>Decompose</strong>. L'archive doit respecter le formalisme
+          de Swagger Organiser : cette action ne permet pas d'assembler arbitrairement
+          plusieurs fichiers OpenAPI indépendants. Utilisez une archive générée par
+          Swagger Organiser, ou une archive externe dont la structure et les références
+          suivent exactement ce formalisme.</p>
+        <p><strong>Cas concret :</strong> vous avez décomposé un Swagger avec Swagger
+          Organiser afin de travailler séparément sur ses différents fichiers. Pour
+          partager ensuite une version complète avec une autre équipe ou la présenter
+          lors d'une revue d'API, utilisez <strong>Merge</strong> afin de reconstituer
+          le document OpenAPI unique.</p>
+
+        <h3>Déroulement d'une transformation</h3>
+        <ol>
+          <li>Sélectionnez le fichier source, ou l'archive ZIP pour l'action
+            <strong>Merge</strong>.</li>
+          <li>Choisissez le format de sortie : JSON, YAML <code>.yaml</code> ou YAML
+            <code>.yml</code>.</li>
+          <li>Choisissez l'une des quatre actions. Pour <strong>Keep endpoints</strong>
+            et <strong>Clear endpoints</strong>, saisissez les endpoints au format
+            <code>method:/path</code>, séparés par des virgules.</li>
+          <li>Lancez la transformation. Le fichier ZIP généré est téléchargé
+            automatiquement.</li>
+        </ol>
+        <p>Les erreurs de validation ou de traitement sont affichées sous le formulaire.
+          Le bouton <strong>Vérifier le serveur</strong> permet de confirmer que l'API
+          est disponible avant de lancer une transformation.</p>
+      </div>
+    </details>
+
+    <section class="card transformation-card" aria-labelledby="transform-title">
       <h2 id="transform-title">Transformation</h2>
       <form id="transform-form">
         <label for="file">Fichier Swagger ou archive ZIP</label>
