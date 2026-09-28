@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swagger Organiser</title>
+  <link rel="stylesheet" href="/app/styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Swagger Organiser</p>
+        <h1>Organiser un fichier OpenAPI</h1>
+        <p class="intro">Transformez votre fichier Swagger sans installer de dépendance frontend.</p>
+      </div>
+      <a class="secondary-button" href="/swagger-ui" target="_blank" rel="noopener">Ouvrir Swagger UI</a>
+    </header>
+
+    <section class="card" aria-labelledby="health-title">
+      <div class="section-heading">
+        <h2 id="health-title">Disponibilité</h2>
+        <button id="health-button" class="secondary-button" type="button">Vérifier le serveur</button>
+      </div>
+      <p id="health-status" class="status" role="status">État non vérifié.</p>
+    </section>
+
+    <section class="card" aria-labelledby="transform-title">
+      <h2 id="transform-title">Transformation</h2>
+      <form id="transform-form">
+        <label for="file">Fichier Swagger ou archive ZIP</label>
+        <input id="file" name="file" type="file" accept=".json,.yaml,.yml,.zip,application/json,application/yaml,application/zip" required>
+
+        <div class="form-grid">
+          <div>
+            <label for="extension">Extension de sortie</label>
+            <select id="extension" name="extension">
+              <option value="yml">YAML (.yml)</option>
+              <option value="yaml">YAML (.yaml)</option>
+              <option value="json">JSON (.json)</option>
+            </select>
+          </div>
+          <div>
+            <label for="action">Action</label>
+            <select id="action" name="action">
+              <option value="clear-endpoints">Clear endpoints</option>
+              <option value="keep-endpoints">Keep endpoints</option>
+              <option value="decompose">Decompose</option>
+              <option value="merge">Merge</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="endpoints-group">
+          <label for="endpoints">Endpoints <span>(method:/path, séparés par des virgules)</span></label>
+          <input id="endpoints" name="endpoints" type="text" placeholder="get:/users,post:/users">
+        </div>
+
+        <button class="primary-button" type="submit">Lancer la transformation</button>
+      </form>
+      <p id="result" class="status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <script src="/app/app.js" defer></script>
+</body>
+</html>

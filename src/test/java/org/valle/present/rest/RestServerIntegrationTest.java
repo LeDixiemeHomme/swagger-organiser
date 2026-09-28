@@ -73,4 +73,28 @@ class RestServerIntegrationTest {
 
         assertThat(entries).contains("main.json", "paths/users.json");
     }
+
+    @Test
+    void should_serve_embedded_app_and_protect_resource_traversal() throws Exception {
+        URI appUri = URI.create("http://localhost:" + server.getAddress().getPort() + "/app");
+        HttpResponse<String> appResponse = client.send(
+                HttpRequest.newBuilder(appUri).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertThat(appResponse.statusCode()).isEqualTo(200);
+        assertThat(appResponse.headers().firstValue("Content-Type")).hasValueSatisfying(
+                value -> assertThat(value).startsWith("text/html"));
+        assertThat(appResponse.body()).contains("Swagger Organiser", "/app/app.js");
+
+        HttpResponse<String> traversalResponse = client.send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + server.getAddress().getPort()
+                                + "/app/%2e%2e/openapi.yml"))
+                        .GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertThat(traversalResponse.statusCode()).isEqualTo(404);
+        assertThat(traversalResponse.headers().firstValue("Content-Type")).hasValueSatisfying(
+                value -> assertThat(value).startsWith("application/json"));
+        assertThat(traversalResponse.body()).contains("\"code\":\"NOT_FOUND\"");
+    }
 }

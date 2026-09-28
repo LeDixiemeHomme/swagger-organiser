@@ -14,9 +14,10 @@ info:
     | `POST`  | `/decompose`        | Décompose un swagger en plusieurs fichiers dans un ZIP             |
     | `POST`  | `/merge`            | Fusionne un swagger décomposé en un fichier unique                 |
     | `GET`   | `/health`           | Vérifie que le serveur est disponible                              |
+    | `GET`   | `/app`              | Interface web vanilla pour transformer un fichier                 |
     | `GET`   | `/swagger-ui`       | Interface graphique Swagger UI                                     |
     ```
-  version: 1.0.0
+  version: 1.1.0
   contact:
     name: swagger-organiser
 
@@ -29,6 +30,36 @@ tags:
     description: Opérations de transformation de fichiers Swagger/OpenAPI
 
 paths:
+
+  /app:
+    get:
+      tags:
+        - swagger
+      summary: Ouvrir l'interface web
+      description: |
+        Sert l'interface HTML/CSS/JavaScript vanilla embarquée dans le JAR.
+        Elle permet de vérifier la santé du serveur, d'envoyer un fichier Swagger
+        ou une archive ZIP, de choisir une transformation et de télécharger le ZIP résultant.
+      operationId: getApp
+      responses:
+        "200":
+          description: Interface web
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "405":
+          description: Méthode HTTP non supportée — seul GET est accepté
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /clear-endpoints:
     post:

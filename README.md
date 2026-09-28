@@ -12,7 +12,7 @@ de produire des classes cohérentes avec le runtime Java 25 utilisé par le proj
 ./gradlew shadowJar
 ```
 
-Le JAR produit : `build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar`
+Le JAR produit : `build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar`
 
 ---
 
@@ -44,27 +44,27 @@ merge → affichage des endpoints → keep → remove → decompose → persist
 
 ```bash
 # Afficher les endpoints uniquement (sans filtre ni persistance)
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar \
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar \
   -sf src/main/resources/swagger-cobaye.yml
 
 # Rassembler le swagger en un seul fichier (sans filtre)
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -pf
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -pf
 
 # Fusionner un swagger décomposé (multi-fichiers $ref) en un seul fichier
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/q1-api-v2/q1-api.yml -m -pf
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar -sf src/main/resources/q1-api-v2/q1-api.yml -m -pf
 
 # Supprimer des endpoints et persister le résultat
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -toRm post:/profiling,get:/profilings -pf
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -toRm post:/profiling,get:/profilings -pf
 
 # Conserver uniquement certains endpoints et décomposer le résultat
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -toKeep post:/profiling,get:/profilings -d -pf
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar -sf src/main/resources/swagger-cobaye.yml -toKeep post:/profiling,get:/profilings -d -pf
 
 
 # Fusionner puis filtrer
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar -sf src/main/resources/q1-api-v2/q1-api.yml -m -toRm delete:/profiling -pf
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar -sf src/main/resources/q1-api-v2/q1-api.yml -m -toRm delete:/profiling -pf
 
 # Aide
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar --help
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar --help
 ```
 
 Via Gradle :
@@ -80,13 +80,13 @@ Passer `server` comme premier argument. Le port est optionnel (défaut : `8080`)
 
 ```bash
 # Port par défaut (8080)
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar server
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar server
 
 # Port personnalisé
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar server 9090
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar server 9090
 
 # Port personnalisé avec une option explicite
-java -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar server --port 9090
+java -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar server --port 9090
 ```
 
 Via Gradle :
@@ -107,7 +107,7 @@ mémoire ou disque non bornées :
 Exemple :
 ```bash
 java -Dswagger.organiser.rest.max-request-bytes=5242880 \
-  -jar build/libs/swagger-organiser-1.0-SNAPSHOT-all.jar server
+  -jar build/libs/swagger-organiser-1.1.0-SNAPSHOT-all.jar server
 ```
 
 ### Endpoints disponibles
@@ -118,6 +118,7 @@ java -Dswagger.organiser.rest.max-request-bytes=5242880 \
 | `POST` | `/keep-endpoints` | Conserve uniquement les endpoints fournis |
 | `POST` | `/decompose` | Décompose le swagger en une archive ZIP |
 | `POST` | `/merge` | Fusionne un swagger décomposé (ZIP) en un seul fichier — contraire de `/decompose` |
+| `GET` | `/app` | Interface web vanilla embarquée (upload, transformation et téléchargement ZIP) |
 | `GET` | `/swagger-ui` | Interface graphique Swagger UI |
 | `GET` | `/health` | Vérifie la disponibilité du serveur |
 
@@ -145,6 +146,12 @@ Les erreurs REST sont retournées en JSON avec une forme commune :
 
 Les codes principaux sont `INVALID_REQUEST` (400), `METHOD_NOT_ALLOWED` (405) et
 `INTERNAL_ERROR` (500). Les codes HTTP des routes existantes restent inchangés.
+
+L'interface web est disponible sur `http://localhost:8080/app`. Elle propose la sonde
+`health`, l'envoi d'un fichier Swagger ou ZIP, le choix de l'extension de sortie et les
+actions `clear`, `keep`, `decompose` et `merge`. Les réponses ZIP sont téléchargées
+automatiquement ; les erreurs JSON sont affichées dans la page. Le lien **Swagger UI**
+permet d'ouvrir la documentation générée.
 
 ### Exemples curl
 

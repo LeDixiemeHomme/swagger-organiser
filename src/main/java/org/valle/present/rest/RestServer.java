@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
  *
  * <h3>Endpoints</h3>
  * <ul>
+ *   <li>{@code GET /app} — interface web vanilla embarquée dans le JAR</li>
  *   <li>{@code POST /clear-endpoints} — supprime des endpoints, retourne le fichier nettoyé</li>
  *   <li>{@code POST /keep-endpoints}  — conserve uniquement les endpoints fournis, supprime les autres</li>
  *   <li>{@code POST /decompose}       — décompose le swagger, retourne une archive ZIP</li>
@@ -35,6 +36,7 @@ public class RestServer {
         server.start();
 
         log.info("Serveur REST démarré sur le port {}", port);
+        log.info("  GET  http://localhost:{}/app  ← Interface web", port);
         log.info("  GET  http://localhost:{}/swagger-ui  ← Swagger UI (interface graphique)", port);
         log.info("  POST http://localhost:{}/clear-endpoints?extension=yml&endpoints=method:/path", port);
         log.info("  POST http://localhost:{}/keep-endpoints?extension=yml&endpoints=method:/path", port);
@@ -50,6 +52,7 @@ public class RestServer {
 
     static HttpServer createServer(int port) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/app",              new ClasspathResourceHandler("/app", "index.html"));
         server.createContext("/clear-endpoints", new ClearEndpointsHandler());
         server.createContext("/keep-endpoints",  new KeepEndpointsHandler());
         server.createContext("/decompose",        new DecomposeHandler());
