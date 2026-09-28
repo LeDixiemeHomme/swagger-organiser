@@ -1,5 +1,7 @@
 package org.valle.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.Extension;
 
@@ -40,6 +42,7 @@ public class ZipUtils {
      * main.{ext}
      * paths/{nom}.{ext}
      * components/{nom}.{ext}
+     * component-categories.json (si des composants sont présents)
      * </pre>
      *
      * @param decomposed le swagger décomposé
@@ -65,6 +68,12 @@ public class ZipUtils {
                         addEntrySilent(zos, "components/" + e.getKey() + "." + ext,
                                 JacksonUtils.writeValueAsBytes(e.getValue(), extension)));
             }
+            if (!decomposed.componentCategories().isEmpty()) {
+                ObjectNode metadata = new ObjectMapper().createObjectNode();
+                decomposed.componentCategories().forEach(metadata::put);
+                addEntry(zos, DecomposedSwagger.COMPONENT_CATEGORIES_FILE,
+                        JacksonUtils.writeValueAsBytes(metadata, Extension.JSON));
+            }
         }
         return baos.toByteArray();
     }
@@ -83,4 +92,3 @@ public class ZipUtils {
         }
     }
 }
-

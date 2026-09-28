@@ -1,11 +1,9 @@
 package org.valle.present.rest;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.MergeSwagger;
 import org.valle.process.MergeSwaggerImpl;
-import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
 import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 import org.valle.utils.ZipUtils;
@@ -14,10 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * Handler REST — {@code POST /merge}
@@ -33,8 +27,9 @@ import java.util.zip.ZipInputStream;
  * │   ├── mon-path.yml
  * │   └── ...
  * └── components/
- *     ├── MonSchema.yml
+ *     ├── MonComposant.yml
  *     └── ...
+ * component-categories.json      ← facultatif, absent dans les archives historiques
  * </pre>
  *
  * <h3>Méthode HTTP</h3>
@@ -79,7 +74,11 @@ import java.util.zip.ZipInputStream;
  * @see DecomposeHandler pour décomposer un swagger en plusieurs fichiers
  */
 @Slf4j
-public class MergeHandler implements HttpHandler {
+public class MergeHandler extends AbstractRestHandler {
+
+    public MergeHandler() {
+        super("POST", "Merge");
+    }
 
     /** Crée le service de fusion à partir du fichier principal et du répertoire de base. */
     @FunctionalInterface
@@ -100,43 +99,21 @@ public class MergeHandler implements HttpHandler {
     ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            RestUtils.sendError(exchange, 405, "Méthode non supportée — utilisez POST.");
-            return;
-        }
-
+    protected void handleRequest(HttpExchange exchange) throws Exception {
         Path tempDir = null;
         try {
-            Map<String, String> params = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
-
-            String extensionParam = params.get("extension");
-            if (extensionParam == null || extensionParam.isBlank()) {
-                RestUtils.sendError(exchange, 400, "Paramètre 'extension' manquant (json, yml, yaml).");
-                return;
-            }
-
-            byte[] fileBytes = RestUtils.readFileBytes(exchange);
-            if (fileBytes.length == 0) {
-                RestUtils.sendError(exchange, 400,
-                        "Le corps de la requête est vide — envoyez l'archive ZIP du swagger décomposé.");
-                return;
-            }
-
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
-
-            log.info("REST Merge — extension={}, {} octets reçus", extension, fileBytes.length);
+            SwaggerRequest request = RestUtils.readSwaggerRequest(exchange,
+                    "Le corps de la requête est vide — envoyez l'archive ZIP du swagger décomposé.");
 
             // 1 — Extraire le ZIP dans un répertoire temporaire
             tempDir = Files.createTempDirectory("swagger-merge-");
-            extractZip(fileBytes, tempDir);
+            RestUtils.extractZip(request.body(), tempDir);
 
             // 2 — Localiser le fichier principal (main.yml / main.yaml / main.json)
-            File mainFile = findMainFile(tempDir);
+            File mainFile = RestUtils.findMainFile(tempDir);
             if (mainFile == null) {
-                RestUtils.sendError(exchange, 400,
+                throw new IllegalArgumentException(
                         "Fichier 'main.yml' (ou .yaml/.json) introuvable dans le ZIP fourni.");
-                return;
             }
 
             log.debug("REST Merge — fichier principal trouvé : {}", mainFile.getAbsolutePath());
@@ -145,84 +122,18 @@ public class MergeHandler implements HttpHandler {
             SwaggerNode mergedNode = mergeFactory.create(mainFile, tempDir.toFile()).execute();
 
             // 4 — Zipper le résultat
-            String filename = "swagger-merged." + extensionParam.toLowerCase();
-            byte[] zipBytes = zipBuildFactory.build(mergedNode, filename);
+            byte[] zipBytes = zipBuildFactory.build(mergedNode, request.outputFilename("swagger-merged"));
 
             exchange.getResponseHeaders().set("Content-Disposition",
                     "attachment; filename=\"swagger-merged.zip\"");
             RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
             log.info("REST Merge — fusion terminée, ZIP retourné ({} octets)", zipBytes.length);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("REST Merge — paramètre invalide : {}", e.getMessage());
-            RestUtils.sendError(exchange, 400, e.getMessage());
-        } catch (Exception e) {
-            log.error("REST Merge — erreur inattendue", e);
-            RestUtils.sendError(exchange, 500, "Erreur interne : " + e.getMessage());
         } finally {
             // Nettoyage du répertoire temporaire
             if (tempDir != null) {
-                deleteRecursively(tempDir);
+                RestUtils.deleteRecursively(tempDir);
             }
-        }
-    }
-
-    // ── Utilitaires privés ────────────────────────────────────────────────────
-
-    /**
-     * Extrait le contenu d'un ZIP (en mémoire) dans le répertoire cible.
-     * Les entrées sont protégées contre les attaques de type "Zip Slip".
-     */
-    private static void extractZip(byte[] zipBytes, Path targetDir) throws IOException {
-        try (ZipInputStream zis = new ZipInputStream(
-                new java.io.ByteArrayInputStream(zipBytes))) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                Path entryPath = targetDir.resolve(entry.getName()).normalize();
-                if (!entryPath.startsWith(targetDir)) {
-                    throw new IllegalArgumentException(
-                            "Entrée ZIP invalide (Zip Slip détecté) : " + entry.getName());
-                }
-                if (entry.isDirectory()) {
-                    Files.createDirectories(entryPath);
-                } else {
-                    Files.createDirectories(entryPath.getParent());
-                    Files.write(entryPath, zis.readAllBytes());
-                }
-                zis.closeEntry();
-            }
-        }
-    }
-
-    /**
-     * Recherche le fichier principal ({@code main.yml}, {@code main.yaml} ou {@code main.json})
-     * à la racine du répertoire temporaire.
-     */
-    private static File findMainFile(Path dir) {
-        for (String name : new String[]{"main.yml", "main.yaml", "main.json"}) {
-            File candidate = dir.resolve(name).toFile();
-            if (candidate.exists()) return candidate;
-        }
-        return null;
-    }
-
-    /** Supprime récursivement un répertoire temporaire. */
-    private static void deleteRecursively(Path dir) {
-        try (var paths = Files.walk(dir)) {
-            paths.sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(f -> {
-                        if (!f.delete()) {
-                            log.warn("REST Merge — impossible de supprimer : {}", f);
-                        }
-                    });
-        } catch (IOException e) {
-            log.warn("REST Merge — impossible de supprimer le répertoire temporaire : {}", dir, e);
         }
     }
 }
-
-
-
-

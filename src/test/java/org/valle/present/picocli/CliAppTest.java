@@ -312,6 +312,14 @@ class CliAppTest {
     class DecomposeOnly {
 
         @Test
+        void should_reject_decompose_and_merge_together() {
+            int exitCode = cli().execute("-sf", "any.yml", "-d", "-m");
+
+            assertThat(exitCode).isNotZero();
+            verifyNoInteractions(mockShow, mockClear, mockKeep, mockDecompose, mockPersistDecomposed);
+        }
+
+        @Test
         void should_decompose_original_swagger_when_only_d_flag_is_provided() {
             cli().execute("-sf", "any.yml", "-d");
 
@@ -366,27 +374,26 @@ class CliAppTest {
     }
 
     // =========================================================================
-    // Tests d'erreur : aucune option de filtrage fournie et -d absent
+    // Tests du mode affichage seul
     // =========================================================================
 
     @Nested
-    class ErrorCases {
+    class DisplayOnly {
 
         @Test
-        void should_return_non_zero_exit_code_when_neither_toRm_nor_toKeep_nor_d_is_provided() {
+        void should_return_zero_exit_code_when_no_transformation_is_requested() {
             int exitCode = cli().execute("-sf", "any.yml");
 
-            assertThat(exitCode).isNotEqualTo(0);
+            assertThat(exitCode).isZero();
         }
 
         @Test
-        void should_not_call_any_service_when_neither_option_is_provided() {
+        void should_show_the_input_without_calling_a_transformation_service() {
             cli().execute("-sf", "any.yml");
 
-            verify(mockShow,  never()).execute();
+            verify(mockShow).execute();
             verify(mockClear, never()).execute(any());
             verify(mockKeep,  never()).execute(any());
         }
     }
 }
-

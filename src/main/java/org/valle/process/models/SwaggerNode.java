@@ -11,6 +11,7 @@ import org.valle.process.exceptions.EndPointNotFoundException;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public record SwaggerNode(
         @NotNull @Valid JsonNode node,
         @NotNull @Valid Extension extension
 ) {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public Set<String> getSchemaNamesToBeRemoved(Set<EndPoint> endPointsToBeRemoved) {
 
@@ -42,13 +44,10 @@ public record SwaggerNode(
     }
 
     public Set<String> getAllNamedReferencesOfAPath(EndPoint endPoint) {
-        JsonNode selectedPath;
-        try {
-            selectedPath = this.node()
-                    .get("paths")
-                    .get(endPoint.path())
-                    .get(endPoint.method());
-        } catch (NullPointerException e) {
+        JsonNode paths = this.node().get("paths");
+        JsonNode path = paths == null ? null : paths.get(endPoint.path());
+        JsonNode selectedPath = path == null ? null : path.get(endPoint.method());
+        if (selectedPath == null || selectedPath.isMissingNode()) {
             throw new EndPointNotFoundException(endPoint, this);
         }
         return findRefs(selectedPath, this.node(), new HashSet<>());
@@ -65,7 +64,9 @@ public record SwaggerNode(
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
-                if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
+                if (field.getKey().equals("$ref")
+                        && field.getValue().isTextual()
+                        && field.getValue().asText().startsWith("#")) {
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
                     String referencedName = dollarRef.getReferencedName();
                     if (!visited.contains(referencedName)) {
@@ -89,12 +90,17 @@ public record SwaggerNode(
     }
 
     public SwaggerNode removeComponents() {
-        ((ObjectNode) this.node()).remove("components");
+        if (this.node() instanceof ObjectNode objectNode) {
+            objectNode.remove("components");
+        }
         return this;
     }
 
     public SwaggerNode changePathReferences() {
         JsonNode paths = this.node().get("paths");
+        if (paths == null || !paths.isObject()) {
+            return this;
+        }
         paths.fields().forEachRemaining(entry -> {
             String key = entry.getKey();
             String withoutFirstSlash = key.startsWith("/") ? key.substring(1) : key;
@@ -102,7 +108,7 @@ public record SwaggerNode(
                     .replace("/", "-")
                     .replace("{", "")
                     .replace("}", "");
-            ObjectNode node = new ObjectMapper().createObjectNode();
+            ObjectNode node = MAPPER.createObjectNode();
             node.put("$ref", "paths/%s.%s".formatted(ref, this.extension().toString().toLowerCase()));
             entry.setValue(node);
         });
@@ -110,14 +116,22 @@ public record SwaggerNode(
     }
 
     public SwaggerNode addComponentFileReferences() {
-        if (this.node().isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = this.node().fields();
+        rewriteComponentReferences(this.node());
+        return this;
+    }
+
+    private void rewriteComponentReferences(JsonNode currentNode) {
+        if (currentNode.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = currentNode.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
-                if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
+                if (field.getKey().equals("$ref")
+                        && field.getValue().isTextual()
+                        && field.getValue().asText().startsWith("#")) {
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
-                    String refValue = dollarRef.getComponentFileReference() + ".%s".formatted(this.extension().toString().toLowerCase());
+                    String refValue = dollarRef.getComponentFileReference() + ".%s"
+                            .formatted(this.extension().toString().toLowerCase());
                     field.setValue(new TextNode(refValue));
                 } else if (field.getKey().equals("mapping") && field.getValue().isObject()) {
                     // Les valeurs de discriminator.mapping sont des références vers des schémas
@@ -130,25 +144,28 @@ public record SwaggerNode(
                             String mappingValue = entry.getValue().asText();
                             if (mappingValue.startsWith("#/components/schemas/")) {
                                 DollarRef dollarRef = new DollarRef(mappingValue);
-                                String refValue = dollarRef.getComponentFileReference() + ".%s".formatted(this.extension().toString().toLowerCase());
+                                String refValue = dollarRef.getComponentFileReference() + ".%s"
+                                        .formatted(this.extension().toString().toLowerCase());
                                 entry.setValue(new TextNode(refValue));
                             }
                         }
                     }
                 } else {
-                    this.toBuilder().node(field.getValue()).build().addComponentFileReferences();
+                    rewriteComponentReferences(field.getValue());
                 }
             }
-        } else if (this.node().isArray()) {
-            for (JsonNode item : this.node()) {
-                this.toBuilder().node(item).build().addComponentFileReferences();
+        } else if (currentNode.isArray()) {
+            for (JsonNode item : currentNode) {
+                rewriteComponentReferences(item);
             }
         }
-        return this;
     }
 
     public SwaggerNode addPathFileReferences() {
         JsonNode paths = this.node().get("paths");
+        if (paths == null || !paths.isObject()) {
+            return this;
+        }
         Iterator<Map.Entry<String, JsonNode>> fields = paths.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
@@ -163,8 +180,12 @@ public record SwaggerNode(
 
     public SwaggerNode decomposePaths() {
         // Extraction des paths
-        ObjectNode paths = new ObjectMapper().createObjectNode();
-        this.node().get("paths").fields().forEachRemaining(entry -> {
+        ObjectNode paths = MAPPER.createObjectNode();
+        JsonNode sourcePaths = this.node().get("paths");
+        if (sourcePaths == null || !sourcePaths.isObject()) {
+            return this.toBuilder().node(paths).build();
+        }
+        sourcePaths.fields().forEachRemaining(entry -> {
             // Chaque endpoint dans un fichier séparé (ici une map)
             String key = entry.getKey();
             String withoutFirstSlash = key.startsWith("/") ? key.substring(1) : key;
@@ -178,16 +199,48 @@ public record SwaggerNode(
     }
 
     public SwaggerNode decomposeComponent() {
-        // Extraction des components/schemas
-        ObjectNode components = new ObjectMapper().createObjectNode();
-        if (node().has("components")) {
-            node().get("components").fields().forEachRemaining(entry -> {
-                entry.getValue().fields().forEachRemaining(field -> {
-                    components.putIfAbsent(field.getKey(), field.getValue());
-                });
-            });
+        ObjectNode components = MAPPER.createObjectNode();
+        JsonNode sourceComponents = node().get("components");
+        if (sourceComponents == null || sourceComponents.isNull()) {
+            return this.toBuilder().node(components).build();
         }
+        getComponentCategories();
+        sourceComponents.fields().forEachRemaining(entry -> {
+            entry.getValue().fields().forEachRemaining(field ->
+                    components.putIfAbsent(field.getKey(), field.getValue()));
+        });
         return this.toBuilder().node(components).build();
+    }
+
+    /**
+     * Returns the category of every component in this document.  Decomposed files retain
+     * their historical flat names, so this map is persisted as sidecar metadata.
+     */
+    public Map<String, String> getComponentCategories() {
+        Map<String, String> categories = new LinkedHashMap<>();
+        JsonNode sourceComponents = node().get("components");
+        if (sourceComponents == null || sourceComponents.isNull()) {
+            return categories;
+        }
+        if (!sourceComponents.isObject()) {
+            throw new IllegalArgumentException("Swagger invalide : components doit être un objet.");
+        }
+        sourceComponents.fields().forEachRemaining(entry -> {
+            if (!entry.getValue().isObject()) {
+                throw new IllegalArgumentException(
+                        "Swagger invalide : la catégorie de composant '%s' doit être un objet."
+                                .formatted(entry.getKey()));
+            }
+            entry.getValue().fieldNames().forEachRemaining(componentName -> {
+                String previousCategory = categories.putIfAbsent(componentName, entry.getKey());
+                if (previousCategory != null && !previousCategory.equals(entry.getKey())) {
+                    throw new IllegalStateException(
+                            "Duplicate component name '%s' in categories '%s' and '%s'."
+                                    .formatted(componentName, previousCategory, entry.getKey()));
+                }
+            });
+        });
+        return categories;
     }
 
     /**
@@ -254,9 +307,13 @@ public record SwaggerNode(
 
         schemasToRemove.forEach(schemaToRm -> {
             JsonNode components = this.node().get("components");
-            components.fields().forEachRemaining(entry -> {
-                ((ObjectNode) entry.getValue()).remove(schemaToRm);
-            });
+            if (components != null && components.isObject()) {
+                components.fields().forEachRemaining(entry -> {
+                    if (entry.getValue() instanceof ObjectNode componentCategory) {
+                        componentCategory.remove(schemaToRm);
+                    }
+                });
+            }
         });
 
         return this;
@@ -265,6 +322,12 @@ public record SwaggerNode(
     public Set<EndPoint> getAllEndpoints() {
         // Lecture des endpoints du swagger
         JsonNode paths = this.node().get("paths");
+        if (paths == null || paths.isNull()) {
+            return new HashSet<>();
+        }
+        if (!paths.isObject()) {
+            throw new IllegalArgumentException("Swagger invalide : paths doit être un objet.");
+        }
 
         Iterator<Map.Entry<String, JsonNode>> pathsFields = paths.fields();
         Set<EndPoint> endpoints = new HashSet<>();
@@ -273,6 +336,11 @@ public record SwaggerNode(
             Map.Entry<String, JsonNode> pField = pathsFields.next();
             String path = pField.getKey();
             JsonNode methods = pField.getValue();
+            if (!methods.isObject()) {
+                throw new IllegalArgumentException(
+                        "Swagger invalide : la définition du path '%s' doit être un objet."
+                                .formatted(path));
+            }
             Iterator<Map.Entry<String, JsonNode>> methodsFields = methods.fields();
             while (methodsFields.hasNext()) {
                 Map.Entry<String, JsonNode> mField = methodsFields.next();

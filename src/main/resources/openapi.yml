@@ -12,9 +12,12 @@ info:
     | `POST`  | `/clear-endpoints`  | Supprime des endpoints et leurs schémas associés                   |
     | `POST`  | `/keep-endpoints`   | Conserve uniquement les endpoints listés, supprime tous les autres |
     | `POST`  | `/decompose`        | Décompose un swagger en plusieurs fichiers dans un ZIP             |
+    | `POST`  | `/merge`            | Fusionne un swagger décomposé en un fichier unique                 |
+    | `GET`   | `/health`           | Vérifie que le serveur est disponible                              |
+    | `GET`   | `/app`              | Interface web vanilla pour transformer un fichier                 |
     | `GET`   | `/swagger-ui`       | Interface graphique Swagger UI                                     |
     ```
-  version: 1.0.0
+  version: 2.0.0
   contact:
     name: swagger-organiser
 
@@ -27,6 +30,36 @@ tags:
     description: Opérations de transformation de fichiers Swagger/OpenAPI
 
 paths:
+
+  /app:
+    get:
+      tags:
+        - swagger
+      summary: Ouvrir l'interface web
+      description: |
+        Sert l'interface HTML/CSS/JavaScript vanilla embarquée dans le JAR.
+        Elle permet de vérifier la santé du serveur, d'envoyer un fichier Swagger
+        ou une archive ZIP, de choisir une transformation et de télécharger le ZIP résultant.
+      operationId: getApp
+      responses:
+        "200":
+          description: Interface web
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Ressource introuvable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "405":
+          description: Méthode HTTP non supportée — seul GET est accepté
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /clear-endpoints:
     post:
@@ -99,7 +132,7 @@ paths:
             - Endpoint introuvable dans le swagger fourni
             - Extension inconnue (autre que `json`, `yml`, `yaml`)
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               examples:
@@ -115,14 +148,14 @@ paths:
         "405":
           description: Méthode HTTP non supportée — seul `POST` est accepté
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Méthode non supportée — utilisez POST."
         "500":
           description: Erreur interne inattendue
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Erreur interne : ..."
@@ -200,7 +233,7 @@ paths:
             - Endpoint introuvable dans le swagger fourni
             - Extension inconnue (autre que `json`, `yml`, `yaml`)
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               examples:
@@ -216,14 +249,14 @@ paths:
         "405":
           description: Méthode HTTP non supportée — seul `POST` est accepté
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Méthode non supportée — utilisez POST."
         "500":
           description: Erreur interne inattendue
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Erreur interne : ..."
@@ -299,7 +332,7 @@ paths:
             - Corps de la requête vide
             - Extension inconnue (autre que `json`, `yml`, `yaml`)
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               examples:
@@ -312,17 +345,75 @@ paths:
         "405":
           description: Méthode HTTP non supportée — seul `POST` est accepté
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Méthode non supportée — utilisez POST."
         "500":
           description: Erreur interne inattendue
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Erreur interne : ..."
+
+  /merge:
+    post:
+      tags:
+        - swagger
+      summary: Fusionner un swagger décomposé
+      description: |
+        Recompose une archive ZIP produite par `/decompose` en un fichier Swagger unique,
+        puis retourne ce fichier dans une nouvelle archive ZIP.
+      operationId: mergeSwagger
+      parameters:
+        - name: extension
+          in: query
+          required: true
+          description: "Format du fichier Swagger fusionné : `json`, `yml` ou `yaml`"
+          schema:
+            type: string
+            enum: [ json, yml, yaml ]
+          example: yml
+      requestBody:
+        required: true
+        description: Archive ZIP contenant `main.yml`/`main.yaml`/`main.json` et ses références
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Swagger fusionné retourné dans une archive ZIP
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="swagger-merged.zip"'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Requête invalide, extension inconnue ou fichier principal absent
+          content:
+            application/json:
+              schema:
+                type: string
+        "405":
+          description: Méthode HTTP non supportée — seul `POST` est accepté
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: Erreur interne inattendue
+          content:
+            application/json:
+              schema:
+                type: string
 
   /swagger-ui:
     get:
@@ -348,14 +439,53 @@ paths:
         "405":
           description: Méthode HTTP non supportée — seul `GET` est accepté
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Méthode non supportée — utilisez GET."
         "500":
           description: Documentation introuvable ou illisible
           content:
-            text/plain:
+            application/json:
               schema:
                 type: string
               example: "Documentation Swagger introuvable — relancez ./gradlew openApiGenerate."
+
+  /health:
+    get:
+      tags:
+        - swagger
+      summary: Vérifier la disponibilité du serveur
+      description: Retourne un état simple et sans dépendance externe pour les sondes de disponibilité.
+      operationId: health
+      responses:
+        "200":
+          description: Serveur disponible
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ status ]
+                properties:
+                  status:
+                    type: string
+                    example: UP
+        "405":
+          description: Méthode HTTP non supportée — seul GET est accepté
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [ code, message ]
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+          example: Paramètre extension manquant.

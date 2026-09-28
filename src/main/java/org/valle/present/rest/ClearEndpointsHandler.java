@@ -1,7 +1,6 @@
 package org.valle.present.rest;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.ClearEndpointOnDemand;
 import org.valle.process.ClearEndpointOnDemandImpl;
@@ -12,11 +11,8 @@ import org.valle.provide.fromstring.jackson.GetSwaggerNodeJacksonFromStringImpl;
 import org.valle.utils.ZipUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Handler REST — {@code POST /swagger/clear-endpoints}
@@ -75,7 +71,11 @@ import java.util.stream.Collectors;
  * @see DecomposeHandler pour décomposer un swagger sans suppression d'endpoints
  */
 @Slf4j
-public class ClearEndpointsHandler implements HttpHandler {
+public class ClearEndpointsHandler extends AbstractRestHandler {
+
+    public ClearEndpointsHandler() {
+        super("POST", "ClearEndpoints");
+    }
 
     /** Crée le service de suppression d'endpoints à partir du contenu et de l'extension. */
     @FunctionalInterface
@@ -96,66 +96,26 @@ public class ClearEndpointsHandler implements HttpHandler {
     ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            RestUtils.sendError(exchange, 405, "Méthode non supportée — utilisez POST.");
-            return;
-        }
-        try {
-            Map<String, String> params = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
+    protected void handleRequest(HttpExchange exchange) throws Exception {
+        Map<String, String> parameters = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
+        String endpointsParam = RestUtils.requireQueryParameter(parameters, "endpoints",
+                "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
+        Set<EndPoint> endpointsToRemove = RestUtils.parseEndpoints(endpointsParam);
+        SwaggerRequest request = RestUtils.readSwaggerRequest(exchange, parameters,
+                "Le corps de la requête est vide — envoyez le fichier Swagger.");
 
-            String extensionParam = params.get("extension");
-            String endpointsParam = params.get("endpoints");
+        log.info("REST ClearEndpoints — extension={}, {} endpoint(s) à supprimer, {} octets",
+                request.extension(), endpointsToRemove.size(), request.body().length);
 
-            if (extensionParam == null || extensionParam.isBlank()) {
-                RestUtils.sendError(exchange, 400, "Paramètre 'extension' manquant (json, yml, yaml).");
-                return;
-            }
-            if (endpointsParam == null || endpointsParam.isBlank()) {
-                RestUtils.sendError(exchange, 400,
-                        "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
-                return;
-            }
+        SwaggerNode clearedNode = clearFactory.create(request.content(), request.extension())
+                .execute(endpointsToRemove);
+        byte[] zipBytes = zipBuildFactory.build(clearedNode, request.outputFilename("swagger-cleared"));
 
-            byte[] fileBytes = RestUtils.readFileBytes(exchange);
-            if (fileBytes.length == 0) {
-                RestUtils.sendError(exchange, 400,
-                        "Le corps de la requête est vide — envoyez le fichier Swagger.");
-                return;
-            }
+        exchange.getResponseHeaders().set("Content-Disposition",
+                "attachment; filename=\"swagger-cleared.zip\"");
+        RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
-            Set<EndPoint> endpointsToRemove = Arrays.stream(endpointsParam.split(","))
-                    .map(String::trim).filter(s -> !s.isEmpty())
-                    .map(EndPoint::fromString)
-                    .collect(Collectors.toSet());
-
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
-
-            log.info("REST ClearEndpoints — extension={}, {} endpoint(s) à supprimer, {} octets",
-                    extension, endpointsToRemove.size(), fileBytes.length);
-
-            // 1 — Supprimer les endpoints
-            String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
-            SwaggerNode clearedNode = clearFactory.create(fileContent, extension)
-                    .execute(endpointsToRemove);
-
-            // 2 — Zipper le fichier nettoyé
-            String filename = "swagger-cleared." + extensionParam.toLowerCase();
-            byte[] zipBytes = zipBuildFactory.build(clearedNode, filename);
-
-            exchange.getResponseHeaders().set("Content-Disposition",
-                    "attachment; filename=\"swagger-cleared.zip\"");
-            RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
-
-            log.info("REST ClearEndpoints — {} endpoint(s) supprimé(s), ZIP retourné ({} octets)",
-                    endpointsToRemove.size(), zipBytes.length);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("REST ClearEndpoints — paramètre invalide : {}", e.getMessage());
-            RestUtils.sendError(exchange, 400, e.getMessage());
-        } catch (Exception e) {
-            log.error("REST ClearEndpoints — erreur inattendue", e);
-            RestUtils.sendError(exchange, 500, "Erreur interne : " + e.getMessage());
-        }
+        log.info("REST ClearEndpoints — {} endpoint(s) supprimé(s), ZIP retourné ({} octets)",
+                endpointsToRemove.size(), zipBytes.length);
     }
 }

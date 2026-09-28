@@ -25,6 +25,7 @@ public class DecomposeSwaggerImpl implements DecomposeSwagger {
         // 3 - Récupère le contenu des paths et components
         SwaggerNode paths = swaggerWithRefs.decomposePaths();
         SwaggerNode components = swaggerWithRefs.decomposeComponent();
+        var componentCategories = swaggerWithRefs.getComponentCategories();
 
         // 4 - Supprime les components du swagger principal
         SwaggerNode decomposedMain = swaggerWithRefs
@@ -36,6 +37,7 @@ public class DecomposeSwaggerImpl implements DecomposeSwagger {
                 .main(decomposedMain)
                 .paths(paths)
                 .components(components)
+                .componentCategories(componentCategories)
                 .build();
     }
 }

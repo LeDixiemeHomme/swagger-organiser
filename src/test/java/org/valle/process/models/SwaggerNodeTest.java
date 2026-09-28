@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.valle.process.models.SwaggerNode.findRefs;
 import static org.valle.utils.JacksonUtils.getSwaggerNode;
 import static org.valle.utils.JacksonUtils.readValue;
@@ -173,6 +174,32 @@ class SwaggerNodeTest {
         assertThat(actual.node().properties()).hasSize(3);
     }
 
+    @Test
+    void should_reject_component_name_collisions_between_categories() throws Exception {
+        JsonNode root = new ObjectMapper().readTree("""
+                {
+                  "components": {
+                    "schemas": {
+                      "Shared": {"type": "object"}
+                    },
+                    "responses": {
+                      "Shared": {"description": "same name"}
+                    }
+                  }
+                }
+                """);
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(root)
+                .extension(Extension.YML)
+                .build();
+
+        assertThatThrownBy(swaggerNode::decomposeComponent)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Shared")
+                .hasMessageContaining("schemas")
+                .hasMessageContaining("responses");
+    }
+
     public static final String SWAGGER_FILE_PATH = "src/test/resources/cleared/swagger-cobaye.yml";
 
     @Test
@@ -184,6 +211,16 @@ class SwaggerNodeTest {
         var endpoints = swaggerNode.getAllEndpoints();
         // Assert
         assertThat(endpoints).hasSize(5);
+    }
+
+    @Test
+    void should_throw_a_domain_exception_when_endpoint_is_missing() {
+        SwaggerNode swaggerNode = getSwaggerNode(new File(SWAGGER_FILE_PATH));
+        EndPoint missing = EndPoint.builder().method("get").path("/does-not-exist").build();
+
+        assertThatThrownBy(() -> swaggerNode.getAllNamedReferencesOfAPath(missing))
+                .isInstanceOf(org.valle.process.exceptions.EndPointNotFoundException.class)
+                .hasMessageContaining("/does-not-exist");
     }
 
     @Test
@@ -291,5 +328,86 @@ class SwaggerNodeTest {
 
         assertThat(oneOf.get(0).get("$ref").asText()).isEqualTo("../components/Car.yml");
         assertThat(oneOf.get(1).get("$ref").asText()).isEqualTo("../components/Truck.yml");
+    }
+
+    @Test
+    void should_not_append_an_extension_to_an_already_external_component_reference() throws Exception {
+        JsonNode root = new ObjectMapper().readTree("""
+                {
+                  "components": {
+                    "schemas": {
+                      "User": {
+                        "$ref": "../components/User.yml"
+                      }
+                    }
+                  }
+                }
+                """);
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(root)
+                .extension(Extension.YML)
+                .build();
+
+        swaggerNode.addComponentFileReferences();
+
+        assertThat(swaggerNode.node().at("/components/schemas/User/$ref").asText())
+                .isEqualTo("../components/User.yml");
+    }
+
+    @Test
+    void should_ignore_a_missing_paths_section_when_adding_path_references() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"openapi\":\"3.0.0\"}"))
+                .extension(Extension.YML)
+                .build();
+
+        assertThat(swaggerNode.addPathFileReferences()).isSameAs(swaggerNode);
+    }
+
+    @Test
+    void should_keep_transformations_safe_when_paths_are_absent() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"openapi\":\"3.0.0\"}"))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThat(swaggerNode.changePathReferences()).isSameAs(swaggerNode);
+        assertThat(swaggerNode.decomposePaths().node()).isEmpty();
+    }
+
+    @Test
+    void should_return_no_endpoints_when_paths_are_absent() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"openapi\":\"3.0.0\"}"))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThat(swaggerNode.getAllEndpoints()).isEmpty();
+    }
+
+    @Test
+    void should_reject_non_object_paths() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("{\"paths\":[]}"))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThatThrownBy(swaggerNode::getAllEndpoints)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Swagger invalide : paths doit être un objet.");
+    }
+
+    @Test
+    void should_remove_elements_without_components() throws Exception {
+        SwaggerNode swaggerNode = SwaggerNode.builder()
+                .node(new ObjectMapper().readTree("""
+                        {"paths": {"/users": {"get": {}}}}
+                        """))
+                .extension(Extension.JSON)
+                .build();
+
+        assertThat(swaggerNode.removeElementsByName(
+                Set.of(EndPoint.builder().method("get").path("/users").build()),
+                Set.of("Unused")).node().at("/paths").isEmpty()).isTrue();
     }
 }

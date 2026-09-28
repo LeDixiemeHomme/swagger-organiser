@@ -21,12 +21,20 @@ public class Main {
     public static void main(String[] args) throws IOException {
         if (args.length > 0 && args[0].equalsIgnoreCase("server")) {
             String[] serverArgs = Arrays.copyOfRange(args, 1, args.length);
-            RestServer.main(serverArgs);
+            try {
+                RestServer.main(serverArgs);
+            } catch (IllegalArgumentException e) {
+                System.err.println(e.getMessage());
+                System.exit(2);
+            }
         } else {
-            CommandLine commandLine = new CommandLine(new CliApp());
-            commandLine.registerConverter(EndPoint.class, EndPoint::fromString);
-            int exitCode = commandLine.execute(args);
-            System.exit(exitCode);
+            System.exit(executeCli(args));
         }
+    }
+
+    static int executeCli(String[] args) {
+        CommandLine commandLine = new CommandLine(new CliApp());
+        commandLine.registerConverter(EndPoint.class, EndPoint::fromString);
+        return commandLine.execute(args);
     }
 }

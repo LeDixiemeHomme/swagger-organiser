@@ -1,7 +1,6 @@
 package org.valle.present.rest;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.KeepEndpointOnDemand;
 import org.valle.process.KeepEndpointOnDemandImpl;
@@ -12,11 +11,8 @@ import org.valle.provide.fromstring.jackson.GetSwaggerNodeJacksonFromStringImpl;
 import org.valle.utils.ZipUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Handler REST — {@code POST /keep-endpoints}
@@ -75,7 +71,11 @@ import java.util.stream.Collectors;
  * @see ClearEndpointsHandler pour supprimer des endpoints spécifiques
  */
 @Slf4j
-public class KeepEndpointsHandler implements HttpHandler {
+public class KeepEndpointsHandler extends AbstractRestHandler {
+
+    public KeepEndpointsHandler() {
+        super("POST", "KeepEndpoints");
+    }
 
     /** Crée le service de filtrage d'endpoints à partir du contenu et de l'extension. */
     @FunctionalInterface
@@ -96,67 +96,26 @@ public class KeepEndpointsHandler implements HttpHandler {
     ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            RestUtils.sendError(exchange, 405, "Méthode non supportée — utilisez POST.");
-            return;
-        }
-        try {
-            Map<String, String> params = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
+    protected void handleRequest(HttpExchange exchange) throws Exception {
+        Map<String, String> parameters = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
+        String endpointsParam = RestUtils.requireQueryParameter(parameters, "endpoints",
+                "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
+        Set<EndPoint> endpointsToKeep = RestUtils.parseEndpoints(endpointsParam);
+        SwaggerRequest request = RestUtils.readSwaggerRequest(exchange, parameters,
+                "Le corps de la requête est vide — envoyez le fichier Swagger.");
 
-            String extensionParam = params.get("extension");
-            String endpointsParam = params.get("endpoints");
+        log.info("REST KeepEndpoints — extension={}, {} endpoint(s) à conserver, {} octets",
+                request.extension(), endpointsToKeep.size(), request.body().length);
 
-            if (extensionParam == null || extensionParam.isBlank()) {
-                RestUtils.sendError(exchange, 400, "Paramètre 'extension' manquant (json, yml, yaml).");
-                return;
-            }
-            if (endpointsParam == null || endpointsParam.isBlank()) {
-                RestUtils.sendError(exchange, 400,
-                        "Paramètre 'endpoints' manquant (ex: get:/path,post:/path2).");
-                return;
-            }
+        SwaggerNode keptNode = keepFactory.create(request.content(), request.extension())
+                .execute(endpointsToKeep);
+        byte[] zipBytes = zipBuildFactory.build(keptNode, request.outputFilename("swagger-kept"));
 
-            byte[] fileBytes = RestUtils.readFileBytes(exchange);
-            if (fileBytes.length == 0) {
-                RestUtils.sendError(exchange, 400,
-                        "Le corps de la requête est vide — envoyez le fichier Swagger.");
-                return;
-            }
+        exchange.getResponseHeaders().set("Content-Disposition",
+                "attachment; filename=\"swagger-kept.zip\"");
+        RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
-            Set<EndPoint> endpointsToKeep = Arrays.stream(endpointsParam.split(","))
-                    .map(String::trim).filter(s -> !s.isEmpty())
-                    .map(EndPoint::fromString)
-                    .collect(Collectors.toSet());
-
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
-
-            log.info("REST KeepEndpoints — extension={}, {} endpoint(s) à conserver, {} octets",
-                    extension, endpointsToKeep.size(), fileBytes.length);
-
-            // 1 — Conserver uniquement les endpoints demandés
-            String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
-            SwaggerNode keptNode = keepFactory.create(fileContent, extension)
-                    .execute(endpointsToKeep);
-
-            // 2 — Zipper le fichier filtré
-            String filename = "swagger-kept." + extensionParam.toLowerCase();
-            byte[] zipBytes = zipBuildFactory.build(keptNode, filename);
-
-            exchange.getResponseHeaders().set("Content-Disposition",
-                    "attachment; filename=\"swagger-kept.zip\"");
-            RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
-
-            log.info("REST KeepEndpoints — {} endpoint(s) conservé(s), ZIP retourné ({} octets)",
-                    endpointsToKeep.size(), zipBytes.length);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("REST KeepEndpoints — paramètre invalide : {}", e.getMessage());
-            RestUtils.sendError(exchange, 400, e.getMessage());
-        } catch (Exception e) {
-            log.error("REST KeepEndpoints — erreur inattendue", e);
-            RestUtils.sendError(exchange, 500, "Erreur interne : " + e.getMessage());
-        }
+        log.info("REST KeepEndpoints — {} endpoint(s) conservé(s), ZIP retourné ({} octets)",
+                endpointsToKeep.size(), zipBytes.length);
     }
 }
-

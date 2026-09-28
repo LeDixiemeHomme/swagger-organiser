@@ -1,17 +1,30 @@
 package org.valle.present.rest;
 
 import com.sun.net.httpserver.HttpExchange;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.models.DecomposedSwagger;
+import org.valle.process.models.EndPoint;
 import org.valle.process.models.Extension;
 import org.valle.utils.ZipUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URLDecoder;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
 
 /**
  * Utilitaires partagés entre les handlers REST.
@@ -19,13 +32,42 @@ import java.util.Map;
 @Slf4j
 class RestUtils {
 
+    private static final int DEFAULT_MAX_REQUEST_BYTES = 10 * 1024 * 1024;
+    private static final int DEFAULT_MAX_ZIP_ENTRIES = 1_000;
+    private static final int DEFAULT_MAX_ZIP_ENTRY_BYTES = 10 * 1024 * 1024;
+    private static final long DEFAULT_MAX_ZIP_TOTAL_BYTES = 100L * 1024 * 1024;
+
     private RestUtils() {}
 
     // ── Lecture du fichier (raw ou multipart) ─────────────────────────────────
 
+    static SwaggerRequest readSwaggerRequest(HttpExchange exchange, String emptyBodyMessage) throws IOException {
+        Map<String, String> params = parseQuery(exchange.getRequestURI().getQuery());
+        return readSwaggerRequest(exchange, params, emptyBodyMessage);
+    }
+
+    static SwaggerRequest readSwaggerRequest(
+            HttpExchange exchange, Map<String, String> params, String emptyBodyMessage) throws IOException {
+        String extensionValue = requireQueryParameter(params, "extension",
+                "Paramètre 'extension' manquant (json, yml, yaml).");
+        byte[] body = readFileBytes(exchange);
+        if (body.length == 0) {
+            throw new IllegalArgumentException(emptyBodyMessage);
+        }
+        Extension extension = parseExtension(extensionValue);
+        return new SwaggerRequest(params, extensionValue.trim().toLowerCase(), extension, body);
+    }
+
     static byte[] readFileBytes(HttpExchange exchange) throws IOException {
+        return readFileBytes(exchange, limits());
+    }
+
+    static byte[] readFileBytes(HttpExchange exchange, RestLimits limits) throws IOException {
         String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
-        byte[] body = exchange.getRequestBody().readAllBytes();
+        byte[] body;
+        try (InputStream requestBody = exchange.getRequestBody()) {
+            body = readLimited(requestBody, limits.maxRequestBytes(), "Corps de requête trop volumineux.");
+        }
 
         log.debug("readFileBytes — Content-Type: {}, taille body: {} octets", contentType, body.length);
 
@@ -43,12 +85,26 @@ class RestUtils {
         return body;
     }
 
+    private static byte[] readLimited(InputStream input, int limit, String message) throws IOException {
+        int readLimit = limit == Integer.MAX_VALUE ? limit : limit + 1;
+        byte[] bytes = input.readNBytes(readLimit);
+        if (bytes.length > limit) {
+            throw new IllegalArgumentException(message);
+        }
+        return bytes;
+    }
+
     private static String extractBoundary(String contentType) {
         for (String part : contentType.split(";")) {
             String trimmed = part.trim();
             if (trimmed.startsWith("boundary=")) {
                 String b = trimmed.substring("boundary=".length()).trim();
-                return b.startsWith("\"") ? b.substring(1, b.length() - 1) : b;
+                if (b.length() >= 2 && b.startsWith("\"") && b.endsWith("\"")) {
+                    b = b.substring(1, b.length() - 1);
+                }
+                if (!b.isBlank()) {
+                    return b;
+                }
             }
         }
         throw new IllegalArgumentException("Boundary manquant dans Content-Type : " + contentType);
@@ -116,9 +172,49 @@ class RestUtils {
         if (query == null || query.isBlank()) return params;
         for (String pair : query.split("&")) {
             int idx = pair.indexOf('=');
-            if (idx > 0) params.put(pair.substring(0, idx), pair.substring(idx + 1));
+            if (idx > 0) {
+                String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+                String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
+                params.put(key, value);
+            }
         }
         return params;
+    }
+
+    static String requireQueryParameter(Map<String, String> params, String name, String message) {
+        String value = params.get(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
+    }
+
+    static Set<EndPoint> parseEndpoints(String endpoints) {
+        if (endpoints == null || endpoints.isBlank()) {
+            throw new IllegalArgumentException(
+                    "La liste des endpoints ne peut pas être vide (ex: get:/path,post:/path2).");
+        }
+        Set<EndPoint> parsed = Arrays.stream(endpoints.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .map(EndPoint::fromString)
+                .collect(Collectors.toSet());
+        if (parsed.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "La liste des endpoints ne peut pas être vide (ex: get:/path,post:/path2).");
+        }
+        return parsed;
+    }
+
+    static Extension parseExtension(String extension) {
+        if (extension == null || extension.isBlank()) {
+            throw new IllegalArgumentException("Extension must be json, yml or yaml.");
+        }
+        try {
+            return Extension.valueOf(extension.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Extension must be json, yml or yaml.", e);
+        }
     }
 
     static String resolveContentType(Extension extension) {
@@ -129,20 +225,151 @@ class RestUtils {
     }
 
     static void sendError(HttpExchange exchange, int code, String message) throws IOException {
-        byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] body = mapper.createObjectNode()
+                .put("code", errorCode(code))
+                .put("message", message)
+                .toString()
+                .getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(code, body.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);
         }
     }
 
+    private static String errorCode(int status) {
+        return switch (status) {
+            case 400 -> "INVALID_REQUEST";
+            case 404 -> "NOT_FOUND";
+            case 405 -> "METHOD_NOT_ALLOWED";
+            default -> status >= 500 ? "INTERNAL_ERROR" : "HTTP_ERROR";
+        };
+    }
+
     static void sendBytes(HttpExchange exchange, int code, String contentType, byte[] body) throws IOException {
+        if (body == null) {
+            throw new IllegalArgumentException("La réponse ne peut pas être null.");
+        }
         exchange.getResponseHeaders().set("Content-Type", contentType);
         exchange.sendResponseHeaders(code, body.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(body);
         }
     }
-}
 
+    static void logInvalidRequest(String operation, Exception exception) {
+        log.warn("REST {} — requête invalide : {}", operation, exception.getMessage());
+    }
+
+    static void logInternalError(String operation, Exception exception) {
+        log.error("REST {} — erreur inattendue", operation, exception);
+    }
+
+    static void extractZip(byte[] zipBytes, Path targetDir) throws IOException {
+        extractZip(zipBytes, targetDir, limits());
+    }
+
+    static void extractZip(byte[] zipBytes, Path targetDir, RestLimits limits) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(
+                new java.io.ByteArrayInputStream(zipBytes))) {
+            ZipEntry entry;
+            int entryCount = 0;
+            long totalBytes = 0;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (++entryCount > limits.maxZipEntries()) {
+                    throw new IllegalArgumentException("Archive ZIP trop volumineuse : trop d'entrées.");
+                }
+                Path entryPath = targetDir.resolve(entry.getName()).normalize();
+                if (!entryPath.startsWith(targetDir)) {
+                    throw new IllegalArgumentException(
+                            "Entrée ZIP invalide (Zip Slip détecté) : " + entry.getName());
+                }
+                if (entry.isDirectory()) {
+                    Files.createDirectories(entryPath);
+                } else {
+                    Path parent = entryPath.getParent();
+                    if (parent == null) {
+                        throw new IllegalArgumentException(
+                                "Entrée ZIP invalide : " + entry.getName());
+                    }
+                    Files.createDirectories(parent);
+                    byte[] entryBytes = readLimited(zis, limits.maxZipEntryBytes(),
+                            "Entrée ZIP trop volumineuse : " + entry.getName());
+                    totalBytes += entryBytes.length;
+                    if (totalBytes > limits.maxZipTotalBytes()) {
+                        throw new IllegalArgumentException("Archive ZIP trop volumineuse après décompression.");
+                    }
+                    Files.write(entryPath, entryBytes);
+                }
+                zis.closeEntry();
+            }
+        } catch (ZipException e) {
+            throw new IllegalArgumentException("Le corps de la requête n'est pas une archive ZIP valide.", e);
+        }
+    }
+
+    private static RestLimits limits() {
+        return new RestLimits(
+                configuredInt("swagger.organiser.rest.max-request-bytes", DEFAULT_MAX_REQUEST_BYTES),
+                configuredInt("swagger.organiser.rest.max-zip-entries", DEFAULT_MAX_ZIP_ENTRIES),
+                configuredInt("swagger.organiser.rest.max-zip-entry-bytes", DEFAULT_MAX_ZIP_ENTRY_BYTES),
+                configuredLong("swagger.organiser.rest.max-zip-total-bytes", DEFAULT_MAX_ZIP_TOTAL_BYTES));
+    }
+
+    private static int configuredInt(String property, int defaultValue) {
+        long value = configuredLong(property, defaultValue);
+        if (value < 1 || value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Configuration invalide : " + property);
+        }
+        return (int) value;
+    }
+
+    private static long configuredLong(String property, long defaultValue) {
+        String configured = System.getProperty(property);
+        if (configured == null || configured.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            long value = Long.parseLong(configured);
+            if (value < 1) {
+                throw new NumberFormatException();
+            }
+            return value;
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Configuration invalide : " + property, exception);
+        }
+    }
+
+    record RestLimits(
+            int maxRequestBytes,
+            int maxZipEntries,
+            int maxZipEntryBytes,
+            long maxZipTotalBytes) {
+    }
+
+    static File findMainFile(Path dir) {
+        for (String name : new String[]{"main.yml", "main.yaml", "main.json"}) {
+            java.io.File candidate = dir.resolve(name).toFile();
+            if (candidate.isFile()) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    static void deleteRecursively(Path dir) {
+        try (var paths = Files.walk(dir)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            log.warn("REST — impossible de supprimer : {}", path, e);
+                        }
+                    });
+        } catch (IOException e) {
+            log.warn("REST — impossible de supprimer le répertoire temporaire : {}", dir, e);
+        }
+    }
+}
