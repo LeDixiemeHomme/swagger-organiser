@@ -117,7 +117,7 @@ public class DecomposeHandler implements HttpHandler {
                 return;
             }
 
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
+            Extension extension = RestUtils.parseExtension(extensionParam);
 
             log.info("REST Decompose — extension={}, {} octets reçus", extension, fileBytes.length);
 
@@ -141,4 +141,3 @@ public class DecomposeHandler implements HttpHandler {
         }
     }
 }
-

@@ -67,6 +67,18 @@ class RestUtilsTest {
     }
 
     @Test
+    void should_parse_extension_case_insensitively() {
+        assertThat(RestUtils.parseExtension(" YAML ")).isEqualTo(Extension.YAML);
+    }
+
+    @Test
+    void should_reject_missing_extension() {
+        assertThatThrownBy(() -> RestUtils.parseExtension(" "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Extension must be json, yml or yaml.");
+    }
+
+    @Test
     void should_read_raw_request_body() throws IOException {
         byte[] body = "openapi: 3.0.0".getBytes(StandardCharsets.UTF_8);
         Headers headers = new Headers();

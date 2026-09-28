@@ -124,7 +124,7 @@ public class ClearEndpointsHandler implements HttpHandler {
 
             Set<EndPoint> endpointsToRemove = RestUtils.parseEndpoints(endpointsParam);
 
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
+            Extension extension = RestUtils.parseExtension(extensionParam);
 
             log.info("REST ClearEndpoints — extension={}, {} endpoint(s) à supprimer, {} octets",
                     extension, endpointsToRemove.size(), fileBytes.length);

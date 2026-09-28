@@ -124,7 +124,7 @@ public class KeepEndpointsHandler implements HttpHandler {
 
             Set<EndPoint> endpointsToKeep = RestUtils.parseEndpoints(endpointsParam);
 
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
+            Extension extension = RestUtils.parseExtension(extensionParam);
 
             log.info("REST KeepEndpoints — extension={}, {} endpoint(s) à conserver, {} octets",
                     extension, endpointsToKeep.size(), fileBytes.length);

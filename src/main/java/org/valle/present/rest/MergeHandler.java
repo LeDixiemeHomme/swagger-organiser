@@ -123,7 +123,7 @@ public class MergeHandler implements HttpHandler {
                 return;
             }
 
-            Extension extension = Extension.valueOf(extensionParam.toUpperCase());
+            Extension extension = RestUtils.parseExtension(extensionParam);
 
             log.info("REST Merge — extension={}, {} octets reçus", extension, fileBytes.length);
 
@@ -222,7 +222,6 @@ public class MergeHandler implements HttpHandler {
         }
     }
 }
-
 
 
 

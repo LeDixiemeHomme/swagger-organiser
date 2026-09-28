@@ -138,6 +138,13 @@ class RestUtils {
                 .collect(Collectors.toSet());
     }
 
+    static Extension parseExtension(String extension) {
+        if (extension == null || extension.isBlank()) {
+            throw new IllegalArgumentException("Extension must be json, yml or yaml.");
+        }
+        return Extension.valueOf(extension.trim().toUpperCase());
+    }
+
     static String resolveContentType(Extension extension) {
         return switch (extension) {
             case JSON      -> "application/json";
