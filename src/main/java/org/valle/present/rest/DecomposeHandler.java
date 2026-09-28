@@ -1,7 +1,6 @@
 package org.valle.present.rest;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.process.DecomposeSwagger;
 import org.valle.process.DecomposeSwaggerImpl;
@@ -10,8 +9,6 @@ import org.valle.process.models.Extension;
 import org.valle.provide.fromstring.jackson.GetSwaggerNodeJacksonFromStringImpl;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 /**
  * Handler REST — {@code POST /swagger/decompose}
@@ -75,7 +72,11 @@ import java.util.Map;
  * @see ClearEndpointsHandler pour supprimer des endpoints avant de décomposer
  */
 @Slf4j
-public class DecomposeHandler implements HttpHandler {
+public class DecomposeHandler extends AbstractRestHandler {
+
+    public DecomposeHandler() {
+        super("POST", "Decompose");
+    }
 
     /** Crée le service de décomposition à partir du contenu et de l'extension du fichier. */
     @FunctionalInterface
@@ -96,45 +97,21 @@ public class DecomposeHandler implements HttpHandler {
     ZipBuildFactory zipBuildFactory = RestUtils::buildZip;
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            RestUtils.sendError(exchange, 405, "Méthode non supportée — utilisez POST.");
-            return;
-        }
-        try {
-            Map<String, String> params = RestUtils.parseQuery(exchange.getRequestURI().getQuery());
+    protected void handleRequest(HttpExchange exchange) throws Exception {
+        SwaggerRequest request = RestUtils.readSwaggerRequest(exchange,
+                "Le corps de la requête est vide — envoyez le fichier Swagger.");
 
-            String extensionParam = RestUtils.requireQueryParameter(params, "extension",
-                    "Paramètre 'extension' manquant (json, yml, yaml).");
+        log.info("REST Decompose — extension={}, {} octets reçus",
+                request.extension(), request.body().length);
 
-            byte[] fileBytes = RestUtils.readFileBytes(exchange);
-            if (fileBytes.length == 0) {
-                RestUtils.sendError(exchange, 400,
-                        "Le corps de la requête est vide — envoyez le fichier Swagger.");
-                return;
-            }
+        DecomposedSwagger decomposed = decomposeFactory
+                .create(request.content(), request.extension()).execute();
+        byte[] zipBytes = zipBuildFactory.build(decomposed);
 
-            Extension extension = RestUtils.parseExtension(extensionParam);
+        exchange.getResponseHeaders().set("Content-Disposition",
+                "attachment; filename=\"swagger-decomposed.zip\"");
+        RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
-            log.info("REST Decompose — extension={}, {} octets reçus", extension, fileBytes.length);
-
-            String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
-            DecomposedSwagger decomposed = decomposeFactory.create(fileContent, extension).execute();
-
-            byte[] zipBytes = zipBuildFactory.build(decomposed);
-
-            exchange.getResponseHeaders().set("Content-Disposition",
-                    "attachment; filename=\"swagger-decomposed.zip\"");
-            RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
-
-            log.info("REST Decompose — archive ZIP retournée ({} octets)", zipBytes.length);
-
-        } catch (IllegalArgumentException e) {
-            log.warn("REST Decompose — paramètre invalide : {}", e.getMessage());
-            RestUtils.sendError(exchange, 400, e.getMessage());
-        } catch (Exception e) {
-            log.error("REST Decompose — erreur inattendue", e);
-            RestUtils.sendError(exchange, 500, "Erreur interne : " + e.getMessage());
-        }
+        log.info("REST Decompose — archive ZIP retournée ({} octets)", zipBytes.length);
     }
 }

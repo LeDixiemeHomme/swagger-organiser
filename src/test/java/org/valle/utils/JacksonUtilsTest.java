@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JacksonUtilsTest {
 
@@ -43,5 +44,19 @@ class JacksonUtilsTest {
         String yaml = new String(JacksonUtils.writeValueAsBytes(node, Extension.YML));
 
         assertThat(yaml).contains("openapi:", "3.0.0");
+    }
+
+    @Test
+    void should_reject_invalid_swagger_content_as_a_client_error() {
+        assertThatThrownBy(() -> JacksonUtils.getSwaggerNode("{not-json", Extension.JSON))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Swagger invalide : impossible de lire le contenu fourni.");
+    }
+
+    @Test
+    void should_reject_non_object_swagger_content() {
+        assertThatThrownBy(() -> JacksonUtils.getSwaggerNode("[]", Extension.JSON))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Swagger invalide : le document doit être un objet JSON ou YAML.");
     }
 }

@@ -14,7 +14,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,6 +73,13 @@ class RestUtilsTest {
     }
 
     @Test
+    void should_reject_an_empty_endpoint_list() {
+        assertThatThrownBy(() -> RestUtils.parseEndpoints(" , "))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("ne peut pas être vide");
+    }
+
+    @Test
     void should_resolve_supported_content_types() {
         assertThat(RestUtils.resolveContentType(Extension.JSON)).isEqualTo("application/json");
         assertThat(RestUtils.resolveContentType(Extension.YML)).isEqualTo("application/yaml");
@@ -83,6 +94,13 @@ class RestUtilsTest {
     @Test
     void should_reject_missing_extension() {
         assertThatThrownBy(() -> RestUtils.parseExtension(" "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Extension must be json, yml or yaml.");
+    }
+
+    @Test
+    void should_reject_unknown_extension_with_a_stable_message() {
+        assertThatThrownBy(() -> RestUtils.parseExtension("xml"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Extension must be json, yml or yaml.");
     }
@@ -128,6 +146,52 @@ class RestUtilsTest {
     }
 
     @Test
+    void should_reject_multipart_with_a_blank_boundary() throws IOException {
+        Headers headers = new Headers();
+        headers.set("Content-Type", "multipart/form-data; boundary=\"\"");
+        when(exchange.getRequestHeaders()).thenReturn(headers);
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream(new byte[0]));
+
+        assertThatThrownBy(() -> RestUtils.readFileBytes(exchange))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Boundary manquant");
+    }
+
+    @Test
+    void should_fallback_to_a_file_part_when_file_field_is_not_named_file() throws IOException {
+        String boundary = "fallback";
+        String multipart = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"upload\"; filename=\"swagger.yml\"\r\n\r\n"
+                + "openapi: 3.0.0\r\n"
+                + "--" + boundary + "--\r\n";
+        Headers headers = new Headers();
+        headers.set("Content-Type", "multipart/form-data; boundary=\"" + boundary + "\"");
+        when(exchange.getRequestHeaders()).thenReturn(headers);
+        when(exchange.getRequestBody()).thenReturn(
+                new ByteArrayInputStream(multipart.getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(RestUtils.readFileBytes(exchange), StandardCharsets.UTF_8))
+                .isEqualTo("openapi: 3.0.0");
+    }
+
+    @Test
+    void should_reject_multipart_without_a_file_part() throws IOException {
+        String boundary = "missing-file";
+        String multipart = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"metadata\"\r\n\r\n"
+                + "value\r\n"
+                + "--" + boundary + "--\r\n";
+        Headers headers = new Headers();
+        headers.set("Content-Type", "multipart/form-data; boundary=" + boundary);
+        when(exchange.getRequestHeaders()).thenReturn(headers);
+        when(exchange.getRequestBody()).thenReturn(
+                new ByteArrayInputStream(multipart.getBytes(StandardCharsets.UTF_8)));
+
+        assertThatThrownBy(() -> RestUtils.readFileBytes(exchange))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Aucune partie 'file'");
+    }
+    @Test
     void should_send_error_as_a_structured_json_body() throws IOException {
         Headers responseHeaders = new Headers();
         ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
@@ -155,5 +219,38 @@ class RestUtilsTest {
         verify(exchange).sendResponseHeaders(200, body.length);
         assertThat(responseHeaders.getFirst("Content-Type")).isEqualTo("application/zip");
         assertThat(responseBody.toByteArray()).containsExactly(body);
+    }
+
+    @Test
+    void should_use_http_status_specific_error_codes() throws IOException {
+        Headers responseHeaders = new Headers();
+        ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
+        when(exchange.getResponseHeaders()).thenReturn(responseHeaders);
+        when(exchange.getResponseBody()).thenReturn(responseBody);
+
+        RestUtils.sendError(exchange, 404, "absent");
+
+        assertThat(responseBody.toString(StandardCharsets.UTF_8))
+                .isEqualTo("{\"code\":\"NOT_FOUND\",\"message\":\"absent\"}");
+    }
+
+    @Test
+    void should_extract_and_clean_a_zip_using_shared_rest_utilities() throws Exception {
+        Path target = Files.createTempDirectory("rest-utils-test-");
+        try {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            try (ZipOutputStream zip = new ZipOutputStream(output)) {
+                zip.putNextEntry(new ZipEntry("main.yml"));
+                zip.write("openapi: 3.0.0".getBytes(StandardCharsets.UTF_8));
+                zip.closeEntry();
+            }
+
+            RestUtils.extractZip(output.toByteArray(), target);
+
+            assertThat(Files.readString(target.resolve("main.yml"))).isEqualTo("openapi: 3.0.0");
+            assertThat(RestUtils.findMainFile(target)).isFile();
+        } finally {
+            RestUtils.deleteRecursively(target);
+        }
     }
 }

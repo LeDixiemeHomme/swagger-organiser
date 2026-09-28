@@ -65,9 +65,19 @@ public class JacksonUtils {
 
     public static JsonNode readValue(String swaggerString, Extension extension) {
         try {
-            return createMapper(extension).readTree(swaggerString);
+            JsonNode node = createMapper(extension).readTree(swaggerString);
+            if (node == null || !node.isObject()) {
+                throw new IllegalArgumentException(
+                        "Swagger invalide : le document doit être un objet JSON ou YAML.");
+            }
+            return node;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read value from swagger string: " + swaggerString, e);
+            if (e instanceof IllegalArgumentException illegalArgumentException
+                    && illegalArgumentException.getMessage().startsWith("Swagger invalide")) {
+                throw illegalArgumentException;
+            }
+            throw new IllegalArgumentException(
+                    "Swagger invalide : impossible de lire le contenu fourni.", e);
         }
     }
 
