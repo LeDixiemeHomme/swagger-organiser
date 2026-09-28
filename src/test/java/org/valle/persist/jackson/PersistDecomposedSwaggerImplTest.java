@@ -3,12 +3,14 @@ package org.valle.persist.jackson;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.io.TempDir;
 import org.valle.process.DecomposeSwagger;
 import org.valle.process.DecomposeSwaggerImpl;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.valle.utils.JacksonUtils.readValue;
@@ -16,6 +18,9 @@ import static org.valle.utils.JacksonUtils.readValue;
 class PersistDecomposedSwaggerImplTest {
 
     private static final String SWAGGER_FILE_PATH_FORM = "src/test/resources/decomposed/swagger-initial.%s";
+
+    @TempDir
+    Path outputDirectory;
 
     @ParameterizedTest
     @ValueSource(strings = {"yml", "yaml", "json"})
@@ -26,19 +31,20 @@ class PersistDecomposedSwaggerImplTest {
                 new GetSwaggerNodeJacksonFromFileImpl(file)
         );
         DecomposedSwagger decomposedSwagger = decomposeSwagger.execute();
-        PersistDecomposedSwaggerImpl persistDecomposedSwagger = new PersistDecomposedSwaggerImpl("src/test/resources/decomposed/persit-test-res");
+        PersistDecomposedSwaggerImpl persistDecomposedSwagger =
+                new PersistDecomposedSwaggerImpl(outputDirectory.toString());
         // Act
         persistDecomposedSwagger.persist(decomposedSwagger);
         // Assert
-        File file1 = new File("src/test/resources/decomposed/persit-test-res/main.%s".formatted(extension));
+        File file1 = outputDirectory.resolve("main.%s".formatted(extension)).toFile();
         assertThat(readValue(file1)).isEqualTo(decomposedSwagger.main().node());
         decomposedSwagger.paths().node().fields().forEachRemaining(field -> {
-            File file2 = new File("src/test/resources/decomposed/persit-test-res/paths/%s.%s".formatted(field.getKey(), extension));
+            File file2 = outputDirectory.resolve("paths/%s.%s".formatted(field.getKey(), extension)).toFile();
             JsonNode expected = readValue(file2);
             assertThat(expected).isEqualTo(field.getValue());
         });
         decomposedSwagger.components().node().fields().forEachRemaining(field -> {
-            File file2 = new File("src/test/resources/decomposed/persit-test-res/components/%s.%s".formatted(field.getKey(), extension));
+            File file2 = outputDirectory.resolve("components/%s.%s".formatted(field.getKey(), extension)).toFile();
             JsonNode expected = readValue(file2);
             assertThat(expected).isEqualTo(field.getValue());
         });

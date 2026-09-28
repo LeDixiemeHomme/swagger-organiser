@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.valle.utils.JacksonUtils.readValue;
 
 class DollarRefTest {
@@ -45,5 +46,14 @@ class DollarRefTest {
         JsonNode actual = dollarRef.getReferencedNode(objectMap);
         // Assert
         assertThat(actual.get("title").asText()).isEqualTo("OperationInputDTOV1");
+    }
+
+    @Test
+    void should_reject_blank_references() {
+        assertThatThrownBy(() -> new DollarRef("").getReferencedName())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid $ref");
+        assertThatThrownBy(() -> new DollarRef("#/components/").getReferencedName())
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -8,16 +8,20 @@ public record EndPoint(
         @NotNull String method,
         @NotNull String path
 ) {
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        EndPoint other = (EndPoint) obj;
-        return method.equals(other.method) && path.equals(other.path);
-    }
-
     public static EndPoint fromString(String string) {
-        String[] parts = string.split(":");
-        return EndPoint.builder().method(parts[0]).path(parts[1]).build();
+        if (string == null || string.isBlank()) {
+            throw new IllegalArgumentException("Endpoint must use the format method:path.");
+        }
+
+        String[] parts = string.split(":", 2);
+        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+            throw new IllegalArgumentException(
+                    "Endpoint must use the format method:path: " + string);
+        }
+
+        return EndPoint.builder()
+                .method(parts[0].trim())
+                .path(parts[1].trim())
+                .build();
     }
 }

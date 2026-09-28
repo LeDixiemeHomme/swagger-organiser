@@ -42,13 +42,10 @@ public record SwaggerNode(
     }
 
     public Set<String> getAllNamedReferencesOfAPath(EndPoint endPoint) {
-        JsonNode selectedPath;
-        try {
-            selectedPath = this.node()
-                    .get("paths")
-                    .get(endPoint.path())
-                    .get(endPoint.method());
-        } catch (NullPointerException e) {
+        JsonNode paths = this.node().get("paths");
+        JsonNode path = paths == null ? null : paths.get(endPoint.path());
+        JsonNode selectedPath = path == null ? null : path.get(endPoint.method());
+        if (selectedPath == null || selectedPath.isMissingNode()) {
             throw new EndPointNotFoundException(endPoint, this);
         }
         return findRefs(selectedPath, this.node(), new HashSet<>());
@@ -65,7 +62,9 @@ public record SwaggerNode(
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
-                if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
+                if (field.getKey().equals("$ref")
+                        && field.getValue().isTextual()
+                        && field.getValue().asText().startsWith("#")) {
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
                     String referencedName = dollarRef.getReferencedName();
                     if (!visited.contains(referencedName)) {
@@ -115,7 +114,9 @@ public record SwaggerNode(
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 // condition d'ajout dans la liste des références
-                if (field.getKey().equals("$ref") && field.getValue().isTextual()) {
+                if (field.getKey().equals("$ref")
+                        && field.getValue().isTextual()
+                        && field.getValue().asText().startsWith("#")) {
                     DollarRef dollarRef = new DollarRef(field.getValue().asText());
                     String refValue = dollarRef.getComponentFileReference() + ".%s".formatted(this.extension().toString().toLowerCase());
                     field.setValue(new TextNode(refValue));
@@ -149,6 +150,9 @@ public record SwaggerNode(
 
     public SwaggerNode addPathFileReferences() {
         JsonNode paths = this.node().get("paths");
+        if (paths == null || !paths.isObject()) {
+            return this;
+        }
         Iterator<Map.Entry<String, JsonNode>> fields = paths.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
@@ -178,11 +182,19 @@ public record SwaggerNode(
     }
 
     public SwaggerNode decomposeComponent() {
-        // Extraction des components/schemas
+        // The persisted format is intentionally flat for backward compatibility.
+        // Refuse ambiguous names instead of silently overwriting one category with another.
         ObjectNode components = new ObjectMapper().createObjectNode();
+        Map<String, String> sourceCategories = new java.util.HashMap<>();
         if (node().has("components")) {
             node().get("components").fields().forEachRemaining(entry -> {
                 entry.getValue().fields().forEachRemaining(field -> {
+                    String previousCategory = sourceCategories.putIfAbsent(field.getKey(), entry.getKey());
+                    if (previousCategory != null && !previousCategory.equals(entry.getKey())) {
+                        throw new IllegalStateException(
+                                "Duplicate component name '%s' in categories '%s' and '%s'."
+                                        .formatted(field.getKey(), previousCategory, entry.getKey()));
+                    }
                     components.putIfAbsent(field.getKey(), field.getValue());
                 });
             });

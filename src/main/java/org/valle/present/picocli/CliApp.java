@@ -42,29 +42,29 @@ public class CliApp implements Runnable {
     static final String DECOMPOSED_PATH = "./gene-res/decomp-from-cli";
     static final String RESULT_PATH = "./gene-res/swagger-from-cli.yml";
 
-    @Option(names = {"-sf", "--swaggerFilePath"}, required = true,
+    @Option(names = {"-sf", "--swaggerFilePath", "--swagger-file"}, required = true,
             description = "Chemin du fichier swagger, ex: -sf src/main/resources/swagger-cobaye.yml")
     private String swaggerFilePath;
 
-    @Option(names = {"-toRm", "--endPointToRemove"}, required = false, split = ",",
+    @Option(names = {"-toRm", "--endPointToRemove", "--remove-endpoints"}, required = false, split = ",",
             description = "Liste des endpoints a supprimer, format: method:path, ex: -toRm get:toto/id,post:tata. "
                     + "Ignoré si --endPointToKeep est aussi renseigné.")
     private Set<EndPoint> endPointToRemove;
-    @Option(names = {"-toKeep", "--endPointToKeep"}, required = false, split = ",",
+    @Option(names = {"-toKeep", "--endPointToKeep", "--keep-endpoints"}, required = false, split = ",",
             description = "Liste des endpoints a conserver (tous les autres seront supprimes), "
                     + "format: method:path, ex: -toKeep get:toto/id,post:tata. "
                     + "Prioritaire sur --endPointToRemove si les deux options sont renseignees.")
     private Set<EndPoint> endPointToKeep;
 
-    @Option(names = {"-d", "--decomposeSwagger"},
+    @Option(names = {"-d", "--decomposeSwagger", "--decompose"},
             description = "A renseigner si le programme doit decomposer le swagger en plusieurs fichiers, defaut: false")
     private boolean shouldDecomposeSwagger;
 
-    @Option(names = {"-pf", "--persistFile"},
+    @Option(names = {"-pf", "--persistFile", "--persist"},
             description = "A renseigner si le programme doit creer des fichiers contenant le resultat de l'execution, defaut: false")
     private boolean shouldPersistFile;
 
-    @Option(names = {"-m", "--mergeSwagger"},
+    @Option(names = {"-m", "--mergeSwagger", "--merge"},
             description = "Fusionne un swagger décomposé (multi-fichiers $ref) en un seul fichier, contraire de --decomposeSwagger. Defaut: false")
     private boolean shouldMergeSwagger;
 
@@ -93,13 +93,6 @@ public class CliApp implements Runnable {
     public void run() {
         boolean hasEndpointsToKeep = endPointToKeep != null && !endPointToKeep.isEmpty();
         boolean hasEndpointsToRemove = endPointToRemove != null && !endPointToRemove.isEmpty();
-        boolean hasAnyAction = hasEndpointsToKeep || hasEndpointsToRemove || shouldDecomposeSwagger || shouldMergeSwagger;
-
-        if (!hasAnyAction) {
-            throw new CommandLine.ParameterException(spec.commandLine(),
-                    "Au moins une option parmi --endPointToRemove (-toRm), --endPointToKeep (-toKeep), "
-                            + "--decomposeSwagger (-d) ou --mergeSwagger (-m) doit être renseignée.");
-        }
 
         File swaggerFile = new File(swaggerFilePath);
         GetSwaggerNode provider = swaggerNodeFactory.apply(swaggerFile);
