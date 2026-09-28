@@ -84,6 +84,91 @@ class MergeSwaggerImplTest {
     }
 
     @Test
+    void should_restore_component_categories_from_metadata() throws IOException {
+        write("main.yml", """
+                openapi: 3.0.0
+                info:
+                  title: Test
+                  version: 1.0.0
+                paths:
+                  /users:
+                    $ref: paths/users.yml
+                """);
+        write("paths/users.yml", """
+                get:
+                  parameters:
+                    - $ref: ../components/TraceId.yml
+                  responses:
+                    '200':
+                      $ref: ../components/OkResponse.yml
+                """);
+        write("components/TraceId.yml", """
+                name: X-Trace-Id
+                in: header
+                schema:
+                  type: string
+                """);
+        write("components/OkResponse.yml", """
+                description: OK
+                """);
+        write("components/bearerAuth.yml", """
+                type: http
+                scheme: bearer
+                """);
+        write("component-categories.json", """
+                {
+                  "TraceId": "parameters",
+                  "OkResponse": "responses",
+                  "bearerAuth": "securitySchemes"
+                }
+                """);
+
+        JsonNode root = merge().execute().node();
+
+        assertThat(root.at("/paths/~1users/get/parameters/0/$ref").asText())
+                .isEqualTo("#/components/parameters/TraceId");
+        assertThat(root.at("/paths/~1users/get/responses/200/$ref").asText())
+                .isEqualTo("#/components/responses/OkResponse");
+        assertThat(root.at("/components/parameters/TraceId/name").asText())
+                .isEqualTo("X-Trace-Id");
+        assertThat(root.at("/components/responses/OkResponse/description").asText())
+                .isEqualTo("OK");
+        assertThat(root.at("/components/securitySchemes/bearerAuth/type").asText())
+                .isEqualTo("http");
+        assertThat(root.at("/components/schemas/TraceId").isMissingNode()).isTrue();
+    }
+
+    @Test
+    void should_read_legacy_flat_component_files_as_schemas_without_metadata() throws IOException {
+        write("main.yml", """
+                openapi: 3.0.0
+                info:
+                  title: Legacy
+                  version: 1.0.0
+                paths:
+                  /legacy:
+                    $ref: paths/legacy.yml
+                """);
+        write("paths/legacy.yml", """
+                get:
+                  responses:
+                    '200':
+                      $ref: ../components/LegacyResponse.yml
+                """);
+        write("components/LegacyResponse.yml", """
+                description: Legacy response
+                """);
+
+        JsonNode root = merge().execute().node();
+
+        assertThat(root.at("/paths/~1legacy/get/responses/200/$ref").asText())
+                .isEqualTo("#/components/schemas/LegacyResponse");
+        assertThat(root.at("/components/schemas/LegacyResponse/description").asText())
+                .isEqualTo("Legacy response");
+        assertThat(root.at("/components/responses/LegacyResponse").isMissingNode()).isTrue();
+    }
+
+    @Test
     void should_reject_missing_path_file() throws IOException {
         write("main.yml", """
                 openapi: 3.0.0

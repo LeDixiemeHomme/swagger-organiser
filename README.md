@@ -184,4 +184,6 @@ Les premiers travaux de fiabilisation sont couverts par des tests dédiés :
 - lecture multipart/raw, génération ZIP et fusion de Swagger ;
 - validation des options CLI et du port REST.
 
-Les sujets restant à traiter après stabilisation de la suite de tests sont la stratégie d'immutabilité de `SwaggerNode`, la préservation des sections de composants lors de la décomposition et l'harmonisation finale des formats d'erreur CLI/REST.
+La décomposition conserve les catégories OpenAPI des composants via le sidecar
+`component-categories.json`. Lors d'une fusion, ce sidecar est optionnel : les archives
+historiques sans métadonnées restent interprétées avec la convention `components.schemas`.

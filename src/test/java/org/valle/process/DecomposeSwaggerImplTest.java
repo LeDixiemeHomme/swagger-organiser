@@ -1,9 +1,13 @@
 package org.valle.process;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.valle.process.models.DecomposedSwagger;
+import org.valle.process.models.Extension;
+import org.valle.process.models.SwaggerNode;
+import org.valle.provide.fromnode.GetSwaggerNodeFromNodeImpl;
 import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
@@ -38,5 +42,42 @@ class DecomposeSwaggerImplTest {
             JsonNode expected = readValue(file2);
             assertThat(expected).isEqualTo(field.getValue());
         });
+    }
+
+    @org.junit.jupiter.api.Test
+    void should_preserve_component_categories_in_metadata() throws Exception {
+        JsonNode input = new ObjectMapper().readTree("""
+                {
+                  "openapi": "3.0.0",
+                  "info": {"title": "Test", "version": "1.0.0"},
+                  "paths": {},
+                  "components": {
+                    "securitySchemes": {
+                      "bearerAuth": {"type": "http", "scheme": "bearer"}
+                    },
+                    "responses": {
+                      "NotFound": {"description": "Not found"}
+                    },
+                    "parameters": {
+                      "TraceId": {"name": "X-Trace-Id", "in": "header", "schema": {"type": "string"}}
+                    }
+                  }
+                }
+                """);
+
+        DecomposedSwagger result = new DecomposeSwaggerImpl(
+                new GetSwaggerNodeFromNodeImpl(SwaggerNode.builder()
+                        .node(input)
+                        .extension(Extension.YML)
+                        .build())
+        ).execute();
+
+        assertThat(result.componentCategories())
+                .containsEntry("bearerAuth", "securitySchemes")
+                .containsEntry("NotFound", "responses")
+                .containsEntry("TraceId", "parameters");
+        assertThat(result.components().node().fieldNames())
+                .toIterable()
+                .containsExactlyInAnyOrder("bearerAuth", "NotFound", "TraceId");
     }
 }

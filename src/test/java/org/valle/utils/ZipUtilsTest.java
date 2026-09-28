@@ -11,6 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -40,6 +41,22 @@ class ZipUtilsTest {
         List<String> entries = entries(ZipUtils.build(decomposed));
 
         assertThat(entries).containsExactly("main.yml", "paths/users.yml", "components/User.yml");
+    }
+
+    @Test
+    void should_include_component_category_metadata_in_decomposed_zip() throws IOException {
+        DecomposedSwagger decomposed = DecomposedSwagger.builder()
+                .main(node("title", "Main"))
+                .components(node("TraceId", "name: X-Trace-Id"))
+                .componentCategories(Map.of("TraceId", "parameters"))
+                .build();
+
+        List<String> entries = entries(ZipUtils.build(decomposed));
+
+        assertThat(entries).containsExactly(
+                "main.yml",
+                "components/TraceId.yml",
+                DecomposedSwagger.COMPONENT_CATEGORIES_FILE);
     }
 
     private SwaggerNode node(String field, String value) {

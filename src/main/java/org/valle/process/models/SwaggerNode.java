@@ -11,6 +11,7 @@ import org.valle.process.exceptions.EndPointNotFoundException;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -198,34 +199,48 @@ public record SwaggerNode(
     }
 
     public SwaggerNode decomposeComponent() {
-        // The persisted format is intentionally flat for backward compatibility.
-        // Refuse ambiguous names instead of silently overwriting one category with another.
         ObjectNode components = MAPPER.createObjectNode();
-        Map<String, String> sourceCategories = new java.util.HashMap<>();
         JsonNode sourceComponents = node().get("components");
         if (sourceComponents == null || sourceComponents.isNull()) {
             return this.toBuilder().node(components).build();
+        }
+        getComponentCategories();
+        sourceComponents.fields().forEachRemaining(entry -> {
+            entry.getValue().fields().forEachRemaining(field ->
+                    components.putIfAbsent(field.getKey(), field.getValue()));
+        });
+        return this.toBuilder().node(components).build();
+    }
+
+    /**
+     * Returns the category of every component in this document.  Decomposed files retain
+     * their historical flat names, so this map is persisted as sidecar metadata.
+     */
+    public Map<String, String> getComponentCategories() {
+        Map<String, String> categories = new LinkedHashMap<>();
+        JsonNode sourceComponents = node().get("components");
+        if (sourceComponents == null || sourceComponents.isNull()) {
+            return categories;
         }
         if (!sourceComponents.isObject()) {
             throw new IllegalArgumentException("Swagger invalide : components doit être un objet.");
         }
         sourceComponents.fields().forEachRemaining(entry -> {
-                if (!entry.getValue().isObject()) {
-                    throw new IllegalArgumentException(
-                            "Swagger invalide : la catégorie de composant '%s' doit être un objet."
-                                    .formatted(entry.getKey()));
+            if (!entry.getValue().isObject()) {
+                throw new IllegalArgumentException(
+                        "Swagger invalide : la catégorie de composant '%s' doit être un objet."
+                                .formatted(entry.getKey()));
+            }
+            entry.getValue().fieldNames().forEachRemaining(componentName -> {
+                String previousCategory = categories.putIfAbsent(componentName, entry.getKey());
+                if (previousCategory != null && !previousCategory.equals(entry.getKey())) {
+                    throw new IllegalStateException(
+                            "Duplicate component name '%s' in categories '%s' and '%s'."
+                                    .formatted(componentName, previousCategory, entry.getKey()));
                 }
-                entry.getValue().fields().forEachRemaining(field -> {
-                    String previousCategory = sourceCategories.putIfAbsent(field.getKey(), entry.getKey());
-                    if (previousCategory != null && !previousCategory.equals(entry.getKey())) {
-                        throw new IllegalStateException(
-                                "Duplicate component name '%s' in categories '%s' and '%s'."
-                                        .formatted(field.getKey(), previousCategory, entry.getKey()));
-                    }
-                    components.putIfAbsent(field.getKey(), field.getValue());
-                });
+            });
         });
-        return this.toBuilder().node(components).build();
+        return categories;
     }
 
     /**

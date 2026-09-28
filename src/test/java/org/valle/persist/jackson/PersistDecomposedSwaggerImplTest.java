@@ -50,6 +50,9 @@ class PersistDecomposedSwaggerImplTest {
             JsonNode expected = readValue(file2);
             assertThat(expected).isEqualTo(field.getValue());
         });
+        JsonNode metadata = readValue(outputDirectory
+                .resolve(DecomposedSwagger.COMPONENT_CATEGORIES_FILE).toFile());
+        assertThat(metadata.get("Error").asText()).isEqualTo("schemas");
     }
 
     @org.junit.jupiter.api.Test

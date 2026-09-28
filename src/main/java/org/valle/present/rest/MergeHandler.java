@@ -27,8 +27,9 @@ import java.nio.file.Path;
  * │   ├── mon-path.yml
  * │   └── ...
  * └── components/
- *     ├── MonSchema.yml
+ *     ├── MonComposant.yml
  *     └── ...
+ * component-categories.json      ← facultatif, absent dans les archives historiques
  * </pre>
  *
  * <h3>Méthode HTTP</h3>

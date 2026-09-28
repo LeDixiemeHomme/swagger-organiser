@@ -1,5 +1,6 @@
 package org.valle.persist.jackson;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,14 @@ public class PersistDecomposedSwaggerImpl implements PersistDecomposedSwagger {
                 File file = path.toFile();
                 new PersistResultNodeImpl(file).persist((ObjectNode) entry.getValue());
             });
+        }
+
+        if (!toPersist.componentCategories().isEmpty()) {
+            ObjectNode metadata = new ObjectMapper().createObjectNode();
+            toPersist.componentCategories()
+                    .forEach(metadata::put);
+            new PersistResultNodeImpl(new File(baseDirectory,
+                    DecomposedSwagger.COMPONENT_CATEGORIES_FILE)).persist(metadata);
         }
 
         File file = new File(baseDirectory, "main.%s".formatted(strExtension));

@@ -21,7 +21,9 @@ import java.io.IOException;
  * <ol>
  *   <li>Extraction du fichier principal ({@code main.{ext}}) avec des {@code $ref} vers les sous-fichiers.</li>
  *   <li>Extraction de chaque path dans un fichier dédié ({@code paths/{nom}.{ext}}).</li>
- *   <li>Extraction de chaque schéma de composant dans un fichier dédié ({@code components/{nom}.{ext}}).</li>
+ *   <li>Extraction de chaque composant dans un fichier dédié
+ *       ({@code components/{nom}.{ext}}), avec le sidecar
+ *       {@code component-categories.json} pour conserver sa catégorie OpenAPI.</li>
  * </ol>
  *
  * <h3>Méthode HTTP</h3>
@@ -53,8 +55,9 @@ import java.io.IOException;
  * │   ├── cadh-v1-operations.yml       ← un fichier par path (slashes → tirets, accolades retirées)
  * │   └── ...
  * └── components/
- *     ├── OperationDTO.yml             ← un fichier par schéma de composant
+ *     ├── OperationDTO.yml             ← un fichier par composant
  *     └── ...
+ * component-categories.json             ← catégorie de chaque composant
  *     </pre>
  *   </li>
  *   <li>{@code 400 Bad Request} — paramètre manquant ou format de fichier invalide</li>
