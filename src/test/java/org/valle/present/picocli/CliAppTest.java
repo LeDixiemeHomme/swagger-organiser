@@ -1,6 +1,5 @@
 package org.valle.present.picocli;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,10 +40,8 @@ class CliAppTest {
     @Mock DecomposeSwagger      mockDecompose;
     @Mock DecomposedSwagger     mockDecomposedSwagger;
     @Mock PersistDecomposedSwagger mockPersistDecomposed;
-    @Mock ObjectNode            mockObjectNode;
-
     @SuppressWarnings("unchecked")
-    PersistResult<ObjectNode> mockPersistResult = mock(PersistResult.class);
+    PersistResult<SwaggerNode> mockPersistResult = mock(PersistResult.class);
 
     CliApp cliApp = new CliApp();
 
@@ -64,7 +61,6 @@ class CliAppTest {
         lenient().when(mockClear.execute(any())).thenReturn(mockClearedNode);
         lenient().when(mockKeep.execute(any())).thenReturn(mockClearedNode);
         lenient().when(mockDecompose.execute()).thenReturn(mockDecomposedSwagger);
-        lenient().when(mockClearedNode.node()).thenReturn(mockObjectNode);
         lenient().when(mockClearedProvider.provide()).thenReturn(mockClearedNode);
     }
 
@@ -145,7 +141,7 @@ class CliAppTest {
         void should_persist_cleared_node_when_pf_is_set_but_d_is_absent() {
             cli().execute("-sf", "any.yml", "-toRm", "post:/test", "-pf");
 
-            verify(mockPersistResult).persist(mockObjectNode);
+            verify(mockPersistResult).persist(mockClearedNode);
             verify(mockPersistDecomposed, never()).persist(any());
         }
 
@@ -299,7 +295,7 @@ class CliAppTest {
         void should_persist_kept_node_when_pf_is_set_but_d_is_absent() {
             cli().execute("-sf", "any.yml", "-toKeep", "get:/profiling", "-pf");
 
-            verify(mockPersistResult).persist(mockObjectNode);
+            verify(mockPersistResult).persist(mockClearedNode);
             verify(mockPersistDecomposed, never()).persist(any());
         }
     }

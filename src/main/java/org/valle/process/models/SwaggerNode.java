@@ -21,9 +21,14 @@ import static java.util.Objects.isNull;
 @Builder(toBuilder = true)
 public record SwaggerNode(
         @NotNull @Valid JsonNode node,
-        @NotNull @Valid Extension extension
+        @NotNull @Valid Extension extension,
+        String comments
 ) {
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public SwaggerNode {
+        comments = comments == null ? "" : comments;
+    }
 
     public Set<String> getSchemaNamesToBeRemoved(Set<EndPoint> endPointsToBeRemoved) {
 

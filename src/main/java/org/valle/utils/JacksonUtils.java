@@ -9,16 +9,29 @@ import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JacksonUtils {
+
+    private static final Pattern YAML_COMMENT_PATTERN = Pattern.compile("(^|\\s)(#.*)$");
 
     private JacksonUtils() {
     }
 
     public static SwaggerNode getSwaggerNode(File swaggerFile) {
+        String content;
+        try {
+            content = Files.readString(swaggerFile.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read value from swagger file: " + swaggerFile.getPath(), e);
+        }
         return SwaggerNode.builder()
-                .node(readValue(swaggerFile))
+                .node(readValue(content, Extension.getSwaggerFileExtension(swaggerFile)))
                 .extension(Extension.getSwaggerFileExtension(swaggerFile))
+                .comments(extractYamlComments(content, Extension.getSwaggerFileExtension(swaggerFile)))
                 .build();
     }
 
@@ -26,6 +39,7 @@ public class JacksonUtils {
         return SwaggerNode.builder()
                 .node(readValue(swaggerString, extension))
                 .extension(extension)
+                .comments(extractYamlComments(swaggerString, extension))
                 .build();
     }
 
@@ -40,7 +54,12 @@ public class JacksonUtils {
 
     public static byte[] writeValueAsBytes(SwaggerNode swaggerNode) {
         try {
-            return createMapper(swaggerNode.extension()).writeValueAsBytes(swaggerNode.node());
+            byte[] serialized = createMapper(swaggerNode.extension()).writeValueAsBytes(swaggerNode.node());
+            if (swaggerNode.extension() == Extension.JSON
+                    || swaggerNode.comments().isBlank()) {
+                return serialized;
+            }
+            return appendComments(serialized, swaggerNode.comments());
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize SwaggerNode to bytes", e);
         }
@@ -58,6 +77,14 @@ public class JacksonUtils {
         try {
             Extension extension = Extension.getSwaggerFileExtension(swaggerFile);
             createMapper(extension).writeValue(swaggerFile, node);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
+        }
+    }
+
+    public static void writeValue(File swaggerFile, SwaggerNode swaggerNode) {
+        try {
+            Files.write(swaggerFile.toPath(), writeValueAsBytes(swaggerNode));
         } catch (Exception e) {
             throw new RuntimeException("Failed to write value to swagger file: " + swaggerFile.getPath(), e);
         }
@@ -102,5 +129,29 @@ public class JacksonUtils {
         // active l'indentation pour les json
         mapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
         return mapper;
+    }
+
+    private static String extractYamlComments(String content, Extension extension) {
+        if (extension == Extension.JSON) {
+            return "";
+        }
+        StringBuilder comments = new StringBuilder();
+        for (String line : content.split("\\R")) {
+            Matcher matcher = YAML_COMMENT_PATTERN.matcher(line);
+            if (matcher.find()) {
+                if (comments.length() > 0) {
+                    comments.append(System.lineSeparator());
+                }
+                comments.append(matcher.group(2).trim());
+            }
+        }
+        return comments.toString();
+    }
+
+    private static byte[] appendComments(byte[] serialized, String comments) {
+        String yaml = new String(serialized, java.nio.charset.StandardCharsets.UTF_8);
+        String separator = yaml.endsWith(System.lineSeparator()) ? "" : System.lineSeparator();
+        return (yaml + separator + comments + System.lineSeparator())
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 }

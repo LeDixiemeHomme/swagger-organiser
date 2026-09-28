@@ -72,7 +72,7 @@ public class CliApp implements Runnable {
     Function<SwaggerNode, GetSwaggerNode> nodeProviderFactory = GetSwaggerNodeFromNodeImpl::new;
     Function<GetSwaggerNode, DecomposeSwagger> decomposeFactory = DecomposeSwaggerImpl::new;
     Function<String, PersistDecomposedSwagger> persistDecomposedFactory = PersistDecomposedSwaggerImpl::new;
-    Function<File, PersistResult<com.fasterxml.jackson.databind.node.ObjectNode>> persistResultFactory =
+    Function<File, PersistResult<SwaggerNode>> persistResultFactory =
             PersistResultNodeImpl::new;
     BiFunction<GetSwaggerNode, File, MergeSwagger> mergeFactory = MergeSwaggerImpl::new;
 

@@ -6,12 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.persist.PersistDecomposedSwagger;
 import org.valle.process.models.DecomposedSwagger;
+import org.valle.process.models.SwaggerNode;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.valle.utils.SafePathResolver.resolveWithin;
+import static org.valle.utils.JacksonUtils.writeValue;
 
 @Slf4j
 @AllArgsConstructor
@@ -38,7 +40,10 @@ public class PersistDecomposedSwaggerImpl implements PersistDecomposedSwagger {
                 Path path = resolveWithin(pathsDirectory.toPath(),
                         "%s.%s".formatted(entry.getKey(), strExtension), "Nom de fichier path");
                 File file = path.toFile();
-                new PersistResultNodeImpl(file).persist((ObjectNode) entry.getValue());
+                new PersistResultNodeImpl(file).persist(SwaggerNode.builder()
+                        .node(entry.getValue())
+                        .extension(toPersist.getExtension())
+                        .build());
             });
         }
 
@@ -47,7 +52,10 @@ public class PersistDecomposedSwaggerImpl implements PersistDecomposedSwagger {
                 Path path = resolveWithin(componentsDirectory.toPath(),
                         "%s.%s".formatted(entry.getKey(), strExtension), "Nom de fichier composant");
                 File file = path.toFile();
-                new PersistResultNodeImpl(file).persist((ObjectNode) entry.getValue());
+                new PersistResultNodeImpl(file).persist(SwaggerNode.builder()
+                        .node(entry.getValue())
+                        .extension(toPersist.getExtension())
+                        .build());
             });
         }
 
@@ -55,11 +63,10 @@ public class PersistDecomposedSwaggerImpl implements PersistDecomposedSwagger {
             ObjectNode metadata = new ObjectMapper().createObjectNode();
             toPersist.componentCategories()
                     .forEach(metadata::put);
-            new PersistResultNodeImpl(new File(baseDirectory,
-                    DecomposedSwagger.COMPONENT_CATEGORIES_FILE)).persist(metadata);
+            writeValue(new File(baseDirectory, DecomposedSwagger.COMPONENT_CATEGORIES_FILE), metadata);
         }
 
         File file = new File(baseDirectory, "main.%s".formatted(strExtension));
-        new PersistResultNodeImpl(file).persist((ObjectNode) toPersist.main().node());
+        new PersistResultNodeImpl(file).persist(toPersist.main());
     }
 }

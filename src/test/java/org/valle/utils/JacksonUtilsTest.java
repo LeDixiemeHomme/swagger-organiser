@@ -37,6 +37,58 @@ class JacksonUtilsTest {
     }
 
     @Test
+    void should_preserve_yaml_comments_when_serializing_a_swagger_node() {
+        String source = """
+                # API documentation
+                openapi: 3.0.0
+                info:
+                  title: Example # Public API
+                  version: 1.0.0
+                """;
+
+        SwaggerNode swaggerNode = JacksonUtils.getSwaggerNode(source, Extension.YML);
+
+        String yaml = new String(JacksonUtils.writeValueAsBytes(swaggerNode));
+
+        assertThat(yaml)
+                .contains("# API documentation")
+                .contains("# Public API");
+    }
+
+    @Test
+    void should_preserve_yaml_comments_when_serializing_a_swagger_node_real_case() {
+        String source = """
+                title: "PilotedProfileV2"
+                type: "object"
+                #todo description
+                required:
+                    - "label"
+                    - "code"
+                    - "is_recommended"
+                properties:
+                    label:
+                        type: "string"
+                        description: "Libellé du profil proposé pour le mode Pilotee"
+                        example: "dynamique"
+                    code:
+                        type: "string"
+                        description: "Code du profil associé au profil"
+                        example: "5"
+                    is_recommended:
+                        type: "boolean"
+                        description: "Indique si ce profil est celui recommandé parmi la liste proposée."
+                        example: true
+                """;
+
+        SwaggerNode swaggerNode = JacksonUtils.getSwaggerNode(source, Extension.YML);
+
+        String yaml = new String(JacksonUtils.writeValueAsBytes(swaggerNode));
+
+        assertThat(yaml)
+                .contains("#todo description");
+    }
+
+    @Test
     void should_serialize_a_node_using_the_requested_format() {
         ObjectNode node = new com.fasterxml.jackson.databind.ObjectMapper()
                 .createObjectNode().put("openapi", "3.0.0");

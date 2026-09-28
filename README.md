@@ -192,6 +192,11 @@ Les erreurs REST sont retournées en JSON avec une forme commune :
 Les codes principaux sont `INVALID_REQUEST` (400), `METHOD_NOT_ALLOWED` (405) et
 `INTERNAL_ERROR` (500). Les codes HTTP des routes existantes restent inchangés.
 
+Lorsqu'un fichier YAML contient des commentaires commençant par `#`, ceux-ci sont
+conservés lors de sa transformation et réémis dans le document YAML principal
+généré. Les commentaires JSON ne sont pas concernés, car JSON ne définit pas de
+syntaxe de commentaire standard.
+
 ### Exemples curl
 
 ```bash

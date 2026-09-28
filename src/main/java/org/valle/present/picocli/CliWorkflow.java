@@ -1,6 +1,5 @@
 package org.valle.present.picocli;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.valle.persist.PersistDecomposedSwagger;
 import org.valle.persist.PersistResult;
@@ -46,7 +45,7 @@ final class CliWorkflow {
             Function<SwaggerNode, GetSwaggerNode> nodeProviderFactory,
             Function<GetSwaggerNode, DecomposeSwagger> decomposeFactory,
             Function<String, PersistDecomposedSwagger> persistDecomposedFactory,
-            Function<File, PersistResult<ObjectNode>> persistResultFactory,
+            Function<File, PersistResult<SwaggerNode>> persistResultFactory,
             BiFunction<GetSwaggerNode, File, MergeSwagger> mergeFactory) {
     }
 
@@ -81,7 +80,7 @@ final class CliWorkflow {
                 services.persistDecomposedFactory().apply(decomposedPath).persist(decomposed.get());
             } else {
                 services.persistResultFactory().apply(new File(resultPath))
-                        .persist((ObjectNode) resultProvider.provide().node());
+                        .persist(resultProvider.provide());
             }
         }
     }
