@@ -15,12 +15,13 @@
         <p class="intro">Transformez votre fichier Swagger directement dans votre navigateur.</p>
         <p class="version">Version ${projectVersion}</p>
       </div>
-      <a class="secondary-button swagger-ui-link" href="/swagger-ui" target="_blank" rel="noopener">Ouvrir Swagger UI Documentation</a>
+      <a class="secondary-button swagger-ui-link" href="/swagger-ui" target="_blank" rel="noopener">Documentation Swagger Organiser</a>
     </header>
 
-    <details class="card documentation">
-      <summary id="documentation-title">Comment utiliser le service</summary>
-      <div class="documentation-content">
+    <div class="workspace">
+      <details class="card documentation">
+        <summary id="documentation-title">Comment utiliser le service</summary>
+        <div class="documentation-content">
         <h3>À quoi sert Swagger Organiser ?</h3>
         <p>Swagger Organiser permet d'adapter un document Swagger/OpenAPI à un besoin
           précis. Vous pouvez réduire la documentation à certains endpoints, retirer
@@ -91,12 +92,12 @@
           <code>DECISEO-API</code>), puis conserve son nom par défaut si aucun titre
           n'est disponible. Le suffixe correspondant à l'action est ajouté
           automatiquement.</p>
-      </div>
-    </details>
+        </div>
+      </details>
 
-    <section class="card transformation-card" aria-labelledby="transform-title">
-      <h2 id="transform-title">Transformation</h2>
-      <form id="transform-form">
+      <section class="card transformation-card" aria-labelledby="transform-title">
+        <h2 id="transform-title">Transformation</h2>
+        <form id="transform-form">
         <label for="file">Fichier Swagger ou archive ZIP</label>
         <input id="file" name="file" type="file" accept=".json,.yaml,.yml,.zip,application/json,application/yaml,application/zip" required>
 
@@ -137,9 +138,10 @@
         </div>
 
         <button class="primary-button" type="submit">Lancer la transformation</button>
-      </form>
-      <p id="result" class="status" role="status" aria-live="polite"></p>
-    </section>
+        </form>
+        <p id="result" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </div>
   </main>
   <script src="/app/app.js" defer></script>
 </body>

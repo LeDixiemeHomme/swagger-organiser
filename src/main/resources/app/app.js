@@ -9,6 +9,8 @@
   const file = document.querySelector("#file");
   const preserveComments = document.querySelector("#preserve-comments");
   const result = document.querySelector("#result");
+  const documentation = document.querySelector(".documentation");
+  const transformationCard = document.querySelector(".transformation-card");
 
   function setStatus(element, message, isError) {
     element.textContent = message;
@@ -22,8 +24,23 @@
     endpoints.required = needsEndpoints;
   }
 
-  action.addEventListener("change", updateEndpointVisibility);
+  function synchronizeDocumentationHeight() {
+    if (!documentation.open || window.matchMedia("(max-width: 650px)").matches) {
+      documentation.style.height = "";
+      return;
+    }
+    documentation.style.height = `${transformationCard.offsetHeight}px`;
+  }
+
+  action.addEventListener("change", () => {
+    updateEndpointVisibility();
+    synchronizeDocumentationHeight();
+  });
+  documentation.addEventListener("toggle", synchronizeDocumentationHeight);
+  window.addEventListener("resize", synchronizeDocumentationHeight);
+  new ResizeObserver(synchronizeDocumentationHeight).observe(transformationCard);
   updateEndpointVisibility();
+  synchronizeDocumentationHeight();
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
