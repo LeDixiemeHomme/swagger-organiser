@@ -22,12 +22,28 @@ import static java.util.Objects.isNull;
 public record SwaggerNode(
         @NotNull @Valid JsonNode node,
         @NotNull @Valid Extension extension,
-        String comments
+        String comments,
+        Boolean preserveComments,
+        Map<String, String> commentsByNode,
+        String rootComments,
+        Map<String, String> commentsByAnchor
 ) {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public SwaggerNode {
         comments = comments == null ? "" : comments;
+        preserveComments = preserveComments == null || preserveComments;
+        commentsByNode = commentsByNode == null ? Map.of() : Map.copyOf(commentsByNode);
+        rootComments = rootComments == null ? comments : rootComments;
+        commentsByAnchor = commentsByAnchor == null ? Map.of() : Map.copyOf(commentsByAnchor);
+    }
+
+    public boolean shouldPreserveComments() {
+        return Boolean.TRUE.equals(preserveComments);
+    }
+
+    public String commentsFor(String nodeKey) {
+        return commentsByNode.getOrDefault(nodeKey, "");
     }
 
     public Set<String> getSchemaNamesToBeRemoved(Set<EndPoint> endPointsToBeRemoved) {

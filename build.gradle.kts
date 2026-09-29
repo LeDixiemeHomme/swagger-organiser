@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.valle"
-version = "2.0.0"
+version = "2.1.0"
 
 java {
     toolchain {
@@ -106,6 +106,9 @@ openApiGenerate {
 // Inclure le index.html généré dans le JAR sous swagger-doc/
 tasks.named<ProcessResources>("processResources") {
     dependsOn("openApiGenerate")
+    filesMatching("app/index.html") {
+        expand("projectVersion" to project.version.toString())
+    }
     from(layout.buildDirectory.dir("generated/swagger-doc")) {
         include("index.html")
         into("swagger-doc")

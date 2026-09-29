@@ -59,6 +59,28 @@ class ZipUtilsTest {
                 DecomposedSwagger.COMPONENT_CATEGORIES_FILE);
     }
 
+    @Test
+    void should_write_path_comments_in_path_file_instead_of_main_file() throws IOException {
+        SwaggerNode paths = SwaggerNode.builder()
+                .node(mapper.readTree("""
+                        {"users":{"get":{}}}
+                        """))
+                .extension(Extension.YML)
+                .commentsByNode(Map.of("paths/users", "# comment for users"))
+                .build();
+        DecomposedSwagger decomposed = DecomposedSwagger.builder()
+                .main(node("title", "Main"))
+                .paths(paths)
+                .build();
+
+        assertThat(zipContents(ZipUtils.build(decomposed)).get("main.yml"))
+                .doesNotContain("# comment for users");
+        String pathFile = zipContents(ZipUtils.build(decomposed)).get("paths/users.yml");
+        assertThat(pathFile).contains("# comment for users");
+        assertThat(pathFile.indexOf("# comment for users"))
+                .isLessThan(pathFile.indexOf("get:"));
+    }
+
     private SwaggerNode node(String field, String value) {
         ObjectNode object = mapper.createObjectNode();
         object.put(field, value);
@@ -74,5 +96,16 @@ class ZipUtilsTest {
             }
         }
         return names;
+    }
+
+    private Map<String, String> zipContents(byte[] zip) throws IOException {
+        Map<String, String> contents = new java.util.LinkedHashMap<>();
+        try (ZipInputStream input = new ZipInputStream(new ByteArrayInputStream(zip))) {
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                contents.put(entry.getName(), new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        return contents;
     }
 }

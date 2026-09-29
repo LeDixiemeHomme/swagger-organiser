@@ -16,6 +16,10 @@ public class DecomposeSwaggerImpl implements DecomposeSwagger {
     public DecomposedSwagger execute() {
         // 1 - Récupérer le contenu du swagger
         SwaggerNode swaggerNode = this.getSwaggerNode.provide();
+        log.debug("Decompose input: extension={}, preserveComments={}, comments={}, nodeComments={}, anchors={}",
+                swaggerNode.extension(), swaggerNode.shouldPreserveComments(),
+                swaggerNode.comments().lines().filter(line -> line.stripLeading().startsWith("#")).count(),
+                swaggerNode.commentsByNode().size(), swaggerNode.commentsByAnchor().size());
 
         // 2 - Modifie les ref des paths et components pour ajouter les ref des fichiers components
         SwaggerNode swaggerWithRefs = swaggerNode
@@ -32,6 +36,14 @@ public class DecomposeSwaggerImpl implements DecomposeSwagger {
                 .removeComponents()
                 // 5 - Modifie les refs des paths pour ajouter les refs des fichiers paths
                 .changePathReferences();
+        decomposedMain = decomposedMain.toBuilder()
+                .comments(swaggerNode.rootComments())
+                .build();
+        log.debug("Decompose output: paths={}, components={}, mainComments={}, pathCommentNodes={}, "
+                        + "componentCommentNodes={}",
+                paths.node().size(), components.node().size(),
+                decomposedMain.comments().lines().filter(line -> line.stripLeading().startsWith("#")).count(),
+                paths.commentsByNode().size(), components.commentsByNode().size());
 
         return DecomposedSwagger.builder()
                 .main(decomposedMain)

@@ -11,6 +11,12 @@ import org.valle.provide.fromnode.GetSwaggerNodeFromNodeImpl;
 import org.valle.provide.fromfile.jackson.GetSwaggerNodeJacksonFromFileImpl;
 
 import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.valle.utils.JacksonUtils.readValue;
@@ -79,5 +85,38 @@ class DecomposeSwaggerImplTest {
         assertThat(result.components().node().fieldNames())
                 .toIterable()
                 .containsExactlyInAnyOrder("bearerAuth", "NotFound", "TraceId");
+    }
+
+    @org.junit.jupiter.api.Test
+    void should_preserve_nested_path_comment_in_decomposed_zip() throws Exception {
+        Path swaggerFile = Path.of("src/main/resources/q1-api.yml");
+        String source = Files.readString(swaggerFile);
+        SwaggerNode swaggerNode = org.valle.utils.JacksonUtils.getSwaggerNode(
+                swaggerFile.toFile(), true);
+
+        DecomposedSwagger result = new DecomposeSwaggerImpl(
+                new GetSwaggerNodeFromNodeImpl(swaggerNode)).execute();
+
+        String pathContent = null;
+        try (ZipInputStream zip = new ZipInputStream(
+                new ByteArrayInputStream(org.valle.utils.ZipUtils.build(result)))) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                if ("paths/entities-customer_uom_code-customers-customer_id-contracts-contract_id-acts-act_code-survey.yml"
+                        .equals(entry.getName())) {
+                    pathContent = new String(zip.readAllBytes(), StandardCharsets.UTF_8);
+                    break;
+                }
+            }
+        }
+
+        assertThat(pathContent).isNotNull();
+        assertThat(pathContent).contains("# todo test a delete");
+        String targetSource = source.substring(source.indexOf(
+                "/entities/{customer_uom_code}/customers/{customer_id}/contracts/{contract_id}/acts/{act_code}/survey:"));
+        assertThat(targetSource.indexOf("# todo test a delete"))
+                .isLessThan(targetSource.indexOf("get:"));
+        assertThat(pathContent.indexOf("# todo test a delete"))
+                .isLessThan(pathContent.indexOf("get:"));
     }
 }

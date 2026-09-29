@@ -137,6 +137,7 @@ public class MergeSwaggerImpl implements MergeSwagger {
                 .node(root)
                 .extension(swaggerNode.extension())
                 .comments(swaggerNode.comments())
+                .preserveComments(swaggerNode.preserveComments())
                 .build();
     }
 

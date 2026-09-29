@@ -56,6 +56,45 @@ class JacksonUtilsTest {
     }
 
     @Test
+    void should_keep_comment_before_the_following_yaml_property() {
+        String source = """
+                openapi: 3.0.1
+                info:
+                    title: DECISEO-API
+                    # todo test a delete
+                    description: >-
+                        Swagger for DECISEO API
+                    version: v1.3.0
+                """;
+
+        String yaml = new String(JacksonUtils.writeValueAsBytes(
+                JacksonUtils.getSwaggerNode(source, Extension.YML)));
+
+        assertThat(yaml.indexOf("title:")).isLessThan(yaml.indexOf("# todo test a delete"));
+        assertThat(yaml.indexOf("# todo test a delete"))
+                .isLessThan(yaml.indexOf("description:"));
+    }
+
+    @Test
+    void should_associate_nested_path_comment_with_its_path_file() {
+        String source = """
+                openapi: 3.0.1
+                paths:
+                  /entities/{customer_id}/survey:
+                    # todo test a delete
+                    get:
+                      tags:
+                        - Survey
+                """;
+
+        SwaggerNode node = JacksonUtils.getSwaggerNode(source, Extension.YML);
+
+        assertThat(node.commentsByNode()).containsKey("paths/entities-customer_id-survey");
+        assertThat(node.commentsFor("paths/entities-customer_id-survey"))
+                .contains("# todo test a delete");
+    }
+
+    @Test
     void should_preserve_yaml_comments_when_serializing_a_swagger_node_real_case() {
         String source = """
                 title: "PilotedProfileV2"
@@ -86,6 +125,26 @@ class JacksonUtilsTest {
 
         assertThat(yaml)
                 .contains("#todo description");
+        assertThat(yaml.indexOf("#todo description"))
+                .isLessThan(yaml.indexOf("required:"));
+    }
+
+    @Test
+    void should_omit_yaml_comments_when_preserve_comments_is_disabled() {
+        String source = """
+                # API documentation
+                openapi: 3.0.0
+                info:
+                  title: Example # Public API
+                """;
+
+        SwaggerNode swaggerNode = JacksonUtils.getSwaggerNode(source, Extension.YML, false);
+
+        String yaml = new String(JacksonUtils.writeValueAsBytes(swaggerNode));
+
+        assertThat(yaml)
+                .doesNotContain("# API documentation")
+                .doesNotContain("# Public API");
     }
 
     @Test

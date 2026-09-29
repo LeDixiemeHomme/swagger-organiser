@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.Extension;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Utilitaire de construction d'archives ZIP à partir d'un {@link DecomposedSwagger}.
  */
+@Slf4j
 public class ZipUtils {
 
     private ZipUtils() {}
@@ -57,16 +59,37 @@ public class ZipUtils {
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
 
             addEntry(zos, "main." + ext, JacksonUtils.writeValueAsBytes(decomposed.main()));
+            log.debug("ZIP entry generated: name=main.{}, comments={}, anchors={}",
+                    ext, decomposed.main().commentsByNode().size(),
+                    decomposed.main().commentsByAnchor().size());
 
             if (decomposed.paths() != null) {
-                decomposed.paths().node().fields().forEachRemaining(e ->
+                decomposed.paths().node().fields().forEachRemaining(e -> {
                         addEntrySilent(zos, "paths/" + e.getKey() + "." + ext,
-                                JacksonUtils.writeValueAsBytes(e.getValue(), extension)));
+                                        JacksonUtils.writeValueAsBytes(
+                                                decomposed.paths().toBuilder()
+                                                        .node(e.getValue())
+                                                        .comments(decomposed.paths().commentsFor("paths/" + e.getKey()))
+                                                        .build()));
+                        log.debug("ZIP path entry generated: name=paths/{}.{} comments={}",
+                                e.getKey(), ext,
+                                decomposed.paths().commentsFor("paths/" + e.getKey()).lines()
+                                        .filter(line -> line.stripLeading().startsWith("#")).count());
+                });
             }
             if (decomposed.components() != null) {
-                decomposed.components().node().fields().forEachRemaining(e ->
+                decomposed.components().node().fields().forEachRemaining(e -> {
                         addEntrySilent(zos, "components/" + e.getKey() + "." + ext,
-                                JacksonUtils.writeValueAsBytes(e.getValue(), extension)));
+                                JacksonUtils.writeValueAsBytes(
+                                        decomposed.components().toBuilder()
+                                                .node(e.getValue())
+                                                .comments(decomposed.components().commentsFor("components/" + e.getKey()))
+                                                .build()));
+                        log.debug("ZIP component entry generated: name=components/{}.{} comments={}",
+                                e.getKey(), ext,
+                                decomposed.components().commentsFor("components/" + e.getKey()).lines()
+                                        .filter(line -> line.stripLeading().startsWith("#")).count());
+                });
             }
             if (!decomposed.componentCategories().isEmpty()) {
                 ObjectNode metadata = new ObjectMapper().createObjectNode();
