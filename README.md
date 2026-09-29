@@ -30,6 +30,7 @@ Le premier argument ne doit **pas** être `server` — les arguments sont transm
 | `-m`, `--mergeSwagger`, `--merge` | Non | Fusionne un swagger décomposé (multi-fichiers `$ref`) en un seul fichier — contraire de `-d` |
 | `-d`, `--decomposeSwagger`, `--decompose` | Non | Décompose le swagger en plusieurs fichiers — contraire de `-m` |
 | `-pf`, `--persistFile`, `--persist` | Non | Persiste le résultat dans des fichiers |
+| `--[no-]preserve-comments` | Non | Préserve les commentaires YAML dans les fichiers YAML générés (défaut : `true`) |
 
 > `-toRm` et `-toKeep` sont tous les deux optionnels. Si aucune transformation n'est fournie, le swagger est seulement affiché.
 > Si les deux sont fournis, `-toKeep` est prioritaire et `-toRm` est ignoré.
@@ -121,10 +122,10 @@ java -jar build/libs/swagger-organiser-2.0.0-all.jar server --port 9090
 
 L'interface permet de :
 
-- vérifier la disponibilité du serveur avec le bouton **Vérifier le serveur** ;
 - sélectionner un fichier Swagger/OpenAPI (`.json`, `.yaml` ou `.yml`) ou une archive
   décomposée (`.zip`) ;
 - choisir le format de sortie `JSON`, `YAML (.yaml)` ou `YAML (.yml)` ;
+- activer/désactiver la préservation des commentaires YAML (case cochée par défaut) ;
 - supprimer des endpoints avec l'action **Clear endpoints** ;
 - conserver uniquement certains endpoints avec l'action **Keep endpoints** ;
 - décomposer un fichier OpenAPI avec l'action **Decompose** ;
@@ -165,12 +166,13 @@ java -Dswagger.organiser.rest.max-request-bytes=5242880 \
 | `POST` | `/merge` | Fusionne un swagger décomposé (ZIP) en un seul fichier — contraire de `/decompose` |
 | `GET` | `/app` | Interface web vanilla embarquée (upload, transformation et téléchargement ZIP) |
 | `GET` | `/swagger-ui` | Interface graphique Swagger UI |
-| `GET` | `/health` | Vérifie la disponibilité du serveur |
 
 #### Paramètres communs (query string)
 
 - `extension` *(obligatoire)* — format de sortie : `json`, `yml` ou `yaml`
 - `endpoints` *(obligatoire pour `/clear-endpoints` et `/keep-endpoints`)* — liste séparée par des virgules, format `method:path`
+- `preserve-comments` *(optionnel, défaut `true`)* — `true` pour conserver les commentaires YAML dans le YAML généré, `false` pour les omettre (sans effet en JSON)
+- `archive-name` *(optionnel)* — nom de base explicite de l'archive téléchargée, sans extension. Si ce paramètre est absent ou vide, la valeur de `info.title` du Swagger fourni est utilisée (par exemple `DECISEO-API`) ; à défaut, le nom historique de l'opération est conservé. Le suffixe de l'opération est ajouté automatiquement (`-decomposed`, `-merged`, `-cleared` ou `-kept`).
 
 #### Corps de la requête
 
@@ -194,30 +196,35 @@ Les codes principaux sont `INVALID_REQUEST` (400), `METHOD_NOT_ALLOWED` (405) et
 
 Lorsqu'un fichier YAML contient des commentaires commençant par `#`, ceux-ci sont
 conservés lors de sa transformation et réémis dans le document YAML principal
-généré. Les commentaires JSON ne sont pas concernés, car JSON ne définit pas de
-syntaxe de commentaire standard.
+généré par défaut. Ce comportement se pilote explicitement :
+
+- **CLI** : `--preserve-comments` (par défaut) ou `--no-preserve-comments`
+- **REST/Web** : query parameters `preserve-comments=true|false` (par défaut `true`) et `archive-name=nom-sans-extension`
+
+Les commentaires JSON ne sont pas concernés, car JSON ne définit pas de syntaxe
+de commentaire standard.
 
 ### Exemples curl
 
 ```bash
 # Supprimer un endpoint
 curl -X POST \
-  "http://localhost:8080/clear-endpoints?extension=yml&endpoints=get:/profiling/%7Bprofiling_id%7D" \
+  "http://localhost:8080/clear-endpoints?extension=yml&endpoints=get:/profiling/%7Bprofiling_id%7D&preserve-comments=true" \
   -F "file=@swagger.yml" --output swagger-cleared.zip
 
 # Conserver des endpoints
 curl -X POST \
-  "http://localhost:8080/keep-endpoints?extension=yml&endpoints=get:/profiling/%7Bprofiling_id%7D" \
+  "http://localhost:8080/keep-endpoints?extension=yml&endpoints=get:/profiling/%7Bprofiling_id%7D&preserve-comments=false" \
   -F "file=@swagger.yml" --output swagger-kept.zip
 
 # Décomposer
 curl -X POST \
-  "http://localhost:8080/decompose?extension=yml" \
+  "http://localhost:8080/decompose?extension=yml&preserve-comments=true" \
   -F "file=@swagger.yml" --output swagger-decomposed.zip
 
 # Fusionner (opération inverse de decompose)
 curl -X POST \
-  "http://localhost:8080/merge?extension=yml" \
+  "http://localhost:8080/merge?extension=yml&preserve-comments=true" \
   -F "file=@swagger-decomposed.zip" --output swagger-merged.zip
 ```
 

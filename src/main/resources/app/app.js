@@ -5,10 +5,10 @@
   const action = document.querySelector("#action");
   const endpointsGroup = document.querySelector("#endpoints-group");
   const endpoints = document.querySelector("#endpoints");
+  const archiveName = document.querySelector("#archive-name");
   const file = document.querySelector("#file");
+  const preserveComments = document.querySelector("#preserve-comments");
   const result = document.querySelector("#result");
-  const healthButton = document.querySelector("#health-button");
-  const healthStatus = document.querySelector("#health-status");
 
   function setStatus(element, message, isError) {
     element.textContent = message;
@@ -25,21 +25,6 @@
   action.addEventListener("change", updateEndpointVisibility);
   updateEndpointVisibility();
 
-  healthButton.addEventListener("click", async () => {
-    healthButton.disabled = true;
-    setStatus(healthStatus, "Vérification en cours…", false);
-    try {
-      const response = await fetch("/health");
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.message || "Le serveur est indisponible.");
-      setStatus(healthStatus, `Serveur disponible (${body.status}).`, false);
-    } catch (error) {
-      setStatus(healthStatus, error.message || "Le serveur est indisponible.", true);
-    } finally {
-      healthButton.disabled = false;
-    }
-  });
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!file.files.length) {
@@ -47,7 +32,11 @@
       return;
     }
 
-    const query = new URLSearchParams({ extension: document.querySelector("#extension").value });
+    const query = new URLSearchParams({
+      extension: document.querySelector("#extension").value,
+      "preserve-comments": String(preserveComments.checked),
+      "archive-name": archiveName.value.trim()
+    });
     if (endpointsGroup.hidden === false) query.set("endpoints", endpoints.value.trim());
     const body = new FormData();
     body.append("file", file.files[0]);

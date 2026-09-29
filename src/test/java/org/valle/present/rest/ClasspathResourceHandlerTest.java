@@ -48,7 +48,9 @@ class ClasspathResourceHandlerTest {
 
         verify(exchange).sendResponseHeaders(eq(200), anyLong());
         assertThat(responseHeaders.getFirst("Content-Type")).startsWith("text/html");
-        assertThat(responseBody.toString()).contains("Swagger Organiser");
+        assertThat(responseBody.toString())
+                .contains("Swagger Organiser")
+                .contains("preserve-comments");
     }
 
     @Test
@@ -60,7 +62,9 @@ class ClasspathResourceHandlerTest {
 
         verify(exchange).sendResponseHeaders(eq(200), anyLong());
         assertThat(responseHeaders.getFirst("Content-Type")).startsWith("text/javascript");
-        assertThat(responseBody.toString()).contains("transform-form");
+        assertThat(responseBody.toString())
+                .contains("transform-form")
+                .contains("\"preserve-comments\"");
     }
 
     @Test

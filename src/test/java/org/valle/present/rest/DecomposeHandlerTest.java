@@ -54,12 +54,14 @@ class DecomposeHandlerTest {
         // Champs pour capturer les arguments reçus par la factory injectée
         String capturedContent;
         Extension capturedExtension;
+        boolean capturedPreserveComments;
 
         @BeforeEach
         void injectFactory() {
-            handler.decomposeFactory = (content, ext) -> {
+            handler.decomposeFactory = (content, ext, preserveComments) -> {
                 capturedContent = content;
                 capturedExtension = ext;
+                capturedPreserveComments = preserveComments;
                 return mockDecompose;
             };
             // ZipBuildFactory stubbée pour éviter d'appeler ZipUtils réel
@@ -122,6 +124,24 @@ class DecomposeHandlerTest {
         }
 
         @Test
+        void should_preserve_comments_by_default() throws IOException {
+            givenPostRequest("extension=yml", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(capturedPreserveComments).isTrue();
+        }
+
+        @Test
+        void should_disable_comment_preservation_when_requested() throws IOException {
+            givenPostRequest("extension=yml&preserve-comments=false", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(capturedPreserveComments).isFalse();
+        }
+
+        @Test
         void should_return_200_with_zip_content_type() throws IOException {
             givenPostRequest("extension=yml", "openapi: 3.0.0");
 
@@ -139,6 +159,16 @@ class DecomposeHandlerTest {
 
             assertThat(responseHeaders.getFirst("Content-Disposition"))
                     .isEqualTo("attachment; filename=\"swagger-decomposed.zip\"");
+        }
+
+        @Test
+        void should_use_requested_archive_name_with_operation_suffix() throws IOException {
+            givenPostRequest("extension=yml&archive-name=nouveau-swagger", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(responseHeaders.getFirst("Content-Disposition"))
+                    .isEqualTo("attachment; filename=\"nouveau-swagger-decomposed.zip\"");
         }
     }
 
@@ -227,6 +257,17 @@ class DecomposeHandlerTest {
             handler.handle(exchange);
 
             // IllegalArgumentException levée par Extension.valueOf("XML")
+            verify(exchange).sendResponseHeaders(eq(400), anyLong());
+        }
+
+        @Test
+        void should_return_400_when_preserve_comments_parameter_is_invalid() throws IOException {
+            when(exchange.getRequestMethod()).thenReturn("POST");
+            when(exchange.getRequestURI()).thenReturn(
+                    URI.create("/swagger/decompose?extension=yml&preserve-comments=invalid"));
+
+            handler.handle(exchange);
+
             verify(exchange).sendResponseHeaders(eq(400), anyLong());
         }
     }

@@ -80,7 +80,7 @@ public class KeepEndpointsHandler extends AbstractRestHandler {
     /** Crée le service de filtrage d'endpoints à partir du contenu et de l'extension. */
     @FunctionalInterface
     interface KeepFactory {
-        KeepEndpointOnDemand create(String content, Extension extension);
+        KeepEndpointOnDemand create(String content, Extension extension, boolean preserveComments);
     }
 
     /** Construit l'archive ZIP à partir du nœud Swagger filtré et du nom de fichier. */
@@ -90,8 +90,9 @@ public class KeepEndpointsHandler extends AbstractRestHandler {
     }
 
     // Package-private pour injection dans les tests
-    KeepFactory keepFactory = (content, ext) ->
-            new KeepEndpointOnDemandImpl(new GetSwaggerNodeJacksonFromStringImpl(content, ext));
+    KeepFactory keepFactory = (content, ext, preserveComments) ->
+            new KeepEndpointOnDemandImpl(
+                    new GetSwaggerNodeJacksonFromStringImpl(content, ext, preserveComments));
 
     ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
 
@@ -107,12 +108,16 @@ public class KeepEndpointsHandler extends AbstractRestHandler {
         log.info("REST KeepEndpoints — extension={}, {} endpoint(s) à conserver, {} octets",
                 request.extension(), endpointsToKeep.size(), request.body().length);
 
-        SwaggerNode keptNode = keepFactory.create(request.content(), request.extension())
+        SwaggerNode keptNode = keepFactory.create(
+                        request.content(), request.extension(), request.preserveComments())
                 .execute(endpointsToKeep);
-        byte[] zipBytes = zipBuildFactory.build(keptNode, request.outputFilename("swagger-kept"));
+        byte[] zipBytes = zipBuildFactory.build(keptNode,
+                request.outputFilename("swagger-kept",
+                        keptNode == null ? null : keptNode.node()));
 
         exchange.getResponseHeaders().set("Content-Disposition",
-                "attachment; filename=\"swagger-kept.zip\"");
+                "attachment; filename=\"" + request.archiveFilename("swagger-kept",
+                        keptNode == null ? null : keptNode.node()) + "\"");
         RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
         log.info("REST KeepEndpoints — {} endpoint(s) conservé(s), ZIP retourné ({} octets)",

@@ -15,6 +15,7 @@ import org.valle.process.GetAndShowEndpoints;
 import org.valle.process.KeepEndpointOnDemand;
 import org.valle.process.models.DecomposedSwagger;
 import org.valle.process.models.EndPoint;
+import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
 import org.valle.provide.GetSwaggerNode;
 import picocli.CommandLine;
@@ -58,6 +59,11 @@ class CliAppTest {
         cliApp.persistResultFactory    = file -> mockPersistResult;
 
         // Stubs communs (lenient = pas d'erreur si non utilises dans certains tests)
+        lenient().when(mockProvider.provide()).thenReturn(SwaggerNode.builder()
+                .node(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode())
+                .extension(Extension.YML)
+                .comments("# comment")
+                .build());
         lenient().when(mockClear.execute(any())).thenReturn(mockClearedNode);
         lenient().when(mockKeep.execute(any())).thenReturn(mockClearedNode);
         lenient().when(mockDecompose.execute()).thenReturn(mockDecomposedSwagger);
@@ -219,6 +225,33 @@ class CliAppTest {
 
             assertThat(capturedFile.get().getPath())
                     .isEqualTo(new File(CliApp.RESULT_PATH).getPath());
+        }
+
+        @Test
+        void should_enable_preserve_comments_by_default() {
+            AtomicReference<SwaggerNode> capturedNode = new AtomicReference<>();
+            cliApp.nodeProviderFactory = node -> {
+                capturedNode.set(node);
+                return mockClearedProvider;
+            };
+
+            cli().execute("-sf", "any.yml");
+
+            assertThat(capturedNode.get()).isNull();
+        }
+
+        @Test
+        void should_disable_preserve_comments_with_no_preserve_comments_option() {
+            AtomicReference<SwaggerNode> capturedNode = new AtomicReference<>();
+            cliApp.nodeProviderFactory = node -> {
+                capturedNode.set(node);
+                return mockClearedProvider;
+            };
+
+            cli().execute("-sf", "any.yml", "--preserve-comments=false");
+
+            assertThat(capturedNode.get()).isNotNull();
+            assertThat(capturedNode.get().shouldPreserveComments()).isFalse();
         }
     }
 

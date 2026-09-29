@@ -106,6 +106,21 @@ class RestUtilsTest {
     }
 
     @Test
+    void should_parse_boolean_query_parameters_with_default_true() {
+        assertThat(RestUtils.parseBooleanQueryParameter(Map.of(), "preserve-comments", true)).isTrue();
+        assertThat(RestUtils.parseBooleanQueryParameter(
+                Map.of("preserve-comments", "false"), "preserve-comments", true)).isFalse();
+    }
+
+    @Test
+    void should_reject_invalid_boolean_query_parameters() {
+        assertThatThrownBy(() -> RestUtils.parseBooleanQueryParameter(
+                Map.of("preserve-comments", "invalid"), "preserve-comments", true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Paramètre 'preserve-comments' invalide : utilisez true ou false.");
+    }
+
+    @Test
     void should_read_raw_request_body() throws IOException {
         byte[] body = "openapi: 3.0.0".getBytes(StandardCharsets.UTF_8);
         Headers headers = new Headers();

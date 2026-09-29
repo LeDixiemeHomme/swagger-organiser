@@ -61,6 +61,10 @@ public class CliApp implements Runnable {
             description = "Fusionne un swagger décomposé (multi-fichiers $ref) en un seul fichier, contraire de --decomposeSwagger. Defaut: false")
     private boolean shouldMergeSwagger;
 
+    @Option(names = "--preserve-comments", negatable = true, defaultValue = "true",
+            description = "Préserve les commentaires YAML dans les fichiers générés (défaut: ${DEFAULT-VALUE}).")
+    private boolean preserveComments;
+
     @Spec
     CommandLine.Model.CommandSpec spec;
 
@@ -93,7 +97,7 @@ public class CliApp implements Runnable {
         }
         CliWorkflow.execute(
                 new CliWorkflow.Options(swaggerFilePath, endPointToRemove, endPointToKeep,
-                        shouldDecomposeSwagger, shouldPersistFile, shouldMergeSwagger),
+                        shouldDecomposeSwagger, shouldPersistFile, shouldMergeSwagger, preserveComments),
                 new CliWorkflow.Services(
                         swaggerNodeFactory, showFactory, clearFactory, keepFactory,
                         nodeProviderFactory, decomposeFactory, persistDecomposedFactory,

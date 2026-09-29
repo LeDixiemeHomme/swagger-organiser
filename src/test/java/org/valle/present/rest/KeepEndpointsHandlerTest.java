@@ -55,12 +55,14 @@ class KeepEndpointsHandlerTest {
 
         String capturedContent;
         Extension capturedExtension;
+        boolean capturedPreserveComments;
 
         @BeforeEach
         void injectFactory() {
-            handler.keepFactory = (content, ext) -> {
+            handler.keepFactory = (content, ext, preserveComments) -> {
                 capturedContent = content;
                 capturedExtension = ext;
+                capturedPreserveComments = preserveComments;
                 return mockKeep;
             };
             handler.zipBuildFactory = (node, filename) -> new byte[]{0x50, 0x4B};
@@ -152,6 +154,25 @@ class KeepEndpointsHandlerTest {
             handler.handle(exchange);
 
             assertThat(capturedContent).isEqualTo(yamlContent);
+        }
+
+        @Test
+        void should_preserve_comments_by_default() throws IOException {
+            givenPostRequest("extension=yml&endpoints=get:/path", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(capturedPreserveComments).isTrue();
+        }
+
+        @Test
+        void should_disable_comment_preservation_when_requested() throws IOException {
+            givenPostRequest(
+                    "extension=yml&endpoints=get:/path&preserve-comments=false", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(capturedPreserveComments).isFalse();
         }
 
         @Test
@@ -303,6 +324,16 @@ class KeepEndpointsHandlerTest {
 
             verify(exchange).sendResponseHeaders(eq(400), anyLong());
         }
+
+        @Test
+        void should_return_400_when_preserve_comments_parameter_is_invalid() throws IOException {
+            when(exchange.getRequestMethod()).thenReturn("POST");
+            when(exchange.getRequestURI()).thenReturn(
+                    URI.create("/keep-endpoints?extension=yml&endpoints=get:/path&preserve-comments=bad"));
+
+            handler.handle(exchange);
+
+            verify(exchange).sendResponseHeaders(eq(400), anyLong());
+        }
     }
 }
-

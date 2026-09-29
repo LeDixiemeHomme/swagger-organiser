@@ -50,12 +50,19 @@ class RestUtils {
             HttpExchange exchange, Map<String, String> params, String emptyBodyMessage) throws IOException {
         String extensionValue = requireQueryParameter(params, "extension",
                 "Paramètre 'extension' manquant (json, yml, yaml).");
+        boolean preserveComments = parseBooleanQueryParameter(params, "preserve-comments", true);
+        String archiveName = params.get("archive-name");
         byte[] body = readFileBytes(exchange);
         if (body.length == 0) {
             throw new IllegalArgumentException(emptyBodyMessage);
         }
         Extension extension = parseExtension(extensionValue);
-        return new SwaggerRequest(params, extensionValue.trim().toLowerCase(), extension, body);
+        log.debug("REST request parsed: extension={}, preserveComments={}, archiveNamePresent={}, "
+                        + "bodyBytes={}, parameters={}",
+                extension, preserveComments, archiveName != null && !archiveName.isBlank(),
+                body.length, params.keySet());
+        return new SwaggerRequest(
+                params, extensionValue.trim().toLowerCase(), extension, preserveComments, archiveName, body);
     }
 
     static byte[] readFileBytes(HttpExchange exchange) throws IOException {
@@ -187,6 +194,22 @@ class RestUtils {
             throw new IllegalArgumentException(message);
         }
         return value;
+    }
+
+    static boolean parseBooleanQueryParameter(
+            Map<String, String> params, String name, boolean defaultValue) {
+        String value = params.get(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        if ("true".equalsIgnoreCase(value.trim())) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(value.trim())) {
+            return false;
+        }
+        throw new IllegalArgumentException(
+                "Paramètre '%s' invalide : utilisez true ou false.".formatted(name));
     }
 
     static Set<EndPoint> parseEndpoints(String endpoints) {

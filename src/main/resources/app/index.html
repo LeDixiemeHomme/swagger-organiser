@@ -13,17 +13,10 @@
         <p class="eyebrow">Swagger Organiser</p>
         <h1>Organiser un fichier OpenAPI</h1>
         <p class="intro">Transformez votre fichier Swagger directement dans votre navigateur.</p>
+        <p class="version">Version ${projectVersion}</p>
       </div>
       <a class="secondary-button swagger-ui-link" href="/swagger-ui" target="_blank" rel="noopener">Ouvrir Swagger UI Documentation</a>
     </header>
-
-    <section class="card" aria-labelledby="health-title">
-      <div class="section-heading">
-        <h2 id="health-title">Disponibilité</h2>
-        <button id="health-button" class="secondary-button" type="button">Vérifier le serveur</button>
-      </div>
-      <p id="health-status" class="status" role="status">État non vérifié.</p>
-    </section>
 
     <details class="card documentation">
       <summary id="documentation-title">Comment utiliser le service</summary>
@@ -92,9 +85,12 @@
           <li>Lancez la transformation. Le fichier ZIP généré est téléchargé
             automatiquement.</li>
         </ol>
-        <p>Les erreurs de validation ou de traitement sont affichées sous le formulaire.
-          Le bouton <strong>Vérifier le serveur</strong> permet de confirmer que l'API
-          est disponible avant de lancer une transformation.</p>
+        <p>Les erreurs de validation ou de traitement sont affichées sous le formulaire.</p>
+        <p>Le nom de l'archive est optionnel. Sans valeur, le service lit la valeur
+          de <code>info.title</code> dans le Swagger fourni (par exemple
+          <code>DECISEO-API</code>), puis conserve son nom par défaut si aucun titre
+          n'est disponible. Le suffixe correspondant à l'action est ajouté
+          automatiquement.</p>
       </div>
     </details>
 
@@ -127,6 +123,17 @@
         <div id="endpoints-group">
           <label for="endpoints">Endpoints <span>(method:/path, séparés par des virgules)</span></label>
           <input id="endpoints" name="endpoints" type="text" placeholder="get:/users,post:/users">
+        </div>
+
+        <label for="archive-name">Nom de l'archive <span>(optionnel, sans extension)</span></label>
+        <input id="archive-name" name="archive-name" type="text" placeholder="Exemple : DECISEO-API">
+
+        <div class="checkbox-option">
+          <input id="preserve-comments" name="preserve-comments" type="checkbox" checked>
+          <label for="preserve-comments">
+            Préserver les commentaires YAML dans le fichier généré
+            <span>(sans effet sur la sortie JSON)</span>
+          </label>
         </div>
 
         <button class="primary-button" type="submit">Lancer la transformation</button>

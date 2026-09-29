@@ -13,6 +13,7 @@ body { margin: 0; }
 h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.05; }
 h2 { margin: 0; font-size: 1.25rem; }
 .intro { color: #58657b; margin-bottom: 0; }
+.version { color: #69758b; font-size: .85rem; margin: .5rem 0 0; }
 .card { background: white; border: 1px solid #e2e8f2; border-radius: 14px; box-shadow: 0 8px 24px #233b6810; margin-top: 1rem; padding: 1.5rem; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .documentation summary { cursor: pointer; font-size: 1.25rem; font-weight: 700; }
@@ -25,11 +26,17 @@ h2 { margin: 0; font-size: 1.25rem; }
 .documentation dd { color: #58657b; line-height: 1.5; margin: .2rem 0 0; }
 .transformation-card { background: #eef4ff; border-color: #b9ccf5; }
 code { background: #f1f4f9; border-radius: 4px; font-size: .92em; padding: .1rem .3rem; }
+.checkbox-option { align-items: flex-start; display: flex; gap: .6rem; margin-top: 1.25rem; }
+.checkbox-option input { margin-top: .25rem; width: auto; }
+.checkbox-option label { margin: 0; }
 label { display: block; font-weight: 650; margin: 1.25rem 0 .45rem; }
 label span { color: #69758b; font-size: .85rem; font-weight: 400; }
 input, select { border: 1px solid #cbd5e1; border-radius: 8px; color: inherit; font: inherit; padding: .7rem .8rem; width: 100%; }
 input:focus, select:focus, button:focus-visible, a:focus-visible { outline: 3px solid #9eb5ff; outline-offset: 2px; }
 .form-grid { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+.checkbox-option { align-items: flex-start; display: flex; gap: .65rem; margin-top: 1rem; }
+.checkbox-option input { margin-top: .2rem; width: auto; }
+.checkbox-option label { margin: 0; }
 button, .secondary-button { border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 650; padding: .7rem 1rem; text-decoration: none; }
 .primary-button { background: #3559c7; color: white; margin-top: 1.5rem; }
 .primary-button:hover { background: #2949ae; }

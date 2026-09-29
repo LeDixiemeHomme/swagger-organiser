@@ -84,7 +84,7 @@ public class DecomposeHandler extends AbstractRestHandler {
     /** Crée le service de décomposition à partir du contenu et de l'extension du fichier. */
     @FunctionalInterface
     interface DecomposeFactory {
-        DecomposeSwagger create(String content, Extension extension);
+        DecomposeSwagger create(String content, Extension extension, boolean preserveComments);
     }
 
     /** Construit l'archive ZIP à partir d'un swagger décomposé. */
@@ -94,8 +94,9 @@ public class DecomposeHandler extends AbstractRestHandler {
     }
 
     // Package-private pour injection dans les tests
-    DecomposeFactory decomposeFactory = (content, ext) ->
-            new DecomposeSwaggerImpl(new GetSwaggerNodeJacksonFromStringImpl(content, ext));
+    DecomposeFactory decomposeFactory = (content, ext, preserveComments) ->
+            new DecomposeSwaggerImpl(
+                    new GetSwaggerNodeJacksonFromStringImpl(content, ext, preserveComments));
 
     ZipBuildFactory zipBuildFactory = RestUtils::buildZip;
 
@@ -108,11 +109,15 @@ public class DecomposeHandler extends AbstractRestHandler {
                 request.extension(), request.body().length);
 
         DecomposedSwagger decomposed = decomposeFactory
-                .create(request.content(), request.extension()).execute();
+                .create(request.content(), request.extension(), request.preserveComments()).execute();
         byte[] zipBytes = zipBuildFactory.build(decomposed);
 
         exchange.getResponseHeaders().set("Content-Disposition",
-                "attachment; filename=\"swagger-decomposed.zip\"");
+                "attachment; filename=\"" + request.archiveFilename(
+                        "swagger-decomposed",
+                        decomposed == null || decomposed.main() == null
+                                ? null
+                                : decomposed.main().node()) + "\"");
         RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
         log.info("REST Decompose — archive ZIP retournée ({} octets)", zipBytes.length);

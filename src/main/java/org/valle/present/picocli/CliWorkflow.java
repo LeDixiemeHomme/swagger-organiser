@@ -34,7 +34,8 @@ final class CliWorkflow {
             Set<EndPoint> endpointsToKeep,
             boolean decompose,
             boolean persist,
-            boolean merge) {
+            boolean merge,
+            boolean preserveComments) {
     }
 
     record Services(
@@ -54,6 +55,7 @@ final class CliWorkflow {
         boolean hasRemove = hasValues(options.endpointsToRemove());
         File swaggerFile = new File(options.swaggerFilePath());
         GetSwaggerNode provider = services.swaggerNodeFactory().apply(swaggerFile);
+        provider = enforcePreserveComments(provider, options.preserveComments(), services);
 
         if (options.merge()) {
             SwaggerNode merged = services.mergeFactory()
@@ -61,6 +63,7 @@ final class CliWorkflow {
                     .execute();
             log.info("Swagger fusionné avec succès.");
             provider = services.nodeProviderFactory().apply(merged);
+            provider = enforcePreserveComments(provider, options.preserveComments(), services);
         }
 
         services.showFactory().apply(provider).execute();
@@ -111,5 +114,16 @@ final class CliWorkflow {
 
     private static boolean hasValues(Set<EndPoint> endpoints) {
         return endpoints != null && !endpoints.isEmpty();
+    }
+
+    private static GetSwaggerNode enforcePreserveComments(
+            GetSwaggerNode provider, boolean preserveComments, Services services) {
+        SwaggerNode swaggerNode = provider.provide();
+        if (swaggerNode.shouldPreserveComments() == preserveComments) {
+            return provider;
+        }
+        return services.nodeProviderFactory().apply(swaggerNode.toBuilder()
+                .preserveComments(preserveComments)
+                .build());
     }
 }

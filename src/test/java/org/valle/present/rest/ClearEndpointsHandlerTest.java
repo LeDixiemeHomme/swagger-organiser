@@ -56,12 +56,14 @@ class ClearEndpointsHandlerTest {
         // Champs pour capturer les arguments reçus par la factory injectée
         String capturedContent;
         Extension capturedExtension;
+        boolean capturedPreserveComments;
 
         @BeforeEach
         void injectFactory() {
-            handler.clearFactory = (content, ext) -> {
+            handler.clearFactory = (content, ext, preserveComments) -> {
                 capturedContent = content;
                 capturedExtension = ext;
+                capturedPreserveComments = preserveComments;
                 return mockClear;
             };
             // ZipBuildFactory stubbée pour éviter d'appeler ZipUtils réel
@@ -164,6 +166,25 @@ class ClearEndpointsHandlerTest {
             handler.handle(exchange);
 
             assertThat(capturedContent).isEqualTo(yamlContent);
+        }
+
+        @Test
+        void should_preserve_comments_by_default() throws IOException {
+            givenPostRequest("extension=yml&endpoints=get:/path", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(capturedPreserveComments).isTrue();
+        }
+
+        @Test
+        void should_disable_comment_preservation_when_requested() throws IOException {
+            givenPostRequest(
+                    "extension=yml&endpoints=get:/path&preserve-comments=false", "openapi: 3.0.0");
+
+            handler.handle(exchange);
+
+            assertThat(capturedPreserveComments).isFalse();
         }
 
         @Test
@@ -318,8 +339,18 @@ class ClearEndpointsHandlerTest {
             // IllegalArgumentException levée par Extension.valueOf("XML")
             verify(exchange).sendResponseHeaders(eq(400), anyLong());
         }
+
+        @Test
+        void should_return_400_when_preserve_comments_parameter_is_invalid() throws IOException {
+            when(exchange.getRequestMethod()).thenReturn("POST");
+            when(exchange.getRequestURI()).thenReturn(
+                    URI.create(
+                            "/swagger/clear-endpoints?extension=yml&endpoints=get:/path&preserve-comments=maybe"));
+
+            handler.handle(exchange);
+
+            verify(exchange).sendResponseHeaders(eq(400), anyLong());
+            assertThat(responseBody.toString()).contains("\"code\":\"INVALID_REQUEST\"");
+        }
     }
 }
-
-
-

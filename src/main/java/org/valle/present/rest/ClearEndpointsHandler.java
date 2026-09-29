@@ -80,7 +80,7 @@ public class ClearEndpointsHandler extends AbstractRestHandler {
     /** Crée le service de suppression d'endpoints à partir du contenu et de l'extension. */
     @FunctionalInterface
     interface ClearFactory {
-        ClearEndpointOnDemand create(String content, Extension extension);
+        ClearEndpointOnDemand create(String content, Extension extension, boolean preserveComments);
     }
 
     /** Construit l'archive ZIP à partir du nœud Swagger nettoyé et du nom de fichier. */
@@ -90,8 +90,9 @@ public class ClearEndpointsHandler extends AbstractRestHandler {
     }
 
     // Package-private pour injection dans les tests
-    ClearFactory clearFactory = (content, ext) ->
-            new ClearEndpointOnDemandImpl(new GetSwaggerNodeJacksonFromStringImpl(content, ext));
+    ClearFactory clearFactory = (content, ext, preserveComments) ->
+            new ClearEndpointOnDemandImpl(
+                    new GetSwaggerNodeJacksonFromStringImpl(content, ext, preserveComments));
 
     ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
 
@@ -107,12 +108,16 @@ public class ClearEndpointsHandler extends AbstractRestHandler {
         log.info("REST ClearEndpoints — extension={}, {} endpoint(s) à supprimer, {} octets",
                 request.extension(), endpointsToRemove.size(), request.body().length);
 
-        SwaggerNode clearedNode = clearFactory.create(request.content(), request.extension())
+        SwaggerNode clearedNode = clearFactory.create(
+                        request.content(), request.extension(), request.preserveComments())
                 .execute(endpointsToRemove);
-        byte[] zipBytes = zipBuildFactory.build(clearedNode, request.outputFilename("swagger-cleared"));
+        byte[] zipBytes = zipBuildFactory.build(clearedNode,
+                request.outputFilename("swagger-cleared",
+                        clearedNode == null ? null : clearedNode.node()));
 
         exchange.getResponseHeaders().set("Content-Disposition",
-                "attachment; filename=\"swagger-cleared.zip\"");
+                "attachment; filename=\"" + request.archiveFilename("swagger-cleared",
+                        clearedNode == null ? null : clearedNode.node()) + "\"");
         RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
         log.info("REST ClearEndpoints — {} endpoint(s) supprimé(s), ZIP retourné ({} octets)",

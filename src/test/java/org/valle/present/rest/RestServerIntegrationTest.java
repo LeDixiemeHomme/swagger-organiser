@@ -62,7 +62,7 @@ class RestServerIntegrationTest {
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.headers().firstValue("Content-Type")).contains("application/zip");
         assertThat(response.headers().firstValue("Content-Disposition"))
-                .hasValueSatisfying(value -> assertThat(value).contains("swagger-decomposed.zip"));
+                .hasValueSatisfying(value -> assertThat(value).contains("Integration-API-decomposed.zip"));
 
         Set<String> entries = new HashSet<>();
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(response.body()))) {

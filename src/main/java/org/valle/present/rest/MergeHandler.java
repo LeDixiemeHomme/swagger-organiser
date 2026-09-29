@@ -83,7 +83,7 @@ public class MergeHandler extends AbstractRestHandler {
     /** Crée le service de fusion à partir du fichier principal et du répertoire de base. */
     @FunctionalInterface
     interface MergeFactory {
-        MergeSwagger create(File mainFile, File baseDir);
+        MergeSwagger create(File mainFile, File baseDir, boolean preserveComments);
     }
 
     /** Construit l'archive ZIP à partir du nœud Swagger fusionné et du nom de fichier. */
@@ -93,8 +93,9 @@ public class MergeHandler extends AbstractRestHandler {
     }
 
     // Package-private pour injection dans les tests
-    MergeFactory mergeFactory = (mainFile, baseDir) ->
-            new MergeSwaggerImpl(new GetSwaggerNodeJacksonFromFileImpl(mainFile), baseDir);
+    MergeFactory mergeFactory = (mainFile, baseDir, preserveComments) ->
+            new MergeSwaggerImpl(
+                    new GetSwaggerNodeJacksonFromFileImpl(mainFile, preserveComments), baseDir);
 
     ZipBuildFactory zipBuildFactory = ZipUtils::buildFromNode;
 
@@ -119,13 +120,17 @@ public class MergeHandler extends AbstractRestHandler {
             log.debug("REST Merge — fichier principal trouvé : {}", mainFile.getAbsolutePath());
 
             // 3 — Fusionner
-            SwaggerNode mergedNode = mergeFactory.create(mainFile, tempDir.toFile()).execute();
+            SwaggerNode mergedNode = mergeFactory
+                    .create(mainFile, tempDir.toFile(), request.preserveComments())
+                    .execute();
 
             // 4 — Zipper le résultat
-            byte[] zipBytes = zipBuildFactory.build(mergedNode, request.outputFilename("swagger-merged"));
+            byte[] zipBytes = zipBuildFactory.build(mergedNode,
+                    request.outputFilename("swagger-merged", mergedNode.node()));
 
             exchange.getResponseHeaders().set("Content-Disposition",
-                    "attachment; filename=\"swagger-merged.zip\"");
+                    "attachment; filename=\"" + request.archiveFilename(
+                            "swagger-merged", mergedNode.node()) + "\"");
             RestUtils.sendBytes(exchange, 200, "application/zip", zipBytes);
 
             log.info("REST Merge — fusion terminée, ZIP retourné ({} octets)", zipBytes.length);

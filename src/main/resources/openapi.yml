@@ -13,7 +13,6 @@ info:
     | `POST`  | `/keep-endpoints`   | Conserve uniquement les endpoints listés, supprime tous les autres |
     | `POST`  | `/decompose`        | Décompose un swagger en plusieurs fichiers dans un ZIP             |
     | `POST`  | `/merge`            | Fusionne un swagger décomposé en un fichier unique                 |
-    | `GET`   | `/health`           | Vérifie que le serveur est disponible                              |
     | `GET`   | `/app`              | Interface web vanilla pour transformer un fichier                 |
     | `GET`   | `/swagger-ui`       | Interface graphique Swagger UI                                     |
     ```
@@ -90,6 +89,28 @@ paths:
           schema:
             type: string
           example: "get:/cadh/v1/operations,post:/cadh/v1/operations/{id}/documents"
+        - name: preserve-comments
+          in: query
+          required: false
+          description: |
+            Active (`true`) ou désactive (`false`) la réémission des commentaires YAML
+            dans le fichier YAML généré. Valeur par défaut : `true`.
+            Sans effet pour le format de sortie JSON.
+          schema:
+            type: boolean
+            default: true
+          example: true
+        - name: archive-name
+          in: query
+          required: false
+          description: |
+            Nom de base de l'archive téléchargée, sans extension.
+            Si ce paramètre est absent ou vide, la valeur de `info.title` du Swagger fourni
+            est utilisée (par exemple `DECISEO-API`) ; à défaut, le nom historique est conservé.
+            Le suffixe de l'opération est ajouté automatiquement.
+          schema:
+            type: string
+          example: nouveau-swagger
       requestBody:
         required: true
         description: Fichier Swagger à nettoyer (multipart ou corps brut)
@@ -191,6 +212,28 @@ paths:
           schema:
             type: string
           example: "get:/cadh/v1/operations,post:/cadh/v1/operations/{id}/documents"
+        - name: preserve-comments
+          in: query
+          required: false
+          description: |
+            Active (`true`) ou désactive (`false`) la réémission des commentaires YAML
+            dans le fichier YAML généré. Valeur par défaut : `true`.
+            Sans effet pour le format de sortie JSON.
+          schema:
+            type: boolean
+            default: true
+          example: true
+        - name: archive-name
+          in: query
+          required: false
+          description: |
+            Nom de base de l'archive téléchargée, sans extension.
+            Si ce paramètre est absent ou vide, la valeur de `info.title` du Swagger fourni
+            est utilisée (par exemple `DECISEO-API`) ; à défaut, le nom historique est conservé.
+            Le suffixe de l'opération est ajouté automatiquement.
+          schema:
+            type: string
+          example: nouveau-swagger
       requestBody:
         required: true
         description: Fichier Swagger à filtrer (multipart ou corps brut)
@@ -292,6 +335,28 @@ paths:
             type: string
             enum: [ json, yml, yaml ]
           example: yml
+        - name: preserve-comments
+          in: query
+          required: false
+          description: |
+            Active (`true`) ou désactive (`false`) la réémission des commentaires YAML
+            dans le fichier YAML généré. Valeur par défaut : `true`.
+            Sans effet pour le format de sortie JSON.
+          schema:
+            type: boolean
+            default: true
+          example: true
+        - name: archive-name
+          in: query
+          required: false
+          description: |
+            Nom de base de l'archive téléchargée, sans extension.
+            Si ce paramètre est absent ou vide, la valeur de `info.title` du Swagger fourni
+            est utilisée (par exemple `DECISEO-API`) ; à défaut, le nom historique est conservé.
+            Le suffixe de l'opération est ajouté automatiquement.
+          schema:
+            type: string
+          example: nouveau-swagger
       requestBody:
         required: true
         description: Fichier Swagger à décomposer (multipart ou corps brut)
@@ -375,6 +440,28 @@ paths:
             type: string
             enum: [ json, yml, yaml ]
           example: yml
+        - name: preserve-comments
+          in: query
+          required: false
+          description: |
+            Active (`true`) ou désactive (`false`) la réémission des commentaires YAML
+            dans le fichier YAML généré. Valeur par défaut : `true`.
+            Sans effet pour le format de sortie JSON.
+          schema:
+            type: boolean
+            default: true
+          example: true
+        - name: archive-name
+          in: query
+          required: false
+          description: |
+            Nom de base de l'archive téléchargée, sans extension.
+            Si ce paramètre est absent ou vide, la valeur de `info.title` du Swagger fourni
+            est utilisée (par exemple `DECISEO-API`) ; à défaut, le nom historique est conservé.
+            Le suffixe de l'opération est ajouté automatiquement.
+          schema:
+            type: string
+          example: nouveau-swagger
       requestBody:
         required: true
         description: Archive ZIP contenant `main.yml`/`main.yaml`/`main.json` et ses références
@@ -450,32 +537,6 @@ paths:
               schema:
                 type: string
               example: "Documentation Swagger introuvable — relancez ./gradlew openApiGenerate."
-
-  /health:
-    get:
-      tags:
-        - swagger
-      summary: Vérifier la disponibilité du serveur
-      description: Retourne un état simple et sans dépendance externe pour les sondes de disponibilité.
-      operationId: health
-      responses:
-        "200":
-          description: Serveur disponible
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [ status ]
-                properties:
-                  status:
-                    type: string
-                    example: UP
-        "405":
-          description: Méthode HTTP non supportée — seul GET est accepté
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 
 components:
   schemas:

@@ -12,7 +12,6 @@ import org.valle.process.models.Extension;
 import org.valle.process.models.SwaggerNode;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.io.ByteArrayOutputStream;
@@ -41,13 +40,17 @@ class MergeHandlerTest {
     private final Headers responseHeaders = new Headers();
     private final ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
     private final MergeHandler handler = new MergeHandler();
+    private boolean capturedPreserveComments;
 
     @BeforeEach
     void setUp() throws IOException {
         lenient().when(exchange.getResponseHeaders()).thenReturn(responseHeaders);
         lenient().when(exchange.getResponseBody()).thenReturn(responseBody);
         lenient().doNothing().when(exchange).sendResponseHeaders(anyInt(), anyLong());
-        handler.mergeFactory = (mainFile, baseDir) -> mergeSwagger;
+        handler.mergeFactory = (mainFile, baseDir, preserveComments) -> {
+            capturedPreserveComments = preserveComments;
+            return mergeSwagger;
+        };
         handler.zipBuildFactory = (node, filename) -> new byte[]{0x50, 0x4B};
         lenient().when(mergeSwagger.execute()).thenReturn(mergedNode);
     }
@@ -110,6 +113,19 @@ class MergeHandlerTest {
         assertThat(responseHeaders.getFirst("Content-Disposition"))
                 .isEqualTo("attachment; filename=\"swagger-merged.zip\"");
         assertThat(responseBody.toByteArray()).containsExactly(0x50, 0x4B);
+        assertThat(capturedPreserveComments).isTrue();
+    }
+
+    @Test
+    void should_disable_comment_preservation_when_requested() throws Exception {
+        when(exchange.getRequestMethod()).thenReturn("POST");
+        when(exchange.getRequestURI()).thenReturn(URI.create("/merge?extension=json&preserve-comments=false"));
+        when(exchange.getRequestHeaders()).thenReturn(new Headers());
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream(zipWithMainFile()));
+
+        handler.handle(exchange);
+
+        assertThat(capturedPreserveComments).isFalse();
     }
 
     @Test
@@ -130,6 +146,16 @@ class MergeHandlerTest {
         when(exchange.getRequestURI()).thenReturn(URI.create("/merge?extension=json"));
         when(exchange.getRequestHeaders()).thenReturn(new Headers());
         when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream(zipWithEntry("../outside.json")));
+
+        handler.handle(exchange);
+
+        verify(exchange).sendResponseHeaders(eq(400), anyLong());
+    }
+
+    @Test
+    void should_return_400_when_preserve_comments_parameter_is_invalid() throws IOException {
+        when(exchange.getRequestMethod()).thenReturn("POST");
+        when(exchange.getRequestURI()).thenReturn(URI.create("/merge?extension=json&preserve-comments=oops"));
 
         handler.handle(exchange);
 
